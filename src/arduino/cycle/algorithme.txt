@@ -1,0 +1,98 @@
+// Modele Arduino avec cycle
+
+// Definition des constantes
+TOPIC_NAME
+MODULE_NAME
+ACCEPTED 
+REJECTED 
+KEEP_ALIVE
+TIME_BETWEEN_DISCONNECT_CONNECT
+FLAG 
+RADIUS
+
+// Nombre de message a envoyer
+MAX_NUMBER_MESSAGES 
+
+// Definition des variables
+msg = ""
+topicId = -1
+numberMsgSent = 0
+isDisconnectedNormal = false
+
+// Methode appele au lancement de l'Arduino uniquement 
+setup() {
+	searchgw(RADIUS) 
+}
+
+// Methode appele en boucle
+loop() {
+        if( !connected() ){
+                connect( FLAG, KEEP_ALIVE, MODULE_NAME )
+        }
+}
+
+getMessage () {
+        return eventCaptured.getValue();
+}
+
+// Callback de la methode connect 
+MQTTSN_connack_handler( msg_connack ) {
+        if ( msg_connack->return_code == ACCEPTED && topic_id != -1 ){
+                pingreq( MODULE_NAME )
+        } else {
+                register( TOPIC_NAME )
+        }
+}
+
+// Callback de la methode pingreq
+MQTTSN_pingresp_handler() {
+	msg = getMessage()
+	publish( FLAG, topicId, msg.c_str(), msg.length() ) 
+}
+
+// Callback de la methode register
+MQTTSN_regack_handler( msg_regack ){
+        topicId = msg_regack->topic_id
+        subscribe_by_name( FLAG, TOPIC_SUB )
+}
+
+// Callback de la methode subscribe_by_name
+MQTTSN_suback_handler( msg_suback ){
+        if( msg_suback->return_code == ACCEPTED ){
+                msg = getMessage()
+		publish( FLAG, topicId, msg.c_str(), msg.length() )
+        } else {
+                subscribe_by_name( FLAG, TOPIC_SUB )
+        }
+}
+
+// Callback de la methode publish
+MQTTSN_puback_handler( msg_puback ){    
+        if( msg_puback->return_code == ACCEPTED ){
+                numberMsgSent ++
+                if( numberMsgSent < MAX_NUMBER_MESSAGES )
+                        msg = getMessage()
+				publish( FLAG, topicId, msg.c_str(), msg.length() )
+                } else {
+                        isDisconnectedNormal = true
+                        numberMsgSent = 0
+                        disconnect( TIME_TO_SLEEP )
+                }
+        else if ( msg_puback->return_code == REJECTED ) {
+                connect( FLAG, KEEP_ALIVE, MODULE_NAME )
+        }
+}
+
+// Callback de la methode disconnect
+MQTTSN_disconnect_handler() {
+        if( is_disconnected_normal ) {
+                isDisconnectedNormal = false
+                delay( TIME_BETWEEN_DISCONNECT_CONNECT * 1000 )
+        } else {
+                connect( FLAG, KEEP_ALIVE, MODULE_NAME )
+        }
+}
+
+// Callback pour la reception d'un message
+MQTTSN_publish_handler( msg_publish ){
+}
