@@ -52,7 +52,7 @@ THE SOFTWARE.
 #define T_SEARCH_GW 5
 #define T_GW_INFO 5
 #define T_WAIT 360
-#define T_RETRY 15
+#define T_RETRY 5
 #define PR_RETRY 15
 #define N_RETRY 5
 

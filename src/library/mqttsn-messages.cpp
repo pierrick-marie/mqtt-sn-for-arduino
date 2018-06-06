@@ -32,6 +32,8 @@ THE SOFTWARE.
 
 MQTTSN::MQTTSN() :
 waiting_for_response(false),
+waiting_for_suback(false),
+waiting_for_puback(false),
 waiting_for_pingresp(false),
 _connected(false),
 _message_id(0),
@@ -40,7 +42,11 @@ _gateway_id(0),
 _response_timer(0),
 _response_retries(0),
 _pingresp_timer(0),
-_pingresp_retries(0)
+_pingresp_retries(0),
+_suback_timer(0),
+_suback_retries(0),
+_puback_timer(0),
+_puback_retries(0)
 {
     memset(topic_table, 0, sizeof(topic) * MAX_TOPICS);
     memset(message_buffer, 0, MAX_BUFFER_SIZE);
@@ -68,6 +74,46 @@ bool MQTTSN::wait_for_response() {
         }
     }
     return waiting_for_response;
+}
+
+bool MQTTSN::wait_for_suback() {
+    if (waiting_for_suback) {
+        // TODO: Watch out for overflow.
+        if ((millis() - _suback_timer) > (T_RETRY * 1000L)) {
+            _suback_timer = millis();
+
+            if (_suback_retries == 0) {
+                waiting_for_suback = false;
+                disconnect_handler(NULL);
+            } else {
+                send_message();
+            }
+            Serial.print("RESPONSE RETRIES ");
+            Serial.println(_suback_retries);
+            --_suback_retries;
+        }
+    }
+    return waiting_for_suback;
+}
+
+bool MQTTSN::wait_for_puback() {
+    if (waiting_for_puback) {
+        // TODO: Watch out for overflow.
+        if ((millis() - _puback_timer) > (T_RETRY * 1000L)) {
+            _puback_timer = millis();
+
+            if (_puback_retries == 0) {
+                waiting_for_puback = false;
+                disconnect_handler(NULL);
+            } else {
+                send_message();
+            }
+            Serial.print("RESPONSE RETRIES ");
+            Serial.println(_puback_retries);
+            --_puback_retries;
+        }
+    }
+    return waiting_for_puback;
 }
 
 bool MQTTSN::wait_for_pingresp() {
@@ -209,6 +255,18 @@ void MQTTSN::send_message() {
         _response_timer = millis();
         _response_retries = N_RETRY;
     }
+    if (!waiting_for_suback) {
+        _suback_timer = millis();
+        _suback_retries = N_RETRY;
+    }
+    if (!waiting_for_puback) {
+        _puback_timer = millis();
+        _puback_retries = N_RETRY;
+    }
+    /*if (!waiting_for_pingresp) {
+        _pingresp_timer = millis();
+        _pingresp_retries = N_RETRY;
+    }*/
 }
 
 void MQTTSN::advertise_handler(const msg_advertise* msg) {
@@ -223,7 +281,7 @@ void MQTTSN::gwinfo_handler(const msg_gwinfo* msg) {
 extern void MQTTSN_connack_handler(const msg_connack* msg);
 void MQTTSN::connack_handler(const msg_connack* msg) {
 	_connected = 1;
-	MQTTSN_connack_handler(msg);
+    MQTTSN_connack_handler(msg);
 }
 
 extern void MQTTSN_willtopicreq_handler(const message_header* msg);
@@ -252,6 +310,7 @@ void MQTTSN::reregister_handler(const msg_reregister* msg) {
 
 extern void MQTTSN_puback_handler(const msg_puback* msg);
 void MQTTSN::puback_handler(const msg_puback* msg) {
+    waiting_for_puback=false;
     MQTTSN_puback_handler(msg);
 }
 
@@ -272,6 +331,7 @@ void MQTTSN::pingreq_handler(const msg_pingreq* msg) {
 
 extern void MQTTSN_suback_handler(const msg_suback* msg);
 void MQTTSN::suback_handler(const msg_suback* msg) {
+    waiting_for_suback=false;
     MQTTSN_suback_handler(msg);
 }
 
@@ -295,7 +355,6 @@ void MQTTSN::publish_handler(const msg_publish* msg) {
     //if (msg->flags & FLAG_QOS_1) {
         return_code_t ret = REJECTED_INVALID_TOPIC_ID;
         const uint16_t topic_id = bswap(msg->topic_id);
-
         for (uint8_t i = 0; i < topic_count; ++i) {
             if (topic_table[i].id == topic_id) {
                 ret = ACCEPTED;
@@ -464,7 +523,7 @@ void MQTTSN::publish(const uint8_t flags, const uint16_t topic_id, const void* d
     send_message();
 
     //if ((flags & QOS_MASK) == FLAG_QOS_1 || (flags & QOS_MASK) == FLAG_QOS_2) {
-        waiting_for_response = true;
+        waiting_for_puback = true;
     //}
 }
 
@@ -523,9 +582,9 @@ void MQTTSN::subscribe_by_name(const uint8_t flags, const char* topic_name) {
 
     send_message();
 
-    if ((flags & QOS_MASK) == FLAG_QOS_1 || (flags & QOS_MASK) == FLAG_QOS_2) {
-        waiting_for_response = true;
-    }
+    //if ((flags & QOS_MASK) == FLAG_QOS_1 || (flags & QOS_MASK) == FLAG_QOS_2) {
+    waiting_for_suback = true;
+    //}
 }
 
 void MQTTSN::subscribe_by_id(const uint8_t flags, const uint16_t topic_id) {

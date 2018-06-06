@@ -39,6 +39,8 @@ public:
 
     uint16_t find_topic_id(const char* name, uint8_t* index);
     bool wait_for_response();
+    bool wait_for_suback();
+    bool wait_for_puback();
     bool wait_for_pingresp();
 	bool connected();
 #ifdef USE_SERIAL
@@ -105,8 +107,10 @@ private:
     // Set to true when we're waiting for some sort of acknowledgement from the
     //server that will transition our state.
     bool waiting_for_response;
+    bool waiting_for_suback;
+    bool waiting_for_puback;
     bool waiting_for_pingresp;
-    bool _connected;
+	bool _connected;
     uint16_t _message_id;
     uint8_t topic_count;
 
@@ -120,6 +124,12 @@ private:
 
     uint32_t _pingresp_timer;
     uint8_t _pingresp_retries;
+
+    uint32_t _suback_timer;
+    uint8_t _suback_retries;
+
+    uint32_t _puback_timer;
+    uint8_t _puback_retries;
 };
 
 #endif

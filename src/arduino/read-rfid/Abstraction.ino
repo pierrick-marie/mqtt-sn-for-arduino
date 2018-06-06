@@ -107,7 +107,7 @@ void sn_disconnect(){
   delay(1000);
 }
 
-String sn_get_message_from_subscribed_topics(){
+String sn_check_subscribed_topic_for_message(){
   message = "";
   mqttsn.pingreq(MODULE_NAME);
   while(mqttsn.wait_for_pingresp()){
