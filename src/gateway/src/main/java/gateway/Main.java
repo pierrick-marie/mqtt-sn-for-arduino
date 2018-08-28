@@ -48,7 +48,7 @@ public class Main {
         msgIDack=new ArrayList<>();
         willTopicAck=new HashMap<>();
         willMessageAck=new HashMap<>();
-        serialPort=Serial.getSerial("/dev/tty.usbserial-AL008PBO");
+        serialPort=Serial.getSerial("/dev/ttyUSB0");
     }
 
     static class SerialPortReader implements SerialPortEventListener {
