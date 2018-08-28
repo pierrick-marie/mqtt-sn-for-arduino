@@ -37,34 +37,37 @@ public:
     MQTTSN();
     virtual ~MQTTSN();
 
-    uint16_t find_topic_id(const char* name, uint8_t* index);
-    bool wait_for_response();
-    bool wait_for_suback();
-    bool wait_for_puback();
-    bool wait_for_pingresp();
-	bool connected();
+    uint16_t MQTTSN_find_topic_id(const char* name);
+    bool MQTTSN_wait_for_response();
+    bool MQTTSN_wait_for_suback();
+    bool MQTTSN_wait_for_puback();
+    bool MQTTSN_wait_for_pingresp();
+    bool MQTTSN_connected();
+
 #ifdef USE_SERIAL
-    void parse_stream(uint8_t* buf, uint16_t len);
+    void MQTTSN_parse_stream(uint8_t* buf, uint16_t len);
 #endif
 
-    void searchgw(const uint8_t radius);
-    void connect(const uint8_t flags, const uint16_t duration, const char* client_id);
-    void willtopic(const uint8_t flags, const char* will_topic, const bool update = false);
-    void willmsg(const void* will_msg, const uint8_t will_msg_len, const bool update = false);
-    bool register_topic(const char* name);
-    void publish(const uint8_t flags, const uint16_t topic_id, const void* data, const uint8_t data_len);
+    void MQTTSN_searchgw(const uint8_t radius);
+    void MQTTSN_connect(const uint8_t flags, const uint16_t duration, const char* client_id);
+    void MQTTSN_will_topic(const uint8_t flags, const char* will_topic, const bool update = false);
+    void MQTTSN_will_messsage(const void* will_msg, const uint8_t will_msg_len, const bool update = false);
+    bool MQTTSN_register_topic(const char* name);
+    void MQTTSN_publish(const uint8_t flags, const uint16_t topic_id, const void* data, const uint8_t data_len);
+
 #ifdef USE_QOS2
-    void pubrec();
-    void pubrel();
-    void pubcomp();
+    void MQTTSN_pubrec();
+    void MQTTSN_pubrel();
+    void MQTTSN_pubcomp();
 #endif
-    void subscribe_by_name(const uint8_t flags, const char* topic_name);
-    void subscribe_by_id(const uint8_t flags, const uint16_t topic_id);
-    void unsubscribe_by_name(const uint8_t flags, const char* topic_name);
-    void unsubscribe_by_id(const uint8_t flags, const uint16_t topic_id);
-    void pingreq(const char* client_id);
-    void pingresp();
-    void disconnect(const uint16_t duration);
+
+    void MQTTSN_subscribe_by_name(const uint8_t flags, const char* topic_name);
+    void MQTTSN_subscribe_by_id(const uint8_t flags, const uint16_t topic_id);
+    void MQTTSN_unsubscribe_by_name(const uint8_t flags, const char* topic_name);
+    void MQTTSN_unsubscribe_by_id(const uint8_t flags, const uint16_t topic_id);
+    void MQTTSN_pingreq(const char* client_id);
+    void MQTTSN_pingresp();
+    void MQTTSN_disconnect(const uint16_t duration);
 
 protected:
     virtual void advertise_handler(const msg_advertise* msg);
@@ -104,32 +107,31 @@ private:
     uint16_t bswap(const uint16_t val);
     void send_message();
 
-    // Set to true when we're waiting for some sort of acknowledgement from the
-    //server that will transition our state.
-    bool waiting_for_response;
-    bool waiting_for_suback;
-    bool waiting_for_puback;
-    bool waiting_for_pingresp;
-	bool _connected;
-    uint16_t _message_id;
-    uint8_t topic_count;
+    // Set to true when we're waiting for some sort of acknowledgement from the server that will transition our state.
+    bool WaitingForResponse;
+    bool WaitingForSuback;
+    bool WaitingForPuback;
+    bool WaitingForPingresp;
+    bool Connected;
+    uint16_t MessageId;
+    uint8_t TopicCount;
 
-    uint8_t message_buffer[MAX_BUFFER_SIZE];
-    uint8_t response_buffer[MAX_BUFFER_SIZE];
-    topic topic_table[MAX_TOPICS];
+    uint8_t MessageBuffer[MAX_BUFFER_SIZE];
+    uint8_t ResponseBuffer[MAX_BUFFER_SIZE];
+    topic TopicTable[MAX_TOPICS];
 
-    uint8_t _gateway_id;
-    uint32_t _response_timer;
-    uint8_t _response_retries;
+    uint8_t GatewayId;
+    uint32_t ResponseTimer;
+    uint8_t ResponseRetries;
 
-    uint32_t _pingresp_timer;
-    uint8_t _pingresp_retries;
+    uint32_t PingrespTimer;
+    uint8_t PingrespRetries;
 
-    uint32_t _suback_timer;
-    uint8_t _suback_retries;
+    uint32_t SubackTimer;
+    uint8_t SubackRetries;
 
-    uint32_t _puback_timer;
-    uint8_t _puback_retries;
+    uint32_t PubackTimer;
+    uint8_t PubackRetries;
 };
 
 #endif
