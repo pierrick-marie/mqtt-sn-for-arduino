@@ -177,9 +177,10 @@ int MB_FrameParse(uint8_t* frame, int frame_len, uint8_t* data, int data_max_len
 }
 
 void CheckSerial(){
+  
   if(XBee.available()>0){
     delay(10);
-    //Serial.println("XBee Available");
+    // Serial.println("XBee Available");
     uint8_t delimiter=XBee.read();
     if(delimiter!=0x7E)
       return;
@@ -206,10 +207,10 @@ void CheckSerial(){
       }
       switch(frameBuffer[0]){
         case 139:
-          //Serial.println("Transmit Status");
+          // Serial.println("Transmit Status");
           break;
         case 144:
-          //Serial.println("Receive Packet");
+          // Serial.println("Receive Packet");
           if(gwAdd[0]==0 && gwAdd[1]==0 && gwAdd[2]==0 && gwAdd[3]==0){
             gwAdd[0]=frameBuffer[1];
             gwAdd[1]=frameBuffer[2];
@@ -260,4 +261,3 @@ bool verifyChecksum(uint8_t frameBuffer[], int frameSize){
   else
     return false;
 }
-

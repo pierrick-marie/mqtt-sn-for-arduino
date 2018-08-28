@@ -11,23 +11,29 @@ SoftwareSerial Rfid(2, 3);
 
 #define TOPIC_PUB "ObiOne-RFID"
 #define TOPIC_SUB "ObiPop"
-#define MODULE_NAME "Arduin-ObiOne-RFID"
+#define MODULE_NAME "Arduino-RFID"
 
 String rfidId = "";
 long time = millis();
 
 void setup() {
+
+  delay(1000);
+  
   Serial.begin(9600);
   XBee.begin(9600);
-  Rfid.begin(9600);
+  // Rfid.begin(9600);
   XBee.listen();
   if(sn_init() == ACCEPTED){
     Serial.println("Sn_init Ok");
+  } else {
+    Serial.println("Sn_init KO");
   }
 }
 
 void loop() {
 
+    /*
     if(time + 10000 <= millis()) {
       XBee.listen();
       if(XBee.isListening()){
@@ -39,8 +45,11 @@ void loop() {
               Serial.println("Sn_subscribe Ok");
             }
           }
-    
-          String received = sn_check_subscribed_topic_for_message();
+
+          Serial.println("# GET MESSAGES 0");
+          String received = sn_get_message_from_subscribed_topics();
+          Serial.println("# GET MESSAGES 1");
+          
           time = millis();
           if(received != ""){
             Serial.print("Message: ");
@@ -49,7 +58,9 @@ void loop() {
         }
       }
     }
-  
+    */
+
+    /* 
     Rfid.listen();
     if(Rfid.isListening()) {
        if (Rfid.available()) {
@@ -77,5 +88,5 @@ void loop() {
         }
       }
     }
+    */
 }
-

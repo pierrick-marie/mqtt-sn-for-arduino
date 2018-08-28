@@ -56,8 +56,25 @@ _puback_retries(0)
 MQTTSN::~MQTTSN() {
 }
 
+void MQTTSN::searchgw(const uint8_t radius) {
+    
+    msg_searchgw* msg = reinterpret_cast<msg_searchgw*>(message_buffer);
+
+    msg->length = sizeof(msg_searchgw);
+    msg->type = SEARCHGW;
+    msg->radius = radius;
+
+    send_message();
+    
+    waiting_for_response = true;
+}
+
 bool MQTTSN::wait_for_response() {
+    
     if (waiting_for_response) {
+        
+        Serial.print("WAIT FOR RESPONSE");
+        
         // TODO: Watch out for overflow.
         if ((millis() - _response_timer) > (T_RETRY * 1000L)) {
             _response_timer = millis();
@@ -387,18 +404,8 @@ void MQTTSN::willtopicresp_handler(const msg_willtopicresp* msg) {
 void MQTTSN::willmsgresp_handler(const msg_willmsgresp* msg) {
 }
 
-void MQTTSN::searchgw(const uint8_t radius) {
-    msg_searchgw* msg = reinterpret_cast<msg_searchgw*>(message_buffer);
-
-    msg->length = sizeof(msg_searchgw);
-    msg->type = SEARCHGW;
-    msg->radius = radius;
-
-    send_message();
-    waiting_for_response = true;
-}
-
 void MQTTSN::connect(const uint8_t flags, const uint16_t duration, const char* client_id) {
+    
     msg_connect* msg = reinterpret_cast<msg_connect*>(message_buffer);
 
     msg->length = sizeof(msg_connect) + strlen(client_id);
