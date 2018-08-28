@@ -56,8 +56,27 @@ _puback_retries(0)
 MQTTSN::~MQTTSN() {
 }
 
+void MQTTSN::searchgw(const uint8_t radius) {
+    
+    msg_searchgw* msg = reinterpret_cast<msg_searchgw*>(message_buffer);
+
+    msg->length = sizeof(msg_searchgw);
+    msg->type = SEARCHGW;
+    msg->radius = radius;
+
+    send_message();
+    
+    waiting_for_response = true;
+}
+
+/**
+ * @ORIGINAL
+ **
+ */
 bool MQTTSN::wait_for_response() {
+    
     if (waiting_for_response) {
+        
         // TODO: Watch out for overflow.
         if ((millis() - _response_timer) > (T_RETRY * 1000L)) {
             _response_timer = millis();
@@ -156,7 +175,14 @@ uint16_t MQTTSN::find_topic_id(const char* name, uint8_t* index) {
 }
 
 #ifdef USE_SERIAL
+/**
+ * parse_stream(buf, len) is called at the end of the function CheckSerial() in _MeshBee.ino.
+ * CheckSerial() gets all incoming data from the gateway and call parse_stream with the buffer of data (@buf) and it's size (@len).
+ * 
+ * 
+ **/
 void MQTTSN::parse_stream(uint8_t* buf, uint16_t len) {
+   
     if(waiting_for_pingresp){
         _pingresp_timer = millis();
     }
@@ -167,7 +193,12 @@ void MQTTSN::parse_stream(uint8_t* buf, uint16_t len) {
 }
 #endif
 
+/**
+ * dispatch() is called at the end of the function parse_stream.
+ * It calls the appropriate function according to the type of the current buffer (@response_buffer).
+ **/
 void MQTTSN::dispatch() {
+    
     message_header* response_message = (message_header*)response_buffer;
     switch (response_message->type) {
     case ADVERTISE:
@@ -387,18 +418,8 @@ void MQTTSN::willtopicresp_handler(const msg_willtopicresp* msg) {
 void MQTTSN::willmsgresp_handler(const msg_willmsgresp* msg) {
 }
 
-void MQTTSN::searchgw(const uint8_t radius) {
-    msg_searchgw* msg = reinterpret_cast<msg_searchgw*>(message_buffer);
-
-    msg->length = sizeof(msg_searchgw);
-    msg->type = SEARCHGW;
-    msg->radius = radius;
-
-    send_message();
-    waiting_for_response = true;
-}
-
 void MQTTSN::connect(const uint8_t flags, const uint16_t duration, const char* client_id) {
+    
     msg_connect* msg = reinterpret_cast<msg_connect*>(message_buffer);
 
     msg->length = sizeof(msg_connect) + strlen(client_id);

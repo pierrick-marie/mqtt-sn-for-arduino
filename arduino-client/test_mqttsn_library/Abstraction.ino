@@ -4,6 +4,9 @@
 #define ACCEPTED 0
 #define DEBUG false
 
+#define TIME_TO_WAIT 2000
+#define MAX_TRY 5
+
 typedef struct {
   int topic_id;
   char* topic_name;
@@ -18,12 +21,45 @@ String message;
 topic_dictionnary my_topic_dictionnary[10];
 int nb_topic_registered=0;
 
+bool init_ok = false;
+
 int sn_init(){
+
+  // Search gateway
   mqttsn.searchgw(0);
-  while(mqttsn.wait_for_response()){
-    CheckSerial();
+  delay(500);
+
+  // Waiting for a response
+  int nb_try = 0;
+  long time = millis();
+  bool test = !XBee.available();
+  while(test && nb_try < MAX_TRY){
+    Serial.print("CHECK IF - ");
+    Serial.println(test);
+    if(time + TIME_TO_WAIT < millis()) {
+      // Search again the gateway (5 times max @MAX_TRY)
+      Serial.println("############ TRY AGAIN!");
+      mqttsn.searchgw(0);
+      delay(500);
+      nb_try++;
+      test = !XBee.available();
+      time = millis();
+    }
   }
-  return 0;
+  Serial.print("OUT OF WHILE - ");
+  Serial.println(test);
+  
+  // Read the response
+  CheckSerial();
+
+  // Wait for checking the response @MQTTSN_gwinfo_handler()
+  while(!init_ok && time + TIME_TO_WAIT > millis()) {}
+
+  if(init_ok) {
+    return ACCEPTED;
+  } else {
+    return REJECTED;
+  }
 }
 
 int sn_connect(const char* module_name){
@@ -129,14 +165,6 @@ void debugln(String message){
   }
 }
 
-
-
-
-
-
-
-
-
 void MQTTSN_connack_handler(const msg_connack* msg){
   debug("Entering connack ");
   debugln(stringFromReturnCode(msg->return_code));
@@ -178,13 +206,12 @@ void MQTTSN_pingresp_handler(){
   debugln("Entering pingresp");
 }
 
-
-
-
-
-
 void MQTTSN_gwinfo_handler(const msg_gwinfo* msg){ 
-  //handler gérant un retour d'info de passerelle
+  if(msg->gw_id == 1) {
+    init_ok = true;
+  } else {
+    init_ok = false;
+  }
 }
 
 void MQTTSN_reregister_handler(msg_reregister const*){
