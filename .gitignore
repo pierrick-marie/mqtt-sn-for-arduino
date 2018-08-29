@@ -1,7 +1,7 @@
 gateway/bin/*
 gateway/lib/*
-.idea/*
 gateway/.idea/*
+.idea/*
 
 *.class
 *.iml
