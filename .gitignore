@@ -1,2 +1,14 @@
 src/gateway/build/
 src/gateway/bin/
+
+.idea/*
+gateway/.idea/*
+
+*.class
+*.iml
+*.zip
+
+
+
+
+
