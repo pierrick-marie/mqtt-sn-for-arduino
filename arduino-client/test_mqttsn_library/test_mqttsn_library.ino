@@ -13,6 +13,8 @@ SoftwareSerial Rfid(2, 3);
 #define TOPIC_SUB "ObiPop"
 #define MODULE_NAME "Arduino-RFID"
 
+#define DEBUG true
+
 String rfidId = "";
 long time = millis();
 
@@ -25,9 +27,11 @@ void setup() {
   Rfid.begin(9600);
   XBee.listen();
   if(ABSTRCT_init() == ACCEPTED){
-    Serial.println("Sn_init Ok");
+    Serial.println("\nINIT OK");
   } else {
-    Serial.println("Sn_init KO");
+    Serial.println("\nINIT KO!");
+    // delay(500);
+    // exit(-1);
   }
 
 
@@ -35,26 +39,28 @@ void setup() {
       XBee.listen();
       if(XBee.isListening()){
         if(ABSTRCT_connect(MODULE_NAME) == ACCEPTED){
-          Serial.println("Sn_connect Sub Ok");
+          Serial.println("\nCONNECT OK");
         }
         else {
-          Serial.println("Sn_connect Sub KO!");
+          Serial.println("\nCONNECT KO!");
         }
       }
     // }
 
+/*
+
     // if(!ABSTRCT_is_topic_registered(TOPIC_SUB)){
     //  Serial.println("TOPIC NOT REGISTERED");
       if(ABSTRCT_subscribe(TOPIC_SUB) == ACCEPTED){
-        Serial.println("Sn_subscribe Ok - TOPIC IS REGISTERED");
+        Serial.println("\nSn_subscribe Ok - TOPIC IS REGISTERED");
       } else {
-        Serial.println("TOPIC NOT REGISTERED");
+        Serial.println("\nTOPIC NOT REGISTERED");
       }
 
       if(ABSTRCT_subscribe("POW POW POW") == ACCEPTED){
-        Serial.println("Sn_subscribe Ok - TOPIC IS REGISTERED");
+        Serial.println("\nSn_subscribe Ok - TOPIC IS REGISTERED");
       } else {
-        Serial.println("TOPIC NOT REGISTERED");
+        Serial.println("\nTOPIC NOT REGISTERED");
       }
     /*  
     } else {

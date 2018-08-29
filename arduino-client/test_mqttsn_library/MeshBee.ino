@@ -263,10 +263,28 @@ void MB_parse_data() {
 /**
  * The function returns the associated string status to corresponding to the given @return_code.
  **/
-static inline char* MB_string_from_return_code(enum return_code_t return_code){
+static inline char* MB_string_from_return_code(const uint8_t return_code){
 
-    static const char *strings[] = { "ACCEPTED", "REJECTED_CONGESTION", "REJECTED_INVALID_TOPIC_ID", "REJECTED"};
-    return strings[return_code];
+    static char string_code[30] = {'\0'};
+
+    /*
+    switch(return_code) {
+        case 0:
+        */
+            strncpy(string_code, "ACCEPTED", 8);
+            /*
+        break;
+    }
+    */
+
+
+    // char strings[][] = { "ACCEPTED", "REJECTED_CONGESTION", "REJECTED_INVALID_TOPIC_ID", "REJECTED"};
+    // return strings[return_code];
+
+    Serial.print("\n POW POW POW: ");
+    Serial.println(string_code);
+
+    return string_code;
 }
 
 /**

@@ -2,7 +2,6 @@
 #define KEEP_ALIVE 60
 #define REJECTED 3
 #define ACCEPTED 0
-#define DEBUG false
 
 #define TIME_TO_WAIT 2000
 #define MAX_TRY 5
@@ -65,6 +64,29 @@ bool init_ok = false;
  *
  **/
 
+void debug(const char* message){
+	if(DEBUG){
+		Serial.print("\nDEBUG: ");
+		Serial.println(message);
+	}
+}
+
+void debug(const char* message, const int value){
+	if(DEBUG){
+		Serial.print("\nDEBUG: ");
+		Serial.print(message);
+		Serial.println(value);
+	}
+}
+
+void debug(const char* message, const char* value){
+	if(DEBUG){
+		Serial.print("\nDEBUG: ");
+		Serial.print(message);
+		Serial.println(value);
+	}
+}
+
 /**
  * @brief multi_check_serial The function calls @MB_check_serial until @nb_max_try have been reach or a response from the gateway have been received.
  * @param nb_max_try The maximum number of try @MB_check_serial before the time out.
@@ -72,25 +94,15 @@ bool init_ok = false;
  **/
 bool multi_check_serial(const int nb_max_try) {
 
-    int nb_try = 1;
+	int nb_try = 0;
 
-    while( !MB_check_serial() && nb_try <= nb_max_try ) {
-        nb_try++;
-    }
+	debug("ABSTRCT.multi_check_serial() -> check serial iteration: ", nb_try);
+	while( !MB_check_serial() && nb_try < nb_max_try ) {
+		nb_try++;
+		debug("ABSTRCT.multi_check_serial(): -> check serial iteration: ", nb_try);
+	}
 
-    return nb_try != nb_max_try;
-}
-
-void debug(String message){
-    if(DEBUG){
-        Serial.print(message);
-    }
-}
-
-void debugln(String message){
-    if(DEBUG){
-        Serial.println(message);
-    }
+	return nb_try != nb_max_try;
 }
 
 /**
@@ -104,9 +116,9 @@ void debugln(String message){
 bool is_topic_registered(const char* topic_name) {
 
     for(int i=0; i < NB_MAX_DICTIONNARY; i++){
-        if(my_topic_dictionnary[i].topic_name == topic_name){
-            return true;
-        }
+	  if(my_topic_dictionnary[i].topic_name == topic_name){
+		return true;
+	  }
     }
     return false;
 }
@@ -139,33 +151,35 @@ bool is_topic_registered(const char* topic_name) {
  * @return ACCEPTED if a correct response is received, else REJECTED.
  **/
 int ABSTRCT_init() {
-    
-    int nb_try = 1;
-    long time = 0;
-    int radius = 0;
 
-    // first try to search a gateway
-    mqttsn.MQTTSN_searchgw(radius);
+	int nb_try = 0;
+	long time = 0;
+	int radius = 0;
 
-    while( !MB_check_serial() && nb_try <= MAX_TRY) {
-        // the gateway did not respond, let's try again after a delay
-        nb_try++;
-        delay(1000);
-        mqttsn.MQTTSN_searchgw(radius);
-    }
-    if( nb_try == MAX_TRY) {
-        return REJECTED;
-    }
+	debug("ABSTRCT_init() -> first try to search a gateway");
+	mqttsn.MQTTSN_searchgw(radius);
 
-    // parsing the received data
-    MB_parse_data();
+	while( !MB_check_serial() && nb_try < MAX_TRY) {
+		debug("ABSTRCT_init() -> the gateway did not respond, iteration: ", nb_try);
+		nb_try++;
+		// delay(1000);
+		mqttsn.MQTTSN_searchgw(radius);
+	}
 
-    // checking the response from the gateway
-    if(init_ok) {
-        return ACCEPTED;
-    } else {
-        return REJECTED;
-    }
+	if( nb_try == MAX_TRY) {
+		debug("ABSTRCT_init() -> REJECTED");
+		return REJECTED;
+	}
+
+	debug("ABSTRCT_init() -> parsing the received data");
+	MB_parse_data();
+
+	debug("ABSTRCT_init() -> checking the response from the gateway");
+	if(init_ok) {
+		return ACCEPTED;
+	} else {
+		return REJECTED;
+	}
 }
 
 /**
@@ -175,19 +189,20 @@ int ABSTRCT_init() {
  **/
 int ABSTRCT_connect(const char* module_name) {
 
-    // send a connect message
-    mqttsn.MQTTSN_connect(FLAG, KEEP_ALIVE, module_name);
+	debug("ABSTRCT_connect() -> send a connect message");
+	mqttsn.MQTTSN_connect(FLAG, KEEP_ALIVE, module_name);
 
-    // waiting for a response
-    if( !multi_check_serial(MAX_TRY) ) {
-        return REJECTED;
-    }
-    
-    // parsing the received data
-    MB_parse_data();
+	debug("ABSTRCT_connect() -> waiting for a response");
+	if( !multi_check_serial(MAX_TRY) ) {
+		debug("ABSTRCT_connect() -> check serial rejected");
+		return REJECTED;
+	}
 
-    // the parsed response from the gateway
-    return connack_return_code;
+	debug("ABSTRCT_connect() -> parsing the received data");
+	MB_parse_data();
+
+	debug("ABSTRCT_connect() -> the parsed response from the gateway ", connack_return_code);
+	return connack_return_code;
 }
 
 /**
@@ -200,60 +215,59 @@ int ABSTRCT_connect(const char* module_name) {
  **/
 int ABSTRCT_subscribe(const char* topic_name) {
 
-    /**
+	/**
      * @deprecated
     if(mqttsn.MQTTSN_find_topic_id(topic_name) == -1) {
-        Serial.println("Topic not registered yet!");
+	  Serial.println("Topic not registered yet!");
      */
-        if(ABSTRCT_register(topic_name) != ACCEPTED) {
-            Serial.println("ABSTRACT - REJECTED");
-            return REJECTED;
-        }
-    /** } */
+	if(ABSTRCT_register(topic_name) != ACCEPTED) {
+		Serial.println("ABSTRACT - REJECTED");
+		return REJECTED;
+	}
+	/** } */
 
 
-    /**
+	/**
      * @todo BEGIN: DEBUG
     mqttsn.subscribe_by_name(FLAG, topic_name);
     while(mqttsn.wait_for_suback()){
-        CheckSerial();
+	  CheckSerial();
     }
     delay(1000);
     return suback_return_code;
     * @todo END: DEBUG
     **/
-    Serial.println("ABSTRACT_subscribe: ACCEPTED");
-    return ACCEPTED;
+	Serial.println("ABSTRACT_subscribe: ACCEPTED");
+	return ACCEPTED;
 }
 
 int ABSTRCT_register(const char* topic_name) {
 
-    debug("Request to register the @topic_name: ");
-    debugln(topic_name);
-    int res_register_topic = mqttsn.MQTTSN_register_topic(topic_name);
+	debug("Request to register the @topic_name: ", topic_name);
+	int res_register_topic = mqttsn.MQTTSN_register_topic(topic_name);
 
-    if(res_register_topic == -1) {
+	if(res_register_topic == -1) {
 
-        debugln("Request to register topic is sent, waiting for a response");
+		debug("Request to register topic is sent, waiting for a response");
 
-        // waiting for a response
-        if( !multi_check_serial(MAX_TRY) ) {
-            return REJECTED;
-        }
+		// waiting for a response
+		if( !multi_check_serial(MAX_TRY) ) {
+			return REJECTED;
+		}
 
-        // parsing the received data
-        MB_parse_data();
+		// parsing the received data
+		MB_parse_data();
 
-        return regack_return_code;
-    }
+		return regack_return_code;
+	}
 
-    if(res_register_topic == -2) {
-        debugln("It is not possible to register the @topic_name");
-        return REJECTED;
-    } else {
-        debugln("ABSTRCT_register()->res_register_topic >= 0, the @topic_name is already registered");
-        return ACCEPTED;
-    }
+	if(res_register_topic == -2) {
+		debug("It is not possible to register the @topic_name");
+		return REJECTED;
+	} else {
+		debug("ABSTRCT_register()->res_register_topic >= 0, the @topic_name is already registered");
+		return ACCEPTED;
+	}
 }
 
 /**
@@ -265,56 +279,56 @@ int ABSTRCT_register(const char* topic_name) {
  *
 int topic_id_for_topic_name(const char* topic_name){
     for(int i=0;i<sizeof(my_topic_dictionnary)/sizeof(topic_dictionnary);i++){
-        if(my_topic_dictionnary[i].topic_name == topic_name){
-            return my_topic_dictionnary[i].topic_id;
-        }
+	  if(my_topic_dictionnary[i].topic_name == topic_name){
+		return my_topic_dictionnary[i].topic_id;
+	  }
     }
     return -1;
 }
  */
 
 int sn_publish(String message, const char* topic_name){
-    /**
+	/**
      * @todo BEGIN: DEBUG
      **/
-    /*
+	/*
     int topic_id;
     if(!is_topic_registered(topic_name)){
-        if(ABSTRCT_register(topic_name) != ACCEPTED){
-            return REJECTED;
-        }else{
-            sn_publish(message, topic_name);
-        }
+	  if(ABSTRCT_register(topic_name) != ACCEPTED){
+		return REJECTED;
+	  }else{
+		sn_publish(message, topic_name);
+	  }
     }
     topic_id = topic_id_for_topic_name(topic_name);
     if(topic_id == -1){
-        return REJECTED;
+	  return REJECTED;
     }
     mqttsn.MQTTSN_publish(FLAG, topic_id, message.c_str(), message.length());
     while(mqttsn.MQTTSN_wait_for_puback()){
-        CheckSerial();
+	  CheckSerial();
     }
     delay(1000);
     return puback_return_code;
     */
-    return ACCEPTED;
-    /**
+	return ACCEPTED;
+	/**
      * @todo BEGIN: DEBUG
      **/
 }
 
 void sn_disconnect(){
-    mqttsn.MQTTSN_disconnect(0);
-    delay(1000);
+	mqttsn.MQTTSN_disconnect(0);
+	delay(1000);
 }
 
 String sn_get_message_from_subscribed_topics(){
-    message = "";
-    mqttsn.MQTTSN_pingreq(MODULE_NAME);
-    while(mqttsn.MQTTSN_wait_for_pingresp()){
-        CheckSerial();
-    }
-    delay(1000);
-    return message;
+	message = "";
+	mqttsn.MQTTSN_pingreq(MODULE_NAME);
+	while(mqttsn.MQTTSN_wait_for_pingresp()){
+		CheckSerial();
+	}
+	delay(1000);
+	return message;
 }
 

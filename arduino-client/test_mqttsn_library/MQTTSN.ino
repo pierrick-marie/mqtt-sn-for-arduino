@@ -46,8 +46,7 @@ void MQTTSN_gwinfo_handler(const msg_gwinfo* message) {
  */
 void MQTTSN_connack_handler( const msg_connack* message ) {
 
-    debug("Entering connack ");
-    debugln(MB_string_from_return_code(message->return_code));
+    debug("Entering connack ", MB_string_from_return_code(message->return_code));
     // save the return code
     connack_return_code = message->return_code;
 }
@@ -61,8 +60,7 @@ void MQTTSN_connack_handler( const msg_connack* message ) {
  */
 void MQTTSN_regack_handler(const msg_regack* msg){
 
-    debug("Entering regack ");
-    debugln(MB_string_from_return_code(msg->return_code));
+    debug("Entering regack: ", MB_string_from_return_code(msg->return_code));
     regack_return_code = msg->return_code;
     /**
      * @deprecated
@@ -74,14 +72,12 @@ void MQTTSN_regack_handler(const msg_regack* msg){
 }
 
 void MQTTSN_suback_handler(const msg_suback* msg){
-    debug("Entering suback ");
-    debugln(MB_string_from_return_code(msg->return_code));
+    debug("Entering suback ", MB_string_from_return_code(msg->return_code));
     suback_return_code = msg->return_code;
 }
 
 void MQTTSN_puback_handler(const msg_puback* msg){ 
-    debug("Entering puback ");
-    debugln(MB_string_from_return_code(msg->return_code));
+    debug("Entering puback ", MB_string_from_return_code(msg->return_code));
     puback_return_code   = msg->return_code;
 }
 
@@ -95,7 +91,7 @@ void MQTTSN_publish_handler(const msg_publish* msg){
 }
 
 void MQTTSN_pingresp_handler(){ 
-    debugln("Entering pingresp");
+    debug("Entering pingresp");
 }
 
 void MQTTSN_reregister_handler(msg_reregister const*){
