@@ -1,8 +1,7 @@
-src/gateway/build/
-src/gateway/bin/
-
-.idea/*
+gateway/bin/*
+gateway/lib/*
 gateway/.idea/*
+.idea/*
 
 *.class
 *.iml

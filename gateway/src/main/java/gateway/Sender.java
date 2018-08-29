@@ -1,59 +1,75 @@
 package gateway;
 
 import mqttsn.Utils;
+import utils.Log;
 
 /**
  * Created by arnaudoglaza on 04/07/2017.
  */
 public class Sender extends Thread {
 
-    byte[] add64;
-    byte[] add16;
-    Message message;
+    private final byte[] address64;
+    private final byte[] address16;
+    private final Message message;
 
-    public Sender(byte[] add64, byte[] add16, Message message) {
-        this.add64=add64;
-        this.add16=add16;
-        this.message=message;
+    public Sender(byte[] address64, byte[] address16, Message message) {
+
+        this.address64 = address64;
+        this.address16 = address16;
+        this.message = message;
     }
 
-    public void sendMessage(Message msg){
-        byte[] ret=new byte[7+msg.getBody().length()];
-        ret[0]=(byte)ret.length;
-        ret[1]=(byte)0x0C;
-        ret[2]=(byte)0x00;
-        System.out.println(msg.getTopic());
-        ret[3]= Utils.getTopicId(msg.getTopic())[0];
-        ret[4]=Utils.getTopicId(msg.getTopic())[1];
-        int msgID=Main.getMessageId();
-        //System.out.println("Send message with MessageId "+MessageId);
-        if(msgID>255){
-            ret[5]= (byte) (msgID/256);
-            ret[6]= (byte) (msgID%256);
-        }else{
-            ret[5]=(byte)0x00;
-            ret[6]= (byte) msgID;
+    public void sendMessage(){
+
+        byte[] serialMessage = new byte[7+message.getBody().length()];
+        byte[] data = message.getBody().getBytes();
+        int nbTry = 0;
+        // for loop
+        int i;
+
+        // creating the serial message to send
+
+        serialMessage[0] = (byte)serialMessage.length;
+        serialMessage[1] = (byte)0x0C;
+        serialMessage[2] = (byte)0x00;
+
+        Log.print( "Sender.sendMessage() topic => " + message.getTopic() );
+
+        serialMessage[3] = Utils.getTopicId(message.getTopic())[0];
+        serialMessage[4] = Utils.getTopicId(message.getTopic())[1];
+
+        if( Main.MessageId > 255 ) {
+            serialMessage[5] = (byte) (Main.MessageId / 256);
+            serialMessage[6] = (byte) (Main.MessageId % 256);
+        } else {
+            serialMessage[5] = (byte)0x00;
+            serialMessage[6] = (byte) Main.MessageId;
         }
-        byte[] data=msg.getBody().getBytes();
-        for(int i=0;i<msg.body.length();i++)
-            ret[7+i]=data[i];
-        Serial.write(Main.SerialPort, add64, add16, ret);
-        int cpt=0;
-        while(cpt<10 && !Main.MessageIdAck.contains(msgID)){
+
+        for(i=0; i < message.body.length(); i++) {
+            serialMessage[7 + i] = data[i];
+        }
+        // sending the message
+        Serial.write(Main.SerialPort, address64, address16, serialMessage);
+
+        // waiting for an acquittal
+        while( nbTry < 10 && !Main.MessageIdAck.contains(Main.MessageId) ) {
             try {
                 Thread.sleep(1000);
-                cpt++;
+                nbTry++;
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
-        if(!Main.MessageIdAck.contains(msgID)){
-            //System.out.println("Resend message");
-            sendMessage(msg);
+
+        // the message has not been acquit -> resend
+        if( !Main.MessageIdAck.contains(Main.MessageId) ){
+            Log.debug("Resend the message");
+            sendMessage();
         }
     }
 
     public void run() {
-        sendMessage(message);
+        sendMessage();
     }
 }
