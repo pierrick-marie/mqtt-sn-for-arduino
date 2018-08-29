@@ -46,7 +46,13 @@ void setup() {
     // if(!ABSTRCT_is_topic_registered(TOPIC_SUB)){
     //  Serial.println("TOPIC NOT REGISTERED");
       if(ABSTRCT_subscribe(TOPIC_SUB) == ACCEPTED){
-        Serial.println("Sn_subscribe Ok");
+        Serial.println("Sn_subscribe Ok - TOPIC IS REGISTERED");
+      } else {
+        Serial.println("TOPIC NOT REGISTERED");
+      }
+
+      if(ABSTRCT_subscribe("POW POW POW") == ACCEPTED){
+        Serial.println("Sn_subscribe Ok - TOPIC IS REGISTERED");
       } else {
         Serial.println("TOPIC NOT REGISTERED");
       }

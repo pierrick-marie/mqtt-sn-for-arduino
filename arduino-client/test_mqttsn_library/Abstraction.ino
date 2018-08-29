@@ -8,35 +8,37 @@
 #define MAX_TRY 5
 #define NB_MAX_DICTIONNARY 10
 
-/*
+/**
  * The structure of a dictionnary
- * @DEPRECATED @SEE:mqttsn-messages.TopicTable
+ * @deprecated @see:mqttsn-messages.TopicTable
  *
 typedef struct {
     int topic_id;
     char* topic_name;
 } topic_dictionnary;
- */
+ **/
 
+/* The code received after a connect message */
 int connack_return_code;
+/* The code received after a subscribe or register message */
 int regack_return_code;
 int suback_return_code;
 int puback_return_code;
 String message;
 
-/*
+/**
  * List of registered topics
- * @DEPRECATED @SEE:mqttsn-messages.TopicTable
+ * @deprecated @see:mqttsn-messages.TopicTable
  *
 topic_dictionnary my_topic_dictionnary[NB_MAX_DICTIONNARY];
- */
+ **/
 
-/*
+/**
  * Number of registered topic
- * @DEPRECATED @SEE:mqttsn-messages.TopicTable
+ * @deprecated @see:mqttsn-messages.TopicTable
  *
 int nb_topic_registered = 0;
- */
+ **/
 
 /* To check if the first message from the gateway have been received */
 bool init_ok = false; 
@@ -64,10 +66,9 @@ bool init_ok = false;
  **/
 
 /**
- * The function calls @MB_check_serial until @nb_max_try have been reach or a response from the gateway have been received.
- *
- * Returns:
- * True if a response is received before @nb_max_try, else false.
+ * @brief multi_check_serial The function calls @MB_check_serial until @nb_max_try have been reach or a response from the gateway have been received.
+ * @param nb_max_try The maximum number of try @MB_check_serial before the time out.
+ * @return True if a respense is received, else false.
  **/
 bool multi_check_serial(const int nb_max_try) {
 
@@ -78,6 +79,18 @@ bool multi_check_serial(const int nb_max_try) {
     }
 
     return nb_try != nb_max_try;
+}
+
+void debug(String message){
+    if(DEBUG){
+        Serial.print(message);
+    }
+}
+
+void debugln(String message){
+    if(DEBUG){
+        Serial.println(message);
+    }
 }
 
 /**
@@ -97,7 +110,7 @@ bool is_topic_registered(const char* topic_name) {
     }
     return false;
 }
- */
+ **/
 
 /**
  *
@@ -122,10 +135,8 @@ bool is_topic_registered(const char* topic_name) {
  **/
 
 /**
- * The init function searches a gateway with a radius = 0.
- *
- * Return:
- * ACCEPTED if a correct response is received, else REJECTED.
+ * @brief ABSTRCT_init The init function searches a gateway with a radius = 0.
+ * @return ACCEPTED if a correct response is received, else REJECTED.
  **/
 int ABSTRCT_init() {
     
@@ -158,29 +169,9 @@ int ABSTRCT_init() {
 }
 
 /**
- * Function called after receiving the first message from the gateway
- * MQTT-SN.searchGW =>
- * <= MQTT-SN.GWinfo
- *
- * Arguments:
- * @message the message sent by the gateway (@see:mqttsn.h->struct msg_gwinfo)
- **/
-void MQTTSN_gwinfo_handler(const msg_gwinfo* message) {
-
-    // 1: magic number, get the code of the gateway
-    if( message->gw_id == 1 ) {
-        init_ok = true;
-    } else {
-        init_ok = false;
-    }
-}
-
-/**
- * The funtion tries to connect the module to the gateway. Arguments:
- * @module_name the name of the module used to make the connection
- *
- * Return:
- * ACCEPTED if a correct response is received, else REJECTED.
+ * @brief ABSTRCT_connect The funtion tries to connect the module to the gateway.
+ * @param module_name The name of the module used to make the connection
+ * @return ACCEPTED if a correct response is received, else REJECTED.
  **/
 int ABSTRCT_connect(const char* module_name) {
 
@@ -200,65 +191,78 @@ int ABSTRCT_connect(const char* module_name) {
 }
 
 /**
- * Function called after receiving a connack message.
- * MQTT-SN.connect =>
- * <= MQTT-SN.connack
+ * @brief ABSTRCT_subscribe Function used to subscribe to a @topic_name.
  *
- * Arguments:
- * @message the message sent by the gateway (@see:mqttsn.h->struct msg_connack)
- **/
-void MQTTSN_connack_handler( const msg_connack* message ) {
-
-    debug("Entering connack ");
-    debugln(MB_string_from_return_code(message->return_code));
-    // save the return code
-    connack_return_code = message->return_code;
-}
-
-/**
  *
+ *
+ * @param topic_name The name of the topic to subscribre.
+ * @return ACCEPTED if the sucbribe operation is OK, else REJECTED.
  **/
 int ABSTRCT_subscribe(const char* topic_name) {
 
-    // @TODO
+    /**
+     * @deprecated
     if(mqttsn.MQTTSN_find_topic_id(topic_name) == -1) {
         Serial.println("Topic not registered yet!");
+     */
         if(ABSTRCT_register(topic_name) != ACCEPTED) {
             Serial.println("ABSTRACT - REJECTED");
             return REJECTED;
         }
-    }
-    /*
-     * TODO Old code
+    /** } */
+
+
+    /**
+     * @todo BEGIN: DEBUG
     mqttsn.subscribe_by_name(FLAG, topic_name);
     while(mqttsn.wait_for_suback()){
         CheckSerial();
     }
     delay(1000);
     return suback_return_code;
-    */
-    // TODO !
-    Serial.println("ABSTRACT - ACCEPTED");
+    * @todo END: DEBUG
+    **/
+    Serial.println("ABSTRACT_subscribe: ACCEPTED");
     return ACCEPTED;
 }
 
 int ABSTRCT_register(const char* topic_name) {
 
-    // Create and send a message to register the @topic_name
-    mqttsn.MQTTSN_register_topic(topic_name);
-    // my_topic_dictionnary[nb_topic_registered].topic_name = topic_name;
-    // TODO : END OF WORK 28/08/2018
-    while(mqttsn.MQTTSN_wait_for_response()){
-        CheckSerial();
+    debug("Request to register the @topic_name: ");
+    debugln(topic_name);
+    int res_register_topic = mqttsn.MQTTSN_register_topic(topic_name);
+
+    if(res_register_topic == -1) {
+
+        debugln("Request to register topic is sent, waiting for a response");
+
+        // waiting for a response
+        if( !multi_check_serial(MAX_TRY) ) {
+            return REJECTED;
+        }
+
+        // parsing the received data
+        MB_parse_data();
+
+        return regack_return_code;
     }
-    //Serial.print("Regack_return_code ");
-    //Serial.println(regack_return_code);
-    //Serial.print("Regack_topic_id ");
-    //Serial.println(my_topic_dictionnary[nb_topic_registered-1].topic_id);
-    delay(1000);
-    return regack_return_code;
+
+    if(res_register_topic == -2) {
+        debugln("It is not possible to register the @topic_name");
+        return REJECTED;
+    } else {
+        debugln("ABSTRCT_register()->res_register_topic >= 0, the @topic_name is already registered");
+        return ACCEPTED;
+    }
 }
 
+/**
+ * @brief topic_id_for_topic_name
+ * @param topic_name
+ * @return
+ *
+ * @deprecated
+ *
 int topic_id_for_topic_name(const char* topic_name){
     for(int i=0;i<sizeof(my_topic_dictionnary)/sizeof(topic_dictionnary);i++){
         if(my_topic_dictionnary[i].topic_name == topic_name){
@@ -267,9 +271,13 @@ int topic_id_for_topic_name(const char* topic_name){
     }
     return -1;
 }
-
+ */
 
 int sn_publish(String message, const char* topic_name){
+    /**
+     * @todo BEGIN: DEBUG
+     **/
+    /*
     int topic_id;
     if(!is_topic_registered(topic_name)){
         if(ABSTRCT_register(topic_name) != ACCEPTED){
@@ -288,6 +296,11 @@ int sn_publish(String message, const char* topic_name){
     }
     delay(1000);
     return puback_return_code;
+    */
+    return ACCEPTED;
+    /**
+     * @todo BEGIN: DEBUG
+     **/
 }
 
 void sn_disconnect(){
@@ -305,61 +318,3 @@ String sn_get_message_from_subscribed_topics(){
     return message;
 }
 
-void debug(String message){
-    if(DEBUG){
-        Serial.print(message);
-    }
-}
-
-void debugln(String message){
-    if(DEBUG){
-        Serial.println(message);
-    }
-}
-
-void MQTTSN_regack_handler(const msg_regack* msg){ 
-    debug("Entering regack ");
-    debugln(MB_string_from_return_code(msg->return_code));
-    regack_return_code = msg->return_code;
-    if(msg->return_code == ACCEPTED){
-        my_topic_dictionnary[nb_topic_registered].topic_id = msg->topic_id;
-        nb_topic_registered++;
-    }
-}
-
-void MQTTSN_suback_handler(const msg_suback* msg){
-    debug("Entering suback ");
-    debugln(MB_string_from_return_code(msg->return_code));
-    suback_return_code = msg->return_code;
-}
-
-void MQTTSN_puback_handler(const msg_puback* msg){ 
-    debug("Entering puback ");
-    debugln(MB_string_from_return_code(msg->return_code));
-    puback_return_code   = msg->return_code;
-}
-
-void MQTTSN_disconnect_handler(const msg_disconnect* msg){
-    //handler gérant une déconnection
-}
-
-void MQTTSN_publish_handler(const msg_publish* msg){ 
-    //handler gérant un message reçu
-    message = msg->data;
-}
-
-void MQTTSN_pingresp_handler(){ 
-    debugln("Entering pingresp");
-}
-
-void MQTTSN_reregister_handler(msg_reregister const*){
-    //RESERVERD
-}
-
-void MQTTSN_willtopicreq_handler(const message_header* msg){ 
-    //handler permettant la création d'un nom de topic pour le testament
-}
-
-void MQTTSN_willmsgreq_handler(const message_header* msg){ 
-    //handler permettant la création d'un message testament
-}
