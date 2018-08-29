@@ -110,8 +110,6 @@ void MQTTSN::MQTTSN_pubcomp() {
 /**
  * parse_stream(buf, len) is called at the end of the function CheckSerial() in _MeshBee.ino.
  * CheckSerial() gets all incoming data from the gateway and call parse_stream with the buffer of data (@buf) and it's size (@len).
- *
- *
  **/
 void MQTTSN::MQTTSN_parse_stream(uint8_t* buf, uint16_t len) {
 
@@ -120,12 +118,17 @@ void MQTTSN::MQTTSN_parse_stream(uint8_t* buf, uint16_t len) {
     }
     memset(ResponseBuffer, 0, MAX_BUFFER_SIZE);
     memcpy(ResponseBuffer, (const void*)buf, len);
+
     // WaitingForResponse is set to false to allow another request
     WaitingForResponse = false;
     dispatch();
 }
 #endif
 
+/**
+ * @brief MQTTSN::MQTTSN_searchgw The function sends a message to the search the closest gateway arround @radius scale.
+ * @param radius The max hop to search an available gateway.
+ **/
 void MQTTSN::MQTTSN_searchgw(const uint8_t radius) {
     
     msg_searchgw* msg = reinterpret_cast<msg_searchgw*>(MessageBuffer);
@@ -136,36 +139,86 @@ void MQTTSN::MQTTSN_searchgw(const uint8_t radius) {
 
     send_message();
     
+    // Waiting a response, set to false in @MQTTSN_parse_stream()
     WaitingForResponse = true;
 }
 
-bool MQTTSN::MQTTSN_register_topic(const char* topicName) {
-
-    // WaitingForResponse is set to false in function @MQTTSN_parse_stream. As a consequence, in nominal case, it should be equals to false.
-    if (!WaitingForResponse && TopicCount < (MAX_TOPICS)) {
-        MessageId++;
-
-        // Fill in the next table entry, but we only increment the counter to
-        // the next topic when we get a REGACK from the broker. So don't issue
-        // another REGISTER until we have resolved this one.
-        TopicTable[TopicCount].name = topicName;
-        TopicTable[TopicCount].id = 0xffff;
-
-        msg_register* msg = reinterpret_cast<msg_register*>(MessageBuffer);
-
-        msg->length = sizeof(msg_register) + strlen(topicName);
-        msg->type = REGISTER;
-        msg->topic_id = 0;
-        msg->message_id = bswap(MessageId);
-        strcpy(msg->topic_name, topicName);
-        send_message();
-        WaitingForResponse = true;
-        return true;
-    }
-
-    return false;
+extern void MQTTSN_gwinfo_handler(const msg_gwinfo* msg);
+void MQTTSN::gwinfo_handler(const msg_gwinfo* msg) {
+    MQTTSN_gwinfo_handler(msg);
 }
 
+bool MQTTSN::MQTTSN_connected() {
+    return Connected;
+}
+
+extern void MQTTSN_connack_handler(const msg_connack* msg);
+void MQTTSN::connack_handler(const msg_connack* msg) {
+    Connected = true;
+    MQTTSN_connack_handler(msg);
+}
+
+/**
+ * @brief MQTTSN::MQTTSN_register_topic The function asks to the gateway to register a @topic_name.
+ * @param topicName The topic name to register.
+ *
+ * @return
+ *      -2 if it is not possible to register the @topic_name.
+ *      -1 if the message to register @topic_name is sent.
+ *      >= 0 the id of the @topic_name already registered.
+ *
+ **/
+int MQTTSN::MQTTSN_register_topic(const char* topic_name) {
+
+    // WaitingForResponse is set to false in function @MQTTSN_parse_stream.
+    // As a consequence, in nominal case, it should be equals to false.
+    if (WaitingForResponse) {
+        debug("MQTTSN_register_topic => WaitingForResponse is true");
+        return -2;
+    }
+
+    if(TopicCount >= MAX_TOPICS) {
+        debug("MQTTSN_register_topic => TopicCount > MAX_TOPICS");
+        return -2;
+    }
+
+    int topic_id = find_topic_id(topic_name);
+    if(topic_id != -1) {
+        debug("MQTTSN_register_topic => topic_name is already regitered");
+        return topic_id;
+    }
+
+    // Fill in the next table entry, but we only increment the counter to
+    // the next topic when we get a REGACK from the broker. So don't issue
+    // another REGISTER until we have resolved this one.
+    // @topic_name is save now because it will be lost at the end of this function.
+    TopicTable[TopicCount].name = topic_name;
+    // A magic number while the gateway respond: @see:regack_handler()
+    TopicTable[TopicCount].id = DEFAULT_TOPIC_ID;
+
+    msg_register* msg = reinterpret_cast<msg_register*>(MessageBuffer);
+    MessageId++;
+    msg->length = sizeof(msg_register) + strlen(topic_name);
+    msg->type = REGISTER;
+    msg->topic_id = 0;
+    msg->message_id = bswap(MessageId);
+    strcpy(msg->topic_name, topic_name);
+    send_message();
+
+    debug("Register topic message is sent");
+
+    // Waiting a response, set to false in @MQTTSN_parse_stream()
+    WaitingForResponse = true;
+
+    return -1;
+}
+
+/**
+ * @brief MQTTSN::MQTTSN_wait_for_response
+ * @return
+ *
+ * @todo DEBUG
+ **/
 bool MQTTSN::MQTTSN_wait_for_response() {
     
     if (WaitingForResponse) {
@@ -188,6 +241,12 @@ bool MQTTSN::MQTTSN_wait_for_response() {
     return WaitingForResponse;
 }
 
+/**
+ * @brief MQTTSN::MQTTSN_wait_for_response
+ * @return
+ *
+ * @todo DEBUG
+ **/
 bool MQTTSN::MQTTSN_wait_for_suback() {
     if (WaitingForSuback) {
         // TODO: Watch out for overflow.
@@ -208,6 +267,12 @@ bool MQTTSN::MQTTSN_wait_for_suback() {
     return WaitingForSuback;
 }
 
+/**
+ * @brief MQTTSN::MQTTSN_wait_for_response
+ * @return
+ *
+ * @todo DEBUG
+ **/
 bool MQTTSN::MQTTSN_wait_for_puback() {
     if (WaitingForPuback) {
         // TODO: Watch out for overflow.
@@ -228,6 +293,12 @@ bool MQTTSN::MQTTSN_wait_for_puback() {
     return WaitingForPuback;
 }
 
+/**
+ * @brief MQTTSN::MQTTSN_wait_for_response
+ * @return
+ *
+ * @todo DEBUG
+ **/
 bool MQTTSN::MQTTSN_wait_for_pingresp() {
     if (WaitingForPingresp) {
         // TODO: Watch out for overflow.
@@ -248,21 +319,6 @@ bool MQTTSN::MQTTSN_wait_for_pingresp() {
     return WaitingForPingresp;
 }
 
-bool MQTTSN::MQTTSN_connected() {
-    return Connected;
-}
-
-extern void MQTTSN_gwinfo_handler(const msg_gwinfo* msg);
-void MQTTSN::gwinfo_handler(const msg_gwinfo* msg) {
-    MQTTSN_gwinfo_handler(msg);
-}
-
-extern void MQTTSN_connack_handler(const msg_connack* msg);
-void MQTTSN::connack_handler(const msg_connack* msg) {
-    Connected = true;
-    MQTTSN_connack_handler(msg);
-}
-
 extern void MQTTSN_willtopicreq_handler(const message_header* msg);
 void MQTTSN::willtopicreq_handler(const message_header* msg) {
     MQTTSN_willtopicreq_handler(msg);
@@ -273,19 +329,6 @@ void MQTTSN::willmsgreq_handler(const message_header* msg) {
     MQTTSN_willmsgreq_handler(msg);
 }
 
-extern void MQTTSN_regack_handler(const msg_regack* msg);
-void MQTTSN::regack_handler(const msg_regack* msg) {
-    if (msg->return_code == 0 && TopicCount < MAX_TOPICS && bswap(msg->message_id) == MessageId) {
-        TopicTable[TopicCount].id = bswap(msg->topic_id);
-        TopicCount++;
-        MQTTSN_regack_handler(msg);
-    }
-}
-
-extern void MQTTSN_reregister_handler(const msg_reregister* msg);
-void MQTTSN::reregister_handler(const msg_reregister* msg) {
-    MQTTSN_reregister_handler(msg);
-}
 
 extern void MQTTSN_puback_handler(const msg_puback* msg);
 void MQTTSN::puback_handler(const msg_puback* msg) {
@@ -365,22 +408,6 @@ void MQTTSN::MQTTSN_unsubscribe_by_id(const uint8_t flags, const uint16_t topic_
     if ((flags & QOS_MASK) == FLAG_QOS_1 || (flags & QOS_MASK) == FLAG_QOS_2) {
         WaitingForResponse = true;
     }
-}
-
-/**
- * @brief MQTTSN::MQTTSN_find_topic_id The function search the index of a @topicName within @TopicTable list.
- * @param topicName The name of the topic to search.
- * @return The index of the topic or -1 if not found.
- */
-uint16_t MQTTSN::MQTTSN_find_topic_id(const char* topicName) {
-    for (uint8_t i = 0; i < TopicCount; ++i) {
-        if (strcmp(TopicTable[i].name, topicName) == 0 && TopicTable[i].id != 0xffff) {
-            *index = i;
-            return TopicTable[i].id;
-        }
-    }
-
-    return -1;
 }
 
 void MQTTSN::MQTTSN_unsubscribe_by_name(const uint8_t flags, const char* topic_name) {

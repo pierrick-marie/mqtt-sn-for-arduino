@@ -32,12 +32,15 @@ THE SOFTWARE.
 #define MAX_TOPICS 10
 #define MAX_BUFFER_SIZE 66
 
+#define DEBUG true
+
+#define DEFAULT_TOPIC_ID 0xffff
+
 class MQTTSN {
 public:
     MQTTSN();
     virtual ~MQTTSN();
 
-    uint16_t MQTTSN_find_topic_id(const char* name);
     bool MQTTSN_wait_for_response();
     bool MQTTSN_wait_for_suback();
     bool MQTTSN_wait_for_puback();
@@ -52,7 +55,7 @@ public:
     void MQTTSN_connect(const uint8_t flags, const uint16_t duration, const char* client_id);
     void MQTTSN_will_topic(const uint8_t flags, const char* will_topic, const bool update = false);
     void MQTTSN_will_messsage(const void* will_msg, const uint8_t will_msg_len, const bool update = false);
-    bool MQTTSN_register_topic(const char* name);
+    int MQTTSN_register_topic(const char* name);
     void MQTTSN_publish(const uint8_t flags, const uint16_t topic_id, const void* data, const uint8_t data_len);
 
 #ifdef USE_QOS2
@@ -100,12 +103,14 @@ protected:
 private:
     struct topic {
         const char* name;
-        uint16_t id;
+        short id;
     };
 
     void dispatch();
     uint16_t bswap(const uint16_t val);
     void send_message();
+    short find_topic_id(const char* name);
+    void debug(const String message);
 
     // Set to true when we're waiting for some sort of acknowledgement from the server that will transition our state.
     bool WaitingForResponse;
@@ -113,8 +118,8 @@ private:
     bool WaitingForPuback;
     bool WaitingForPingresp;
     bool Connected;
-    uint16_t MessageId;
-    uint8_t TopicCount;
+    short TopicCount;
+    int MessageId;
 
     uint8_t MessageBuffer[MAX_BUFFER_SIZE];
     uint8_t ResponseBuffer[MAX_BUFFER_SIZE];

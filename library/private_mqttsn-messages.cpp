@@ -86,13 +86,25 @@ void MQTTSN::puback(const uint16_t topic_id, const uint16_t message_id, const re
     send_message();
 }
 
+/**
+ * @brief MQTTSN::register_handler
+ * @param message
+ *
+ * @todo BUG?
+ **/
 void MQTTSN::register_handler(const msg_register* message) {
 
     return_code_t ret = REJECTED_INVALID_TOPIC_ID;
-    uint16_t topic_id = MQTTSN_find_topic_id(message->topic_name);
+    short topic_id = find_topic_id(message->topic_name);
 
-    if (topic_id != 0xffff) {
-        TopicTable[index].id = bswap(message->topic_id);
+    debug("register_handler()");
+    debug("Received topic_name: ");
+    debug(message->topic_name);
+    debug("Found topic id: ");
+    debug(topic_id);
+
+    if (topic_id != DEFAULT_TOPIC_ID) {
+        TopicTable[topic_id].id = bswap(message->topic_id);
         ret = ACCEPTED;
     }
 
@@ -113,17 +125,17 @@ void MQTTSN::pingreq_handler(const msg_pingreq* msg) {
 }
 
 /**
- * @brief MQTTSN::bswap Magic formula (big / little indian?)
- * @param val
- * @return
- */
+ * @brief MQTTSN::bswap Magic formula (big / little indian?).
+ * @param val A number to swap.
+ * @return The swaped number.
+ **/
 uint16_t MQTTSN::bswap(const uint16_t value) {
     return (value << 8) | (value >> 8);
 }
 
 /**
- * dispatch() is called at the end of the function parse_stream.
- * It calls the appropriate function according to the type of the current buffer (@response_buffer).
+ * @brief MQTTSN::dispatch The function is called at the end of the function parse_stream.
+ * It calls the corresponding function according to the message type.
  **/
 void MQTTSN::dispatch() {
 
@@ -206,10 +218,14 @@ void MQTTSN::send_message() {
     message_header* hdr = reinterpret_cast<message_header*>(MessageBuffer);
 
 #ifdef USE_SERIAL
+    // Sending the message stored into @MessageBuffer through @MB_serial_send function
     extern void MB_serial_send(uint8_t* MessageBuffer, int length);
     MB_serial_send(MessageBuffer, hdr->length);
 #endif
 
+    /**
+      * @todo BEGIN: DEBUG
+      **/
     if (!WaitingForResponse) {
         ResponseTimer = millis();
         ResponseRetries = N_RETRY;
@@ -222,16 +238,45 @@ void MQTTSN::send_message() {
         PubackTimer = millis();
         PubackRetries = N_RETRY;
     }
-    /*if (!waiting_for_pingresp) {
-         *        _pingresp_timer = millis();
-         *        _pingresp_retries = N_RETRY;
-}*/
+    /*
+    if (!waiting_for_pingresp) {
+        _pingresp_timer = millis();
+        _pingresp_retries = N_RETRY;
+    }
+     */
+    /**
+      * @todo END: DEBUG
+      **/
 }
 
 void MQTTSN::advertise_handler(const msg_advertise* msg) {
     GatewayId = msg->gw_id;
 }
 
+/**
+ * @brief MQTTSN::debug Print a debug @message prefixed with "DEBUG: " text.
+ * @param message The message to print.
+ */
+void MQTTSN::debug(const String message) {
+    Serial.print("DEBUG: ");
+    Serial.println(message);
+}
+
+/**
+ * @brief MQTTSN::find_topic_id The function search the index of a @topicName within @TopicTable list.
+ * @param topicName The name of the topic to search.
+ * @return The index of the topic or -1 if not found.
+ */
+short MQTTSN::find_topic_id(const char* topic_name) {
+    for (short i = 0; i < TopicCount; i++) {
+        if (TopicTable[i].id != DEFAULT_TOPIC_ID && strcmp(TopicTable[i].name, topic_name) == 0) {
+            debug("TOPIC ID FOUND: " + TopicTable[i].id);
+            return TopicTable[i].id;
+        }
+    }
+
+    return -1;
+}
 
 #ifdef USE_QOS2
 void MQTTSN::pubrec_handler(const msg_pubqos2* msg) {
