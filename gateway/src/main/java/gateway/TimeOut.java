@@ -25,7 +25,7 @@ public class TimeOut implements Runnable, ExceptionListener {
 
     public void start() {
         for(int i=0;i<duration;i++){
-            //System.out.println((duration-i)+" "+Main.AddressClientMap.get(Utils.byteArrayToString(add64))+" "+Main.ClientState.get(Utils.byteArrayToString(add64)));
+            //System.out.println((duration-i)+" "+Main.AddressClientMap.get(Utils.byteArrayToString(address64))+" "+Main.ClientState.get(Utils.byteArrayToString(address64)));
             if(!Main.ClientState.get(Utils.byteArrayToString(add64)).equals("Asleep")){
                 System.out.println(Main.AddressClientMap.get(Utils.byteArrayToString(add64))+" not asleep anymore");
                 return;

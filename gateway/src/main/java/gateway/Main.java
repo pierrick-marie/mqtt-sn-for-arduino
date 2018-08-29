@@ -14,6 +14,8 @@ import java.util.HashMap;
  */
 public class Main {
 
+    public static final Boolean DEBUG = true;
+
     public static int GatewayId = 1;
 
     public final static HashMap<String, MQTT> ClientMap = new HashMap<>();
@@ -27,11 +29,15 @@ public class Main {
     public final static HashMap<String, Boolean> WillTopicAck = new HashMap<>();
     public final static HashMap<String, Boolean> WillMessageAck = new HashMap<>();
 
+    public static final String SERIAL_PORT = "/dev/ttyUSB0";
+    public static final String HOST = "141.115.64.26";
+    public static final Integer PORT = 1883;
+
     public static SerialPort SerialPort = null;
-    private static int MessageId = 0;
+    public static int MessageId = 0;
 
     public static void main(String[] args) {
-        SerialPort = Serial.getSerial("/dev/ttyUSB0");
+        SerialPort = Serial.getSerial(Main.SERIAL_PORT);
     }
 
     /**

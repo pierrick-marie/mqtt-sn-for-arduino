@@ -9,26 +9,27 @@ import utils.Log;
  */
 public class SearchGW extends Thread {
 
-    byte[] add64;
-    byte[] add16;
+    byte[] address64;
+    byte[] address16;
     int radius;
 
-    public SearchGW(byte[] add64, byte[] add16, int radius) {
-        this.add16 = add16;
-        this.add64 = add64;
+    public SearchGW(byte[] address64, byte[] address16, int radius) {
+
+        this.address16 = address16;
+        this.address64 = address64;
         this.radius = radius;
     }
 
     public void searchGW(){
 
-        Log.print(": -> SearchGW");
+        Log.print(" -> SearchGW");
 
         byte[] ret=new byte[3];
         ret[0]=(byte)0x03;
         ret[1]=(byte)0x02;
         ret[2]=(byte) Main.GatewayId;
 
-        Serial.write(Main.SerialPort, add64, add16, ret);
+        Serial.write(Main.SerialPort, address64, address16, ret);
     }
 
     public void run() {

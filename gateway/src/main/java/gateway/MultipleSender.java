@@ -68,7 +68,7 @@ public class MultipleSender extends Thread {
         Serial.write(Main.SerialPort, add64, add16, ret);
         if(Main.ClientState.get(Utils.byteArrayToString(add64)).equals("Awake")) {
             Main.ClientState.put(Utils.byteArrayToString(add64), "Asleep");
-            //System.out.println(Main.AddressClientMap.get(Utils.byteArrayToString(add64))+" goes to sleep");
+            //System.out.println(Main.AddressClientMap.get(Utils.byteArrayToString(address64))+" goes to sleep");
             if(Main.ClientDuration.get(Utils.byteArrayToString(add64)) != null){
                 TimeOut timeOut=new TimeOut(Main.ClientDuration.get(Utils.byteArrayToString(add64)), add64);
                 Threading.thread(timeOut, false);
