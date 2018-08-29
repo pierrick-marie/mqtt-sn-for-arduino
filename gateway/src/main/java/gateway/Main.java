@@ -5,67 +5,49 @@ import mqttsn.*;
 import org.fusesource.mqtt.client.CallbackConnection;
 import org.fusesource.mqtt.client.MQTT;
 
-import javax.xml.bind.DatatypeConverter;
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Array;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 /**
  * Created by arnaudoglaza on 03/07/2017.
  */
 public class Main {
 
-    public static int gwId=1;
-    public static HashMap<String, MQTT> clientMap;
-    public static HashMap<String, String> addressClientMap;
-    public static HashMap<String, String> clientState;
-    public static HashMap<String, Integer> clientDuration;
-    public static HashMap<String, ArrayList<Message>> clientBufferedMessage;
-    public static HashMap<String, CallbackConnection> addressConnectiontMap;
-    public static HashMap<String, Integer> topicName;
-    static int msgID;
-    public static ArrayList<Integer> msgIDack;
-    public static HashMap<String, Boolean> willTopicAck;
-    public static HashMap<String, Boolean> willMessageAck;
+    public static int GatewayId = 1;
 
-    public static SerialPort serialPort;
+    public final static HashMap<String, MQTT> ClientMap = new HashMap<>();
+    public final static HashMap<String, String> AddressClientMap = new HashMap<>();
+    public final static HashMap<String, String> ClientState = new HashMap<>();
+    public final static HashMap<String, Integer> ClientDuration = new HashMap<>();
+    public final static HashMap<String, ArrayList<Message>> ClientBufferedMessage = new HashMap<>();
+    public final static HashMap<String, CallbackConnection> AddressConnectiontMap = new HashMap<>();
+    public final static HashMap<String, Integer> TopicName = new HashMap<>();
+    public final static ArrayList<Integer> MessageIdAck = new ArrayList<>();
+    public final static HashMap<String, Boolean> WillTopicAck = new HashMap<>();
+    public final static HashMap<String, Boolean> WillMessageAck = new HashMap<>();
+
+    public static SerialPort SerialPort = null;
+    private static int MessageId = 0;
 
     public static void main(String[] args) {
-        clientMap=new HashMap<>();
-        clientState=new HashMap<>();
-        addressClientMap=new HashMap<>();
-        addressConnectiontMap=new HashMap<>();
-        clientDuration=new HashMap<>();
-        clientBufferedMessage=new HashMap<>();
-        topicName=new HashMap<>();
-        msgID=0;
-        msgIDack=new ArrayList<>();
-        willTopicAck=new HashMap<>();
-        willMessageAck=new HashMap<>();
-        serialPort=Serial.getSerial("/dev/ttyUSB0");
+        SerialPort = Serial.getSerial("/dev/ttyUSB0");
     }
 
-    static class SerialPortReader implements SerialPortEventListener {
+    public static class SerialPortReader implements SerialPortEventListener {
 
         public void serialEvent(SerialPortEvent event) {
-            int cpt=0;
-            int temp;
-            if(event.isRXCHAR()){
+            int inputBufferSize;
+            int totalInputSize = 0;
+            if( event.isRXCHAR() ) {
                 try {
-                    temp=serialPort.getInputBufferBytesCount();
-                    while(temp>cpt){
-                        cpt=temp;
+                    inputBufferSize = SerialPort.getInputBufferBytesCount();
+                    while( inputBufferSize > totalInputSize ){
+                        totalInputSize = inputBufferSize;
                         Thread.sleep(100);
-                        temp=serialPort.getInputBufferBytesCount();
+                        inputBufferSize = SerialPort.getInputBufferBytesCount();
                     }
-                    byte buffer[] = serialPort.readBytes(cpt);
-                    checkDuplicate(buffer);
+                    checkDuplicate(SerialPort.readBytes(totalInputSize));
                 } catch (SerialPortException e) {
                     e.printStackTrace();
                 } catch (InterruptedException e) {
@@ -77,194 +59,212 @@ public class Main {
         }
     }
 
-    public static int getFirstIndexforByte(byte b, byte[] data){
-        for(int i=1;i<data.length;i++){
-            if(data[i]==b)
-                return i;
-        }
-        return -1;
-    }
-
     public static void checkDuplicate(byte[] buffer) throws URISyntaxException, InterruptedException {
-        /*System.out.println("----------");
-        for(int i=0;i<buffer.length;i++)
-            System.out.print(String.format("%02X", buffer[i],StandardCharsets.UTF_8)+" ");
-        System.out.println("");
-        System.out.println("----------");*/
-        int cpt=getFirstIndexforByte((byte)0X7E, buffer);
-        if(cpt==-1){
-            if(verifyData(buffer))
+
+        int indexOfByte = getFirstIndexforByte((byte)0X7E, buffer);
+
+        if(indexOfByte == -1){
+            if(verifyData(buffer)) {
                 parseData(buffer);
+            }
             return;
         }
-        while(cpt!=-1){
-            byte[]temp=new byte[cpt];
-            byte[]newBuff=new byte[buffer.length-cpt];
-            for(int i=0;i<temp.length;i++){
+
+        // for loop
+        int i;
+
+        while(indexOfByte != -1){
+
+            byte[]temp = new byte[indexOfByte];
+            byte[]newBuff = new byte[buffer.length-indexOfByte];
+
+            for(i=0; i < temp.length; i++){
                 temp[i]=buffer[i];
             }
-            if(verifyData(temp))
+
+            if(verifyData(temp)) {
                 parseData(temp);
-            for(int i=0;i<newBuff.length;i++)
-                newBuff[i]=buffer[cpt+i];
-            buffer=newBuff;
-            cpt=getFirstIndexforByte((byte)0X7E, buffer);
+            }
+
+            for(i=0; i < newBuff.length; i++) {
+                newBuff[i] = buffer[indexOfByte + i];
+            }
+
+            buffer = newBuff;
+            indexOfByte = getFirstIndexforByte((byte)0X7E, buffer);
             Thread.sleep(100);
         }
     }
 
-    public static boolean verifyData(byte[] data){
-        /*System.out.println("----------");
-        for(int i=0;i<data.length;i++)
-            System.out.print(String.format("%02X", data[i],StandardCharsets.UTF_8)+" ");
-        System.out.println("");
-        System.out.println("----------");*/
+    /**
+     * The function returns the index of @searchedByte into @data.
+     *
+     * @param searchedByte The byte to search.
+     * @param data The date to search into the @searchedByte.
+     *
+     * @return The index of @searedByte or -1 if not found.
+     */
+    public static int getFirstIndexforByte(byte searchedByte, byte[] data) {
+
+        for(int i=1; i < data.length; i++){
+            if(data[i] == searchedByte) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    /**
+     * The function checks if the first byte of @data is equals to 0x7E else returns false.
+     * If ok, the functions returns the result of @verifyChecksum()
+     *
+     * @param data The data to verify.
+     * @return True is the @data is OK, else false.
+     */
+    public static boolean verifyData(byte[] data) {
+
         if(data[0] != (byte)0x7E) {
-            //System.err.println("Wrong delimiter: " + String.format("%02X", data[0]));
             return false;
         }
+
         return verifyChecksum(data);
     }
 
-    public static boolean verifyChecksum(byte[] data){
-        int cs=0;
-        for(int i=3;i<data.length;i++) {
-            cs += (data[i]&0xFF);
+    /**
+     * The function verifies the checksum of the @data.
+     *
+     * @param data The data to verify the checksum.
+     * @return True if the checksum is ok, else false.
+     */
+    public static boolean verifyChecksum(byte[] data) {
+
+        int checksum = 0;
+
+        // magic number
+        for(int i=3; i < data.length; i++) {
+            checksum += (data[i]&0xFF);
         }
-        cs= cs&0xFF;
-        if(cs==0xFF)
+        checksum = checksum&0xFF;
+
+        if(checksum == 0xFF) {
             return true;
-        else{
-            /*for(int i=0;i<data.length;i++)
-                System.err.print(String.format("%02X", data[i])+" ");
-            System.err.println("");
-            System.err.println("Wrong Checksum");*/
+        }
+        else {
             return false;
         }
     }
 
     public static void parseData(byte[] data) throws URISyntaxException, InterruptedException {
-        //for(int i=0;i<data.length;i++)
-        //    System.out.print(String.format("%02X", data[i])+" ");
-        //System.out.println("");
-        if(data[3]==(byte)0x8B)
+
+        if(data[3] == (byte)0x8B) {
             return;
-        byte add64[]=new byte[8];
-        byte add16[]=new byte[2];
+        }
+
+        byte address64[]=new byte[8];
+        byte address16[]=new byte[2];
         int payload_length;
         int data_type;
         byte[] payload;
-        for(int i=0;i<8;i++)
-            add64[i]=data[4+i];
-        for(int i=0;i<2;i++)
-            add16[i]=data[12+i];
-        if(data[15]==0x01){
-            payload_length=data[16]*16+data[17];
-            data_type=data[18];
-            payload=new byte[payload_length];
-            for(int i=19;i<data.length;i++)
-                payload[i]=data[i];
-        }else{
-            payload_length=data[15];
-            data_type=data[16];
-            payload=new byte[payload_length];
-            for(int i=0;i<payload_length;i++)
-                payload[i]=data[15+i];
+        byte[] message;
+
+        // for loop
+        int i;
+
+        // Read the first 8 bytes
+        for(i=0; i < 8; i++) {
+            address64[i] = data[4 + i];
         }
-        byte[] msg;
-        switch (data_type){
+
+        // Read the first 2 bytes
+        for(i=0; i < 2; i++) {
+            address16[i] = data[12+i];
+        }
+
+        // check the type of message
+        if(data[15] == 0x01) {
+            payload_length = (data[16] * 16) + data[17];
+            data_type = data[18];
+            payload = new byte[payload_length];
+            for(i=19; i < data.length; i++) {
+                payload[i] = data[i];
+            }
+        } else {
+            payload_length=data[15];
+            data_type = data[16];
+            payload = new byte[payload_length];
+            for(i=0; i < payload_length; i++) {
+                payload[i] = data[15 + i];
+            }
+        }
+
+        // Compute the message for each case of the following switch except for SEARCHGW
+        message = new byte[payload_length-2];
+        for(i=0; i < message.length; i++) {
+            message[i] = payload[2 + i];
+        }
+
+        switch ( data_type ){
             case 0x01:
                 //SEARCHGW
-                SearchGW searchGW=new SearchGW(add64, add16, payload[2]);
+                SearchGW searchGW = new SearchGW(address64, address16, payload[2]);
                 searchGW.start();
-                //Mqttsn.SearchGW(add64, add16, payload[2]);
                 break;
+
             case 0x04:
                 //CONNECT
-                msg=new byte[payload_length-2];
-                for(int i=0;i<msg.length;i++)
-                    msg[i]=payload[2+i];
-                Connect connect=new Connect(add64, add16, msg);
+                Connect connect = new Connect(address64, address16, message);
                 connect.start();
-                //Mqttsn.connect(add64, add16, msg);
                 break;
+
             case 0x07:
                 //WILLTOPIC
-                msg=new byte[payload_length-2];
-                for(int i=0;i<msg.length;i++)
-                    msg[i]=payload[2+i];
-                WillTopic willTopic=new WillTopic(add64, add16, msg);
+                WillTopic willTopic = new WillTopic(address64, address16, message);
                 willTopic.start();
-                //Mqttsn.willtopic(add64, add16, msg);
                 break;
+
             case 0x09:
                 //WILLMESSAGE
-                msg=new byte[payload_length-2];
-                for(int i=0;i<msg.length;i++)
-                    msg[i]=payload[2+i];
-                WillMessage willMessage=new WillMessage(add64, add16, msg);
+                WillMessage willMessage = new WillMessage(address64, address16, message);
                 willMessage.start();
-                //Mqttsn.willmessage(add64, add16, msg);
                 break;
+
             case 0x0A:
                 //REGISTER
-                msg=new byte[payload_length-2];
-                for(int i=0;i<msg.length;i++){
-                    msg[i]=payload[2+i];
-                }
-                Register register=new Register(add64, add16, msg);
+                Register register = new Register(address64, address16, message);
                 register.start();
-                //Mqttsn.register(add64, add16, msg);
                 break;
+
             case 0x12:
                 //SUBSCRIBE
-                msg=new byte[payload_length-2];
-                for(int i=0;i<msg.length;i++)
-                    msg[i]=payload[2+i];
-                Subscribe subscribe=new Subscribe(add64, add16, msg);
+                Subscribe subscribe = new Subscribe(address64, address16, message);
                 subscribe.start();
-                //Mqttsn.subscribe(add64, add16, msg);
                 break;
+
             case 0x18:
                 //DISCONNECT
-                msg=new byte[payload_length-2];
-                for(int i=0;i<msg.length;i++)
-                    msg[i]=payload[2+i];
-                Disconnect disconnect=new Disconnect(add64, add16, msg);
+                Disconnect disconnect = new Disconnect(address64, address16, message);
                 disconnect.start();
-                //Mqttsn.disconnect(add64, add16, msg);
                 break;
+
             case 0x0C:
                 //PUBLISH
-                msg=new byte[payload_length-2];
-                for(int i=0;i<msg.length;i++)
-                    msg[i]=payload[2+i];
-                Publish publish=new Publish(add64, add16, msg);
+                Publish publish = new Publish(address64, address16, message);
                 publish.start();
-                //Mqttsn.publish(add64, add16, msg);
                 break;
+
             case 0x0D:
                 //PUBACK
-                msg=new byte[payload_length-2];
-                for(int i=0;i<msg.length;i++)
-                    msg[i]=payload[2+i];
-                Puback puback=new Puback(add64, add16, msg);
+                Puback puback = new Puback(address64, address16, message);
                 puback.start();
-                //Mqttsn.pubackClient(add64, add16, msg);
                 break;
+
             case 0x16:
                 //PINGREQ
-                msg=new byte[payload_length-2];
-                for(int i=0;i<msg.length;i++)
-                    msg[i]=payload[2+i];
-                Pingreq pingreq=new Pingreq(add64, add16, msg);
+                Pingreq pingreq = new Pingreq(address64, address16, message);
                 pingreq.start();
-                //Mqttsn.pingreq(add64, add16, msg);
                 break;
         }
     }
-
-    public static int getMsgID(){
-        return msgID++;
-    }
 }
+

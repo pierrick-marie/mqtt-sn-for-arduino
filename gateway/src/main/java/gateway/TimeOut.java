@@ -5,7 +5,6 @@ import org.fusesource.mqtt.client.Callback;
 import org.fusesource.mqtt.client.CallbackConnection;
 
 import java.beans.ExceptionListener;
-import java.io.UnsupportedEncodingException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -26,9 +25,9 @@ public class TimeOut implements Runnable, ExceptionListener {
 
     public void start() {
         for(int i=0;i<duration;i++){
-            //System.out.println((duration-i)+" "+Main.addressClientMap.get(Utils.byteArrayToString(add64))+" "+Main.clientState.get(Utils.byteArrayToString(add64)));
-            if(!Main.clientState.get(Utils.byteArrayToString(add64)).equals("Asleep")){
-                System.out.println(Main.addressClientMap.get(Utils.byteArrayToString(add64))+" not asleep anymore");
+            //System.out.println((duration-i)+" "+Main.AddressClientMap.get(Utils.byteArrayToString(add64))+" "+Main.ClientState.get(Utils.byteArrayToString(add64)));
+            if(!Main.ClientState.get(Utils.byteArrayToString(add64)).equals("Asleep")){
+                System.out.println(Main.AddressClientMap.get(Utils.byteArrayToString(add64))+" not asleep anymore");
                 return;
             }
             try {
@@ -41,8 +40,8 @@ public class TimeOut implements Runnable, ExceptionListener {
     }
 
     public void clientTimeOut(byte[] add64){
-        Main.clientState.put(Utils.byteArrayToString(add64), "Lost");
-        CallbackConnection connection=Main.addressConnectiontMap.get(Utils.byteArrayToString(add64));
+        Main.ClientState.put(Utils.byteArrayToString(add64), "Lost");
+        CallbackConnection connection=Main.AddressConnectiontMap.get(Utils.byteArrayToString(add64));
         connection.disconnect(new Callback<Void>() {
             @Override
             public void onSuccess(Void value) {

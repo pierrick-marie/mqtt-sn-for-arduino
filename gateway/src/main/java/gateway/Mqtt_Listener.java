@@ -5,7 +5,6 @@ import org.fusesource.hawtbuf.Buffer;
 import org.fusesource.hawtbuf.UTF8Buffer;
 import org.fusesource.mqtt.client.Listener;
 
-import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -34,11 +33,11 @@ public class Mqtt_Listener implements Listener {
 
     @Override
     public void onPublish(UTF8Buffer topic, Buffer body, Runnable ack) {
-        System.out.println(Main.addressClientMap.get(Utils.byteArrayToString(add64))+" Buffering Message");
+        System.out.println(Main.AddressClientMap.get(Utils.byteArrayToString(add64))+" Buffering Message");
         Message msg=new Message(topic.utf8().toString(), body.utf8().toString());
-        ArrayList<Message>temp=Main.clientBufferedMessage.get(Utils.byteArrayToString(add64));
+        ArrayList<Message>temp=Main.ClientBufferedMessage.get(Utils.byteArrayToString(add64));
         temp.add(msg);
-        Main.clientBufferedMessage.put(Utils.byteArrayToString(add64), temp);
+        Main.ClientBufferedMessage.put(Utils.byteArrayToString(add64), temp);
         ack.run();
 
     }

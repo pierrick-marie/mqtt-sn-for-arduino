@@ -28,8 +28,8 @@ public class Pingreq extends Thread {
         String clientId=new String(msg, StandardCharsets.UTF_8);
         Date date = new Date();
         System.out.println(sdf.format(date)+": -> "+clientId+" Pingreq");
-        //if(Main.clientState.get(Utils.byteArrayToString(add64)).equals("Asleep")){
-            Main.clientState.put(Utils.byteArrayToString(add64),"Awake");
+        //if(Main.ClientState.get(Utils.byteArrayToString(add64)).equals("Asleep")){
+            Main.ClientState.put(Utils.byteArrayToString(add64),"Awake");
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
@@ -41,8 +41,10 @@ public class Pingreq extends Thread {
 
     public void sendBufferedMessage(byte[] add64, byte[] add16){
         //System.out.println("SendBufferedMessage");
-        //System.out.println(Main.clientBufferedMessage.get(Utils.byteArrayToString(add64)).size()+" messages buffered");
-        ArrayList<Message> toSend=Main.clientBufferedMessage.get(Utils.byteArrayToString(add64));
+        //System.out.println(Main.ClientBufferedMessage.get(Utils.byteArrayToString(add64)).size()+" messages buffered");
+        
+        ArrayList<Message> toSend = Main.ClientBufferedMessage.get(Utils.byteArrayToString(add64));
+        
         MultipleSender msender=new MultipleSender(add64, add16, toSend);
         //System.out.println("Before Msender");
         msender.start();

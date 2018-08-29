@@ -1,7 +1,6 @@
 package mqttsn;
 
 import gateway.Main;
-import gateway.Mqttsn;
 import gateway.Serial;
 
 import java.text.DateFormat;
@@ -24,14 +23,14 @@ public class WillTopicReq extends Thread {
 
     public void willtopicreq(){
         Date date = new Date();
-        System.out.println(sdf.format(date)+": <- "+ Main.addressClientMap.get(Utils.byteArrayToString(add64))+" Willtopicreq");
+        System.out.println(sdf.format(date)+": <- "+ Main.AddressClientMap.get(Utils.byteArrayToString(add64))+" Willtopicreq");
         byte[] ret=new byte[2];
         ret[0]=(byte)0x02;
         ret[1]=(byte)0x06;
-        Main.willTopicAck.put(Utils.byteArrayToString(add64), true);
-        Serial.write(Main.serialPort, add64, add16, ret);
+        Main.WillTopicAck.put(Utils.byteArrayToString(add64), true);
+        Serial.write(Main.SerialPort, add64, add16, ret);
         int cpt=0;
-        while(cpt<10 && Main.willTopicAck.get(Utils.byteArrayToString(add64))){
+        while(cpt<10 && Main.WillTopicAck.get(Utils.byteArrayToString(add64))){
             try {
                 Thread.sleep(1000);
                 cpt++;
@@ -39,7 +38,7 @@ public class WillTopicReq extends Thread {
                 e.printStackTrace();
             }
         }
-        if(Main.willTopicAck.get(Utils.byteArrayToString(add64))){
+        if(Main.WillTopicAck.get(Utils.byteArrayToString(add64))){
             //System.out.println("Resend willTopicReq");
             willtopicreq();
         }

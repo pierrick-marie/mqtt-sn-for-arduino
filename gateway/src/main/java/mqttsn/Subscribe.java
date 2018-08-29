@@ -4,7 +4,6 @@ import gateway.Main;
 import gateway.Serial;
 import org.fusesource.mqtt.client.Callback;
 import org.fusesource.mqtt.client.CallbackConnection;
-import org.fusesource.mqtt.client.QoS;
 import org.fusesource.mqtt.client.Topic;
 
 import java.nio.charset.StandardCharsets;
@@ -31,7 +30,7 @@ public class Subscribe extends Thread {
 
     public void subscribe(){
         Date date = new Date();
-        System.out.println(sdf.format(date)+": -> "+Main.addressClientMap.get(Utils.byteArrayToString(add64))+" Subscribe");
+        System.out.println(sdf.format(date)+": -> "+Main.AddressClientMap.get(Utils.byteArrayToString(add64))+" Subscribe");
         byte flags=msg[0];
         //System.out.println("FLAGS "+String.format("%8s", Integer.toBinaryString(flags & 0xFF)).replace(' ', '0'));
         boolean DUP=(flags&0b10000000)==1;
@@ -45,17 +44,17 @@ public class Subscribe extends Thread {
             name[i]=msg[3+i];
         String topicName=new String(name, StandardCharsets.UTF_8);
         int topicID;
-        //System.out.println(topicName);
-        if(Main.topicName.containsKey(topicName)){
-            topicID=Main.topicName.get(topicName);
+        //System.out.println(TopicName);
+        if(Main.TopicName.containsKey(topicName)){
+            topicID=Main.TopicName.get(topicName);
             //System.out.println("TOPICID "+topicID);
-            CallbackConnection connection=Main.addressConnectiontMap.get(Utils.byteArrayToString(add64));
+            CallbackConnection connection=Main.AddressConnectiontMap.get(Utils.byteArrayToString(add64));
             Topic[] topics={new Topic(topicName, Utils.getQoS(qos))};
             final int finalTopicID = topicID;
             connection.subscribe(topics, new Callback<byte[]>() {
                 @Override
                 public void onSuccess(byte[] value) {
-                    Main.clientBufferedMessage.put(Utils.byteArrayToString(add64), new ArrayList<>());
+                    Main.ClientBufferedMessage.put(Utils.byteArrayToString(add64), new ArrayList<>());
                     suback(add64, add16, value, msgID, finalTopicID);
                 }
 
@@ -76,7 +75,7 @@ public class Subscribe extends Thread {
 
     public static void suback(byte[] add64, byte[] add16, byte[] qoses, byte[] msgID, int topicID){
         Date date = new Date();
-        System.out.println(sdf.format(date)+": <- "+Main.addressClientMap.get(Utils.byteArrayToString(add64))+" Suback");
+        System.out.println(sdf.format(date)+": <- "+Main.AddressClientMap.get(Utils.byteArrayToString(add64))+" Suback");
         byte[] ret=new byte[8];
         ret[0]=(byte)0x08;
         ret[1]=(byte)0x13;
@@ -91,7 +90,7 @@ public class Subscribe extends Thread {
         ret[5]=msgID[0];
         ret[6]=msgID[1];
         ret[7]=(byte)0x00;
-        Serial.write(Main.serialPort, add64, add16, ret);
+        Serial.write(Main.SerialPort, add64, add16, ret);
     }
 
     public void run(){

@@ -2,13 +2,9 @@ package mqttsn;
 
 import gateway.Main;
 import gateway.Serial;
-import gateway.Threading;
-import gateway.TimeOut;
 import org.fusesource.mqtt.client.Callback;
 import org.fusesource.mqtt.client.CallbackConnection;
-import org.fusesource.mqtt.client.QoS;
 
-import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -31,7 +27,7 @@ public class Publish extends Thread {
 
     public void publish(){
         Date date = new Date();
-        System.out.println(sdf.format(date)+": -> "+Main.addressClientMap.get(Utils.byteArrayToString(add64))+" Publish");
+        System.out.println(sdf.format(date)+": -> "+Main.AddressClientMap.get(Utils.byteArrayToString(add64))+" Publish");
         /*for(int i=0;i<msg.length;i++)
             System.out.print(String.format("%02X", msg[i])+" ");
         System.out.println("");*/
@@ -51,11 +47,11 @@ public class Publish extends Thread {
             data[i] = msg[5 + i];
         }
         //System.out.println(new String(data, StandardCharsets.UTF_8));
-        //System.out.println(Main.topicName.entrySet());
+        //System.out.println(Main.TopicName.entrySet());
         //System.out.println(topicID);
-        if(Main.topicName.containsValue(topicID)){
-            String topicName=getKeyByValue(Main.topicName,topicID);
-            CallbackConnection connection=Main.addressConnectiontMap.get(Utils.byteArrayToString(add64));
+        if(Main.TopicName.containsValue(topicID)){
+            String topicName=getKeyByValue(Main.TopicName,topicID);
+            CallbackConnection connection=Main.AddressConnectiontMap.get(Utils.byteArrayToString(add64));
             if(connection!=null){
                 connection.publish(topicName, data, Utils.getQoS(qos), retain, new Callback<Void>() {
                     @Override
@@ -80,7 +76,7 @@ public class Publish extends Thread {
 
     public static void reregister(byte[] add64, byte[] add16, int topicId, byte[] msgID){
         Date date = new Date();
-        System.out.println(sdf.format(date)+": <- "+Main.addressClientMap.get(Utils.byteArrayToString(add64))+" Reregister");
+        System.out.println(sdf.format(date)+": <- "+Main.AddressClientMap.get(Utils.byteArrayToString(add64))+" Reregister");
         byte[] ret=new byte[7];
         ret[0]=(byte)0x07;
         ret[1]=(byte)0x1E;
@@ -94,12 +90,12 @@ public class Publish extends Thread {
         ret[4]=msgID[0];
         ret[5]=msgID[1];
         ret[6]=(byte)0x00;
-        Serial.write(Main.serialPort, add64, add16, ret);
+        Serial.write(Main.SerialPort, add64, add16, ret);
     }
 
     public static void puback(byte[] add64, byte[] add16, int topicId, byte[] msgID, int returnCode){
         Date date = new Date();
-        System.out.println(sdf.format(date)+": <- "+Main.addressClientMap.get(Utils.byteArrayToString(add64))+" Puback");
+        System.out.println(sdf.format(date)+": <- "+Main.AddressClientMap.get(Utils.byteArrayToString(add64))+" Puback");
         byte[] ret=new byte[7];
         ret[0]=(byte)0x07;
         ret[1]=(byte)0x0D;
@@ -113,7 +109,7 @@ public class Publish extends Thread {
         ret[4]=msgID[0];
         ret[5]=msgID[1];
         ret[6]=(byte)returnCode;
-        Serial.write(Main.serialPort, add64, add16, ret);
+        Serial.write(Main.SerialPort, add64, add16, ret);
     }
 
     public void run(){

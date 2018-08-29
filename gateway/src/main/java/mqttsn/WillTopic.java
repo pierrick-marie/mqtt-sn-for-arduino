@@ -1,8 +1,6 @@
 package mqttsn;
 
 import gateway.Main;
-import gateway.Mqttsn;
-import gateway.Serial;
 import org.fusesource.mqtt.client.MQTT;
 
 import java.nio.charset.StandardCharsets;
@@ -28,11 +26,11 @@ public class WillTopic extends Thread {
 
     public void willtopic(){
         Date date = new Date();
-        System.out.println(sdf.format(date)+": -> "+Main.addressClientMap.get(Utils.byteArrayToString(add64))+" Willtopic");
-        Main.willTopicAck.put(Utils.byteArrayToString(add64), false);
+        System.out.println(sdf.format(date)+": -> "+Main.AddressClientMap.get(Utils.byteArrayToString(add64))+" Willtopic");
+        Main.WillTopicAck.put(Utils.byteArrayToString(add64), false);
         if(msg.length==0){
-            String clientID=Main.addressClientMap.get(Utils.byteArrayToString(add64));
-            MQTT mqtt=Main.clientMap.get(clientID);
+            String clientID=Main.AddressClientMap.get(Utils.byteArrayToString(add64));
+            MQTT mqtt=Main.ClientMap.get(clientID);
             mqtt.setWillTopic("");
             mqtt.setWillMessage("");
         }else{
@@ -44,8 +42,8 @@ public class WillTopic extends Thread {
             for(int i=0;i<msg.length-1;i++)
                 data[i]=msg[i+1];
             String willtopic=new String(data, StandardCharsets.UTF_8);
-            String clientID=Main.addressClientMap.get(Utils.byteArrayToString(add64));
-            MQTT mqtt=Main.clientMap.get(clientID);
+            String clientID=Main.AddressClientMap.get(Utils.byteArrayToString(add64));
+            MQTT mqtt=Main.ClientMap.get(clientID);
             mqtt.setWillTopic(willtopic);
             mqtt.setWillQos(Utils.getQoS(will_QOS));
             mqtt.setWillRetain(will_retain);

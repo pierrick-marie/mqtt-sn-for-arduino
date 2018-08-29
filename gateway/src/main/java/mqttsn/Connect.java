@@ -31,7 +31,7 @@ public class Connect extends Thread {
 
     public void connect() throws URISyntaxException, InterruptedException {
         Date date = new Date();
-        System.out.println(sdf.format(date)+": -> "+Main.addressClientMap.get(Utils.byteArrayToString(add64))+" Connect");
+        System.out.println(sdf.format(date)+": -> "+Main.AddressClientMap.get(Utils.byteArrayToString(add64))+" Connect");
         byte flags=msg[0];
         int protocolID=msg[1];
         short duration= (short) (msg[2]*16+msg[3]);
@@ -41,22 +41,22 @@ public class Connect extends Thread {
         for(int i=0;i<id.length;i++)
             id[i]=msg[4+i];
         String clientID=new String(id, StandardCharsets.UTF_8);
-        if(Main.clientMap.containsKey(clientID)){
-            if(Main.clientState.get(Utils.byteArrayToString(add64)).equals("Asleep")){
-                //System.out.println(Main.addressClientMap.get(Utils.byteArrayToString(add64))+" come back from sleep");
-                Main.clientState.put(Utils.byteArrayToString(add64), "Active");
+        if(Main.ClientMap.containsKey(clientID)){
+            if(Main.ClientState.get(Utils.byteArrayToString(add64)).equals("Asleep")){
+                //System.out.println(Main.AddressClientMap.get(Utils.byteArrayToString(add64))+" come back from sleep");
+                Main.ClientState.put(Utils.byteArrayToString(add64), "Active");
                 Thread.sleep(10);
                 connack(add64, add16, true);
-            }else if(Main.clientState.get(Utils.byteArrayToString(add64)).equals("Lost")) {
+            }else if(Main.ClientState.get(Utils.byteArrayToString(add64)).equals("Lost")) {
                 MQTT mqtt = new MQTT();
-                mqtt.setHost("192.168.1.42", 1883);
+                mqtt.setHost("141.115.64.26", 1883);
                 //mqtt.setHost("141.115.64.26", 1883);
                 mqtt.setClientId(clientID);
                 mqtt.setCleanSession(cleansession);
                 mqtt.setKeepAlive(duration);
                 CallbackConnection connection = mqtt.callbackConnection();
-                Main.addressConnectiontMap.put(Utils.byteArrayToString(add64), connection);
-                Main.clientState.put(Utils.byteArrayToString(add64),"Active");
+                Main.AddressConnectiontMap.put(Utils.byteArrayToString(add64), connection);
+                Main.ClientState.put(Utils.byteArrayToString(add64),"Active");
                 Mqtt_Listener listener=new Mqtt_Listener(add64);
                 connection.listener(listener);
                 if(will) {
@@ -94,10 +94,10 @@ public class Connect extends Thread {
             mqtt.setCleanSession(cleansession);
             mqtt.setKeepAlive(duration);
             CallbackConnection connection = mqtt.callbackConnection();
-            Main.addressClientMap.put(Utils.byteArrayToString(add64), clientID);
-            Main.clientMap.put(clientID, mqtt);
-            Main.addressConnectiontMap.put(Utils.byteArrayToString(add64), connection);
-            Main.clientState.put(Utils.byteArrayToString(add64),"Active");
+            Main.AddressClientMap.put(Utils.byteArrayToString(add64), clientID);
+            Main.ClientMap.put(clientID, mqtt);
+            Main.AddressConnectiontMap.put(Utils.byteArrayToString(add64), connection);
+            Main.ClientState.put(Utils.byteArrayToString(add64),"Active");
             Mqtt_Listener listener=new Mqtt_Listener(add64);
             connection.listener(listener);
             if(will) {
@@ -129,7 +129,7 @@ public class Connect extends Thread {
 
     public void connack(byte[] add64, byte[] add16, boolean isValid){
         Date date = new Date();
-        System.out.println(sdf.format(date)+": <- "+Main.addressClientMap.get(Utils.byteArrayToString(add64))+" Connack");
+        System.out.println(sdf.format(date)+": <- "+Main.AddressClientMap.get(Utils.byteArrayToString(add64))+" Connack");
         byte[] ret=new byte[3];
         ret[0]=(byte)0x03;
         ret[1]=(byte)0x05;
@@ -138,7 +138,7 @@ public class Connect extends Thread {
         }else{
             ret[2]=(byte)0x03;
         }
-        Serial.write(Main.serialPort, add64, add16, ret);
+        Serial.write(Main.SerialPort, add64, add16, ret);
 
     }
 

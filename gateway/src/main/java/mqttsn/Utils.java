@@ -18,12 +18,12 @@ public class Utils {
     public static byte[] getTopicId(String name){
         byte[] ret=new byte[2];
         int id=-1;
-        /*for(int i = 0; i< Main.topicName.size(); i++) {
-            System.out.println(i+" "+Main.topicName.get(i)+" "+name);
-            if (Main.topicName.get(i).equals(name))
+        /*for(int i = 0; i< Main.TopicName.size(); i++) {
+            System.out.println(i+" "+Main.TopicName.get(i)+" "+name);
+            if (Main.TopicName.get(i).equals(name))
                 id = i;
         }*/
-        id = Main.topicName.get(name);
+        id = Main.TopicName.get(name);
         if(id!=-1){
             if(id>255){
                 ret[0]= (byte) (id/255);

@@ -26,11 +26,11 @@ public class WillMessage extends Thread {
 
     public void willmessage(){
         Date date = new Date();
-        System.out.println(sdf.format(date)+": -> "+Main.addressClientMap.get(Utils.byteArrayToString(add64))+" Willmessage");
-        Main.willMessageAck.put(Utils.byteArrayToString(add64), false);
+        System.out.println(sdf.format(date)+": -> "+Main.AddressClientMap.get(Utils.byteArrayToString(add64))+" Willmessage");
+        Main.WillMessageAck.put(Utils.byteArrayToString(add64), false);
         String willmessage=new String(msg, StandardCharsets.UTF_8);
-        String clientID=Main.addressClientMap.get(Utils.byteArrayToString(add64));
-        MQTT mqtt=Main.clientMap.get(clientID);
+        String clientID=Main.AddressClientMap.get(Utils.byteArrayToString(add64));
+        MQTT mqtt=Main.ClientMap.get(clientID);
         mqtt.setWillMessage(willmessage);
     }
 
