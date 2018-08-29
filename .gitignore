@@ -1,6 +1,5 @@
-src/gateway/build/
-src/gateway/bin/
-
+gateway/bin/*
+gateway/lib/*
 .idea/*
 gateway/.idea/*
 
