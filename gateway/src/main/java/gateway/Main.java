@@ -34,6 +34,9 @@ public class Main {
         SerialPort = Serial.getSerial("/dev/ttyUSB0");
     }
 
+    /**
+     * @todo DEBUG: change this static innner class to a normal class with singleton
+     */
     public static class SerialPortReader implements SerialPortEventListener {
 
         public void serialEvent(SerialPortEvent event) {

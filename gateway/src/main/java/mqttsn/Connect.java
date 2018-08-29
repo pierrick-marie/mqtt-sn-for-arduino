@@ -43,7 +43,7 @@ public class Connect extends Thread {
         String clientID=new String(id, StandardCharsets.UTF_8);
         if(Main.ClientMap.containsKey(clientID)){
             if(Main.ClientState.get(Utils.byteArrayToString(add64)).equals("Asleep")){
-                //System.out.println(Main.AddressClientMap.get(Utils.byteArrayToString(add64))+" come back from sleep");
+                //System.out.println(Main.AddressClientMap.get(Utils.byteArrayToString(address64))+" come back from sleep");
                 Main.ClientState.put(Utils.byteArrayToString(add64), "Active");
                 Thread.sleep(10);
                 connack(add64, add16, true);

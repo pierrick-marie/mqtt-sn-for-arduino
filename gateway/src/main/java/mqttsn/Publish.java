@@ -28,8 +28,8 @@ public class Publish extends Thread {
     public void publish(){
         Date date = new Date();
         System.out.println(sdf.format(date)+": -> "+Main.AddressClientMap.get(Utils.byteArrayToString(add64))+" Publish");
-        /*for(int i=0;i<msg.length;i++)
-            System.out.print(String.format("%02X", msg[i])+" ");
+        /*for(int i=0;i<message.length;i++)
+            System.out.print(String.format("%02X", message[i])+" ");
         System.out.println("");*/
         byte flags=msg[0];
         boolean DUP=(flags&0b10000000)==1;

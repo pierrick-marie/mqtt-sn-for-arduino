@@ -25,8 +25,8 @@ public class Puback extends Thread {
     public void puback(){
         Date date = new Date();
         System.out.println(sdf.format(date)+": -> "+Main.AddressClientMap.get(Utils.byteArrayToString(add64))+" PubackClient");
-        //for(int i=0;i<msg.length;i++){
-        //    System.out.print(String.format("%02X", msg[i]));
+        //for(int i=0;i<message.length;i++){
+        //    System.out.print(String.format("%02X", message[i]));
         //}
         //System.out.println("");
         if(msg[4]==(byte)0x00){

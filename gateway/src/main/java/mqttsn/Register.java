@@ -2,6 +2,7 @@ package mqttsn;
 
 import gateway.Main;
 import gateway.Serial;
+import utils.Log;
 
 import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
@@ -13,69 +14,83 @@ import java.util.Date;
  */
 public class Register extends Thread {
 
-    byte[] add64;
-    byte[] add16;
-    byte[] msg;
-    private static final DateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+    byte[] address64;
+    byte[] address16;
+    byte[] message;
 
-    public Register(byte[] add64, byte[] add16, byte[] msg) {
-        this.add16=add16;
-        this.add64=add64;
-        this.msg=msg;
+    public Register(byte[] address64, byte[] address16, byte[] message) {
+
+        this.address16 = address16;
+        this.address64 = address64;
+        this.message = message;
     }
 
+    /**
+     * This method registers a topic name into the list of topics @see:Main.TopicName
+     * The method does not register the topic name to the bus.
+     */
     public void register() {
 
-        Date date = new Date();
+        Log.print(Main.AddressClientMap.get(Utils.byteArrayToString(address64))+" Register");
 
-        System.out.println(sdf.format(date)+": -> "+ Main.AddressClientMap.get(Utils.byteArrayToString(add64))+" Register");
+        byte[] messageId = new byte[2];
+        messageId[0]= message[2];
+        messageId[1]= message[3];
+        byte[] name = new byte[message.length-4];
+        String topicName;
+        // i: for loop
+        int i, topicId = -1;
 
-        //int topicID=msg[0]*16+msg[1];
-        byte[] msgID=new byte[2];
-        msgID[0]=msg[2];
-        msgID[1]=msg[3];
-        byte[] name=new byte[msg.length-4];
-        for(int i=0;i<name.length;i++){
-            name[i]=msg[4+i];
+        for(i=0; i < name.length; i++) {
+            name[i]= message[4+i];
         }
-        String topicName=new String(name, StandardCharsets.UTF_8);
-        int id=-1;
-        if(Main.TopicName.containsKey(topicName)){
-            id=Main.TopicName.get(topicName);
-            System.out.println(sdf.format(date)+": TOPIC NAME IS CONTAINED -> "+topicName+" "+id);
-        }else{
-            id=Main.TopicName.size();
-            System.out.println(sdf.format(date)+": TOPIC NAME IS NOT CONTAINED -> "+topicName+" "+id);
-            Main.TopicName.put(topicName, id);
+        topicName = new String(name, StandardCharsets.UTF_8);
+
+        if( Main.TopicName.containsKey(topicName) ) {
+            topicId = Main.TopicName.get( topicName );
+            Log.print("TOPIC NAME IS CONTAINED -> " + topicName + " " + topicId);
+        } else {
+            topicId = Main.TopicName.size();
+            Log.print("TOPIC NAME IS NOT CONTAINED -> " + topicName + " " + topicId);
+            Main.TopicName.put( topicName, topicId );
         }
-        if(id!=-1)
-            regack(add64, add16, msgID, id);
+        if( topicId != -1)
+            regack(address64, address16, messageId, topicId);
         else{
-            date = new Date();
-            System.err.println(sdf.format(date)+": Register Error: TopicName");
+            Log.print("Register Error: TopicName");
         }
     }
 
-    public void regack(byte[] add64, byte[] add16, byte[] msgID, int id){
-        Date date = new Date();
-        System.out.println(sdf.format(date)+": <- "+Main.AddressClientMap.get(Utils.byteArrayToString(add64))+" Regack");
-        byte[] ret=new byte[7];
-        ret[0]=(byte)0x07;
-        ret[1]=(byte)0x0B;
-        if(id>255){
-            ret[3]= (byte) (id/255);
-            ret[2]= (byte) (id%255);
-        }else{
-            ret[3]= (byte) id;
-            ret[2]=(byte)0x00;
+    /**
+     * The method sends regack message to the XBee module.
+     *
+     * @param address64
+     * @param address16
+     * @param messageId
+     * @param topicId
+     */
+    public void regack(byte[] address64, byte[] address16, byte[] messageId, int topicId) {
+
+        Log.print(" <- " + Main.AddressClientMap.get(Utils.byteArrayToString(address64)) + " Regack");
+
+        // the message to send
+        byte[] message = new byte[7];
+
+        message[0] = (byte)0x07;
+        message[1] = (byte)0x0B;
+        if( topicId > 255 ){
+            message[3] = (byte) (topicId/255);
+            message[2] = (byte) (topicId%255);
+        } else {
+            message[3] = (byte) topicId;
+            message[2] =(byte)0x00;
         }
-        ret[4]=msgID[0];
-        ret[5]=msgID[1];
-        ret[6]=(byte)0x00;
-        Serial.write(Main.SerialPort, add64, add16, ret);
+        message[4] = messageId[0];
+        message[5] = messageId[1];
+        message[6] = (byte)0x00;
+
+        Serial.write(Main.SerialPort, address64, address16, message);
     }
-
-
 
     public void run(){
         register();

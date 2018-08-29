@@ -14,6 +14,6 @@ public class Log {
 
     public static void print(final String message) {
         Date date = new Date();
-        System.out.println(dateFormat.format(date) + message);
+        System.out.println(dateFormat.format(date) + " : " + message);
     }
 }

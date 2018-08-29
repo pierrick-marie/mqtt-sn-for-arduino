@@ -35,7 +35,7 @@ public class Disconnect extends Thread {
                 Main.ClientState.put(Utils.byteArrayToString(add64),"Asleep");
                 Main.ClientDuration.put(Utils.byteArrayToString(add64), duration);
                 disconnectack(add64, add16);
-                //System.out.println(Main.AddressClientMap.get(Utils.byteArrayToString(add64))+" going into sleep");
+                //System.out.println(Main.AddressClientMap.get(Utils.byteArrayToString(address64))+" going into sleep");
                 TimeOut timeOut=new TimeOut(duration, add64);
                 Threading.thread(timeOut, false);
             }

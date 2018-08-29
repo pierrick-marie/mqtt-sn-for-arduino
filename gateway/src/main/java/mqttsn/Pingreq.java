@@ -28,7 +28,7 @@ public class Pingreq extends Thread {
         String clientId=new String(msg, StandardCharsets.UTF_8);
         Date date = new Date();
         System.out.println(sdf.format(date)+": -> "+clientId+" Pingreq");
-        //if(Main.ClientState.get(Utils.byteArrayToString(add64)).equals("Asleep")){
+        //if(Main.ClientState.get(Utils.byteArrayToString(address64)).equals("Asleep")){
             Main.ClientState.put(Utils.byteArrayToString(add64),"Awake");
             try {
                 Thread.sleep(1000);
@@ -41,7 +41,7 @@ public class Pingreq extends Thread {
 
     public void sendBufferedMessage(byte[] add64, byte[] add16){
         //System.out.println("SendBufferedMessage");
-        //System.out.println(Main.ClientBufferedMessage.get(Utils.byteArrayToString(add64)).size()+" messages buffered");
+        //System.out.println(Main.ClientBufferedMessage.get(Utils.byteArrayToString(address64)).size()+" messages buffered");
         
         ArrayList<Message> toSend = Main.ClientBufferedMessage.get(Utils.byteArrayToString(add64));
         
