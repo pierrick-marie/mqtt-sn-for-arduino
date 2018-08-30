@@ -1,10 +1,13 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
-#include <mqttsn-messages.h>
+#include <Logs.h>
+#include <Mqttsn.h>
 #include <SoftwareSerial.h>
 
-MQTTSN mqttsn; //objet qui permet d'appeler les methodes de la librairie mqttsn
+Logs logs; // 
+MQTTSN mqttsn; // objet qui permet d'appeler les methodes de la librairie mqttsn
+
 SoftwareSerial XBee(5, 4); //objet qui permet d'appeler les méthodes pour envoyer des données via le module XBee
 
 SoftwareSerial Rfid(2, 3);
@@ -12,8 +15,6 @@ SoftwareSerial Rfid(2, 3);
 #define TOPIC_PUB "ObiOne-RFID"
 #define TOPIC_SUB "ObiPop"
 #define MODULE_NAME "Arduino-RFID"
-
-#define DEBUG true
 
 String rfidId = "";
 long time = millis();
@@ -34,7 +35,7 @@ void setup() {
     // exit(-1);
   }
 
-
+/*
   // if(time + 10000 <= millis()) {
       XBee.listen();
       if(XBee.isListening()){
