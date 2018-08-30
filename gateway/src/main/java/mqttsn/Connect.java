@@ -23,9 +23,9 @@ import java.util.Date;
  */
 public class Connect extends Thread {
 
-	byte[] address64;
-	byte[] address16;
-	byte[] message;
+	private final byte[] address64;
+	private final byte[] address16;
+	private final byte[] message;
 
 	public Connect(byte[] address64, byte[] address16, byte[] message) {
 		this.address16 = address16;
@@ -46,6 +46,7 @@ public class Connect extends Thread {
 		} catch (URISyntaxException e) {
 			Log.debug(e.getMessage());
 			Log.debug(e.getReason());
+			return null;
 		}
 
 		return mqtt;
@@ -70,6 +71,9 @@ public class Connect extends Thread {
 		boolean will = (flags >> 3) == 1;
 		boolean cleanSession = (flags >> 2) == 1;
 
+		MqttCallback validCallBack = new MqttCallback(address64, address16, true);
+		MqttCallback invalidCallBack = new MqttCallback(address64, address16, false);
+
 		Log.debug("Connect.java -> searching the client id");
 		byte[] id = new byte[message.length - 4];
 		for (int i = 0; i < id.length; i++) {
@@ -78,17 +82,19 @@ public class Connect extends Thread {
 		String clientId = new String(id, StandardCharsets.UTF_8);
 		Log.debug("Connect.java -> connect with client id: " + clientId);
 
+		// @todo Check if mqtt is null
 		MQTT mqtt = createMqttClient(clientId, cleanSession, duration);
 
-		// The client is already knowed
+		// The client is already knew and its status is "sleeping"
 		if (Main.ClientMap.containsKey(clientId)) {
 			if (Main.ClientState.get(Utils.byteArrayToString(address64)).equals("Asleep")) {
 				Log.debug("Connect.java -> device " + Main.AddressClientMap.get(Utils.byteArrayToString(address64)) + " come back from sleep");
 				Main.ClientState.put(Utils.byteArrayToString(address64), "Active");
 				Thread.sleep(10);
-				connack(true);
-			} else if (Main.ClientState.get(Utils.byteArrayToString(address64)).equals("Lost")) {
+				validCallBack.connack();
 
+			// The client is knew and its status is "lost"
+			} else if (Main.ClientState.get(Utils.byteArrayToString(address64)).equals("Lost")) {
 
 				CallbackConnection connection = mqtt.callbackConnection();
 				Main.AddressConnectiontMap.put(Utils.byteArrayToString(address64), connection);
@@ -96,33 +102,19 @@ public class Connect extends Thread {
 				Mqtt_Listener listener = new Mqtt_Listener(address64);
 				connection.listener(listener);
 				if (will) {
-					//System.out.println("before topicreq");
 					WillTopicReq willTopicReq = new WillTopicReq(address64, address16);
 					willTopicReq.start();
 					willTopicReq.join();
-					//System.out.println("after topicreq");
 					WillMessageReq willMessageReq = new WillMessageReq(address64, address16);
 					willMessageReq.start();
 					willMessageReq.join();
-					//System.out.println("after msgreq");
 				}
-				connection.connect(new Callback<Void>() {
-					@Override
-					public void onSuccess(Void value) {
-						connack(true);
-					}
-
-					@Override
-					public void onFailure(Throwable value) {
-						Log.print("Failure on connect");
-						value.printStackTrace();
-					}
-				});
+				connection.connect(validCallBack);
 			} else {
-				connack(true);
+				validCallBack.connack();
 			}
+		// The client is not knew
 		} else {
-			// The client is not knowed
 
 			CallbackConnection connection = mqtt.callbackConnection();
 			Main.AddressClientMap.put(Utils.byteArrayToString(address64), clientId);
@@ -132,47 +124,15 @@ public class Connect extends Thread {
 			Mqtt_Listener listener = new Mqtt_Listener(address64);
 			connection.listener(listener);
 			if (will) {
-				//System.out.println("before topicreq");
 				WillTopicReq willTopicReq = new WillTopicReq(address64, address16);
 				willTopicReq.start();
 				willTopicReq.join();
-				//System.out.println("after topicreq");
 				WillMessageReq willMessageReq = new WillMessageReq(address64, address16);
 				willMessageReq.start();
 				willMessageReq.join();
-				//System.out.println("after msgreq");
 			}
-			connection.connect(new Callback<Void>() {
-				@Override
-				public void onSuccess(Void value) {
-					connack(false);
-				}
-
-				@Override
-				public void onFailure(Throwable value) {
-					Log.print("Failure on connect");
-					value.printStackTrace();
-				}
-			});
+			connection.connect(invalidCallBack);
 		}
-	}
-
-	public void connack(final Boolean isValid) {
-
-		Log.print("<- " + Main.AddressClientMap.get(Utils.byteArrayToString(address64)) + " Connack");
-
-		byte[] serialMesasge = new byte[3];
-		serialMesasge[0] = (byte) 0x03;
-		serialMesasge[1] = (byte) 0x05;
-
-		if (isValid) {
-			serialMesasge[2] = (byte) 0x00;
-		} else {
-			serialMesasge[2] = (byte) 0x03;
-		}
-
-		Serial.write(Main.SerialPort, address64, address16, serialMesasge);
-
 	}
 
 	public void run() {
