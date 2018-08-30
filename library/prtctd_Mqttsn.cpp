@@ -27,7 +27,8 @@ THE SOFTWARE.
 #include <Arduino.h>
 
 #include "mqttsn-messages.h"
-#include "mqttsn.h"
+#include "Mqttsn.h"
+#include "Logs.h"
 
 /**
  *
@@ -54,23 +55,20 @@ THE SOFTWARE.
 extern void MQTTSN_regack_handler(const msg_regack* msg);
 void MQTTSN::regack_handler(const msg_regack* msg) {
 
-    debug("Response to register message is received");
+	logs.debug("MQTTSN", "regack_handler", "Response to register message is received");
 
-    if (msg->return_code == 0 && TopicCount < MAX_TOPICS && bswap(msg->message_id) == MessageId) {
-        TopicTable[TopicCount].id = bswap(msg->topic_id);
+	if (msg->return_code == 0 && TopicCount < MAX_TOPICS && bswap(msg->message_id) == MessageId) {
+		TopicTable[TopicCount].id = bswap(msg->topic_id);
 
-        debug("The topic id is ");
-        Serial.print("regack_handler - Test 0: ");
-        Serial.println(msg->topic_id);
-        Serial.print("regack_handler - Test 1: ");
-        Serial.println(TopicTable[TopicCount].id);
+		logs.debug("MQTTSN", "regack_handler", "The topic id is ", msg->topic_id);
+		logs.debug("MQTTSN", "regack_handler", "The topic table id is ", TopicTable[TopicCount].id);
 
-        TopicCount++;
-        MQTTSN_regack_handler(msg);
-    }
+		TopicCount++;
+		MQTTSN_regack_handler(msg);
+	}
 }
 
 extern void MQTTSN_reregister_handler(const msg_reregister* msg);
 void MQTTSN::reregister_handler(const msg_reregister* msg) {
-    MQTTSN_reregister_handler(msg);
+	MQTTSN_reregister_handler(msg);
 }

@@ -255,7 +255,7 @@ void MB_parse_data() {
     for(i = 0; i < payload_lenght; i++){
         payload[i] = FrameBufferIn[12+i];
     }
-    mqttsn.MQTTSN_parse_stream(payload, payload_lenght);
+    mqttsn.parse_stream(payload, payload_lenght);
     
     memset(FrameBufferIn, 0, sizeof(FrameBufferIn));
 }
