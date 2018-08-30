@@ -98,10 +98,8 @@ void MQTTSN::register_handler(const msg_register* message) {
 	return_code_t ret = REJECTED_INVALID_TOPIC_ID;
 	short topic_id = find_topic_id(message->topic_name);
 
-	logs.debug("register_handler()");
-	logs.debug("Received topic_name: ");
-	logs.debug(message->topic_name);
-	logs.debug("Found topic id: ", (int)topic_id);
+	logs.debug("MQTTSN", "register_handler", "received topic_name: ", message->topic_name);
+	logs.debug("MQTTSN", "register_handler", "found topic id: ", (int)topic_id);
 
 	if (topic_id != DEFAULT_TOPIC_ID) {
 		TopicTable[topic_id].id = bswap(message->topic_id);

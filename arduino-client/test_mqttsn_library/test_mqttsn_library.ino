@@ -3,10 +3,12 @@
 #include <string.h>
 #include <Logs.h>
 #include <Mqttsn.h>
+#include <MqttsnApi.h>
 #include <SoftwareSerial.h>
 
-Logs logs; // 
+Logs logs; // objet pour ecrire des logs dans la console
 MQTTSN mqttsn; // objet qui permet d'appeler les methodes de la librairie mqttsn
+MqttsnApi api; // API de manipulation du protocole MQTT-SN
 
 SoftwareSerial XBee(5, 4); //objet qui permet d'appeler les méthodes pour envoyer des données via le module XBee
 
@@ -27,7 +29,8 @@ void setup() {
   XBee.begin(9600);
   Rfid.begin(9600);
   XBee.listen();
-  if(ABSTRCT_init() == ACCEPTED){
+  // if(ABSTRCT_init() == ACCEPTED){
+  if(api.init() == ACCEPTED){
     Serial.println("\nINIT OK");
   } else {
     Serial.println("\nINIT KO!");

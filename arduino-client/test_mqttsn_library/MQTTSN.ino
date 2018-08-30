@@ -31,9 +31,9 @@ void MQTTSN_gwinfo_handler(const msg_gwinfo* message) {
 
 	// 1: magic number, get the code of the gateway
 	if( message->gw_id == 1 ) {
-		init_ok = true;
+		api.setInitOk(true);
 	} else {
-		init_ok = false;
+		api.setInitOk(false);
 	}
 }
 
@@ -46,9 +46,10 @@ void MQTTSN_gwinfo_handler(const msg_gwinfo* message) {
  */
 void MQTTSN_connack_handler( const msg_connack* message ) {
 
-	logs.debug("Entering connack ", MB_string_from_return_code(message->return_code));
+	logs.debug("", "", "Entering connack ", MB_string_from_return_code(message->return_code));
 	// save the return code
-	connack_return_code = message->return_code;
+	// @todo uncomment (refactor to classes)
+	// connack_return_code = message->return_code;
 }
 
 /**
@@ -60,8 +61,9 @@ void MQTTSN_connack_handler( const msg_connack* message ) {
  */
 void MQTTSN_regack_handler(const msg_regack* msg){
 
-	logs.debug("Entering regack: ", MB_string_from_return_code(msg->return_code));
-	regack_return_code = msg->return_code;
+	logs.debug("", "", "Entering regack: ", MB_string_from_return_code(msg->return_code));
+	// @todo uncomment (refactor to classes)
+	// regack_return_code = msg->return_code;
 	/**
      * @deprecated
     if(msg->return_code == ACCEPTED){
@@ -72,13 +74,15 @@ void MQTTSN_regack_handler(const msg_regack* msg){
 }
 
 void MQTTSN_suback_handler(const msg_suback* msg){
-	logs.debug("Entering suback ", MB_string_from_return_code(msg->return_code));
-	suback_return_code = msg->return_code;
+	logs.debug("", "", "Entering suback ", MB_string_from_return_code(msg->return_code));
+	// @todo uncomment (refactor to classes)
+	// suback_return_code = msg->return_code;
 }
 
 void MQTTSN_puback_handler(const msg_puback* msg){ 
-	logs.debug("Entering puback ", MB_string_from_return_code(msg->return_code));
-	puback_return_code   = msg->return_code;
+	logs.debug("", "", "Entering puback ", MB_string_from_return_code(msg->return_code));
+	// @todo uncomment (refactor to classes)
+	// puback_return_code   = msg->return_code;
 }
 
 void MQTTSN_disconnect_handler(const msg_disconnect* msg){
@@ -87,11 +91,12 @@ void MQTTSN_disconnect_handler(const msg_disconnect* msg){
 
 void MQTTSN_publish_handler(const msg_publish* msg){ 
 	//handler gérant un message reçu
-	message = msg->data;
+	// @todo uncomment (refactor to classes)
+	// message = msg->data;
 }
 
 void MQTTSN_pingresp_handler(){ 
-	logs.debug("Entering pingresp");
+	logs.debug("", "", "Entering pingresp");
 }
 
 void MQTTSN_reregister_handler(msg_reregister const*){

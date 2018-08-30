@@ -174,18 +174,18 @@ int MQTTSN::register_topic(const char* topic_name) {
 	// WaitingForResponse is set to false in function @MQTTSN_parse_stream.
 	// As a consequence, in nominal case, it should be equals to false.
 	if (WaitingForResponse) {
-		logs.debug("MQTTSN_register_topic => WaitingForResponse is true");
+		logs.debug("MQTTSN", "register_topic", "waitingForResponse is true");
 		return -2;
 	}
 
 	if(TopicCount >= MAX_TOPICS) {
-		logs.debug("MQTTSN_register_topic => TopicCount > MAX_TOPICS");
+		logs.debug("MQTTSN", "register_topic", "topicCount > MAX_TOPICS");
 		return -2;
 	}
 
 	int topic_id = find_topic_id(topic_name);
 	if(topic_id != -1) {
-		logs.debug("MQTTSN_register_topic => topic_name is already regitered");
+		logs.debug("MQTTSN", "register_topic", "topic_name is already regitered");
 		return topic_id;
 	}
 
@@ -206,7 +206,7 @@ int MQTTSN::register_topic(const char* topic_name) {
 	strcpy(msg->topic_name, topic_name);
 	send_message();
 
-	logs.debug("Register topic message is sent");
+	logs.debug("MQTTSN", "register_topic", "Register topic message is sent");
 
 	// Waiting a response, set to false in @MQTTSN_parse_stream()
 	WaitingForResponse = true;
