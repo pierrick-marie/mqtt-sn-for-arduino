@@ -4,6 +4,7 @@ import jssc.*;
 import mqttsn.*;
 import org.fusesource.mqtt.client.CallbackConnection;
 import org.fusesource.mqtt.client.MQTT;
+import utils.ClientsManager;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -18,6 +19,7 @@ public class Main {
 
     public static int GatewayId = 1;
 
+    // @todo DEBUG: use the ClientManager instead
     public final static HashMap<String, MQTT> ClientMap = new HashMap<>();
     public final static HashMap<String, String> AddressClientMap = new HashMap<>();
     public final static HashMap<String, String> ClientState = new HashMap<>();
@@ -37,6 +39,7 @@ public class Main {
     public static int MessageId = 0;
 
     public static void main(String[] args) {
+
         SerialPort = Serial.getSerial(Main.SERIAL_PORT);
     }
 

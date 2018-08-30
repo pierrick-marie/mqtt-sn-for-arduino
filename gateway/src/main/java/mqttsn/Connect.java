@@ -7,6 +7,7 @@ import org.fusesource.mqtt.client.Callback;
 import org.fusesource.mqtt.client.CallbackConnection;
 import org.fusesource.mqtt.client.MQTT;
 import utils.Log;
+import utils.Time;
 
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
@@ -33,6 +34,112 @@ public class Connect extends Thread {
 		this.message = message;
 	}
 
+	public void run() {
+		connect();
+	}
+
+	/**
+	 * Method called after receiving a connect message.
+	 *
+	 * @todo DEBUG: use the ClientsManager instead
+	 **/
+	public void connect()  {
+
+		byte flags = message[0];
+		short duration = (short) (message[2] * 16 + message[3]);
+		boolean will = (flags >> 3) == 1;
+		boolean cleanSession = (flags >> 2) == 1;
+
+		MqttCallback validCallBack = new MqttCallback(address64, address16, true);
+		MqttCallback invalidCallBack = new MqttCallback(address64, address16, false);
+
+		String clientId = getClientId();
+
+		MQTT mqtt = createMqttClient(clientId, cleanSession, duration);
+		if(null == mqtt){
+			Log.error("Connect.java -> connect: mqtt client is null");
+			return;
+		}
+
+		if (Main.ClientMap.containsKey(clientId)) {
+			Log.debug("The client is already knew and its status is \"sleeping\"");
+
+			if (Main.ClientState.get(Utils.byteArrayToString(address64)).equals("Asleep")) {
+				Log.debug("Connect.java -> device " + Main.AddressClientMap.get(Utils.byteArrayToString(address64)) + " come back from sleep");
+
+				Main.ClientState.put(Utils.byteArrayToString(address64), "Active");
+
+				Time.sleep((long) 10, "Connect.java -> connect(): An error occurs when trying to sleep the current thread");
+
+				validCallBack.connack();
+
+			} else if (Main.ClientState.get(Utils.byteArrayToString(address64)).equals("Lost")) {
+				Log.debug("The client is knew and its status is \"lost\"");
+
+				Main.ClientState.put(Utils.byteArrayToString(address64), "Active");
+				Mqtt_Listener listener = new Mqtt_Listener(address64);
+
+				CallbackConnection connection = mqtt.callbackConnection();
+				Main.AddressConnectiontMap.put(Utils.byteArrayToString(address64), connection);
+				connection.listener(listener);
+				connection.connect(validCallBack);
+
+				if (will) {
+					createWillHandlers();
+				}
+			} else {
+				validCallBack.connack();
+			}
+		} else {
+			Log.debug("The client is not knew");
+
+			Main.AddressClientMap.put(Utils.byteArrayToString(address64), clientId);
+			Main.ClientMap.put(clientId, mqtt);
+			Main.ClientState.put(Utils.byteArrayToString(address64), "Active");
+
+			CallbackConnection connection = mqtt.callbackConnection();
+			Main.AddressConnectiontMap.put(Utils.byteArrayToString(address64), connection);
+			Mqtt_Listener listener = new Mqtt_Listener(address64);
+			connection.listener(listener);
+			connection.connect(invalidCallBack);
+
+			if (will) {
+				createWillHandlers();
+			}
+		}
+	}
+
+	private String getClientId() {
+
+		Log.debug("Connect.java -> getClientId(): searching the client id");
+
+		byte[] id = new byte[message.length - 4];
+		for (int i = 0; i < id.length; i++) {
+			id[i] = message[4 + i];
+		}
+
+		String clientId = new String(id, StandardCharsets.UTF_8);
+		Log.debug("Connect.java -> getClientId(): the client is " + clientId);
+		return clientId;
+	}
+
+	private void createWillHandlers() {
+
+		Log.debug("Connect.java -> creating and starting will handlers");
+
+		try {
+			WillTopicReq willTopicReq = new WillTopicReq(address64, address16);
+			willTopicReq.start();
+			willTopicReq.join();
+			WillMessageReq willMessageReq = new WillMessageReq(address64, address16);
+			willMessageReq.start();
+			willMessageReq.join();
+		} catch (InterruptedException e) {
+			Log.error("Connect.java -> createWillHandlers(): exception while creating the \"will handlers\"");
+			Log.debug(e.getMessage());
+		}
+	}
+
 	private MQTT createMqttClient(final String clientId, final Boolean cleanSession, final Short duration) {
 
 		Log.debug("Connect.java -> creating a MQTT client with: " + clientId + ", " + cleanSession + ", " + duration);
@@ -44,105 +151,12 @@ public class Connect extends Thread {
 			mqtt.setCleanSession(cleanSession);
 			mqtt.setKeepAlive(duration);
 		} catch (URISyntaxException e) {
+			Log.error("Connect.java -> createMqttClient(): impossible to create the MQTT client");
 			Log.debug(e.getMessage());
 			Log.debug(e.getReason());
 			return null;
 		}
 
 		return mqtt;
-	}
-
-	/**
-	 * Method called after receiving a connect message.
-	 *
-	 * @todo DEBUG
-	 *
-	 * @throws URISyntaxException
-	 * @throws InterruptedException
-	 */
-	public void connect() throws URISyntaxException, InterruptedException {
-
-		// @todo DEBUG: null Connect for the first connection of the device
-		// Log.print(Main.AddressClientMap.get(Utils.byteArrayToString(address64)) + " BLA BAL BAL Connect");
-
-
-		byte flags = message[0];
-		short duration = (short) (message[2] * 16 + message[3]);
-		boolean will = (flags >> 3) == 1;
-		boolean cleanSession = (flags >> 2) == 1;
-
-		MqttCallback validCallBack = new MqttCallback(address64, address16, true);
-		MqttCallback invalidCallBack = new MqttCallback(address64, address16, false);
-
-		Log.debug("Connect.java -> searching the client id");
-		byte[] id = new byte[message.length - 4];
-		for (int i = 0; i < id.length; i++) {
-			id[i] = message[4 + i];
-		}
-		String clientId = new String(id, StandardCharsets.UTF_8);
-		Log.debug("Connect.java -> connect with client id: " + clientId);
-
-		// @todo Check if mqtt is null
-		MQTT mqtt = createMqttClient(clientId, cleanSession, duration);
-
-		// The client is already knew and its status is "sleeping"
-		if (Main.ClientMap.containsKey(clientId)) {
-			if (Main.ClientState.get(Utils.byteArrayToString(address64)).equals("Asleep")) {
-				Log.debug("Connect.java -> device " + Main.AddressClientMap.get(Utils.byteArrayToString(address64)) + " come back from sleep");
-				Main.ClientState.put(Utils.byteArrayToString(address64), "Active");
-				Thread.sleep(10);
-				validCallBack.connack();
-
-			// The client is knew and its status is "lost"
-			} else if (Main.ClientState.get(Utils.byteArrayToString(address64)).equals("Lost")) {
-
-				CallbackConnection connection = mqtt.callbackConnection();
-				Main.AddressConnectiontMap.put(Utils.byteArrayToString(address64), connection);
-				Main.ClientState.put(Utils.byteArrayToString(address64), "Active");
-				Mqtt_Listener listener = new Mqtt_Listener(address64);
-				connection.listener(listener);
-				if (will) {
-					WillTopicReq willTopicReq = new WillTopicReq(address64, address16);
-					willTopicReq.start();
-					willTopicReq.join();
-					WillMessageReq willMessageReq = new WillMessageReq(address64, address16);
-					willMessageReq.start();
-					willMessageReq.join();
-				}
-				connection.connect(validCallBack);
-			} else {
-				validCallBack.connack();
-			}
-		// The client is not knew
-		} else {
-
-			CallbackConnection connection = mqtt.callbackConnection();
-			Main.AddressClientMap.put(Utils.byteArrayToString(address64), clientId);
-			Main.ClientMap.put(clientId, mqtt);
-			Main.AddressConnectiontMap.put(Utils.byteArrayToString(address64), connection);
-			Main.ClientState.put(Utils.byteArrayToString(address64), "Active");
-			Mqtt_Listener listener = new Mqtt_Listener(address64);
-			connection.listener(listener);
-			if (will) {
-				WillTopicReq willTopicReq = new WillTopicReq(address64, address16);
-				willTopicReq.start();
-				willTopicReq.join();
-				WillMessageReq willMessageReq = new WillMessageReq(address64, address16);
-				willMessageReq.start();
-				willMessageReq.join();
-			}
-			connection.connect(invalidCallBack);
-		}
-	}
-
-	public void run() {
-		try {
-			connect();
-		} catch (URISyntaxException e) {
-			Log.debug(e.getMessage());
-			Log.debug(e.getReason());
-		} catch (InterruptedException e) {
-			Log.debug(e.getMessage());
-		}
 	}
 }

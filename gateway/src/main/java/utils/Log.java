@@ -8,20 +8,24 @@ import java.util.Date;
 
 public class Log {
 
-    private static final DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+	private static final DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 
-    public Log() {
+	public Log() {
 
-    }
+	}
 
-    public static void print(final String message) {
-        Date date = new Date();
-        System.out.println(dateFormat.format(date) + ": " + message);
-    }
+	public static void print(final String message) {
+		Date date = new Date();
+		System.out.println(dateFormat.format(date) + ": " + message);
+	}
 
-    public static void debug(final String message) {
-        if( Main.DEBUG ) {
-            System.out.println("DEBUG: " + message);
-        }
-    }
+	public static void debug(final String message) {
+		if (Main.DEBUG) {
+			System.out.println("DEBUG: " + message);
+		}
+	}
+
+	public static void error(final String message) {
+		System.out.println("ERROR: " + message);
+	}
 }

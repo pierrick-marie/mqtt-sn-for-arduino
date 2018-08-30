@@ -5,7 +5,7 @@ import gateway.Serial;
 import org.fusesource.mqtt.client.Callback;
 import utils.Log;
 
-public class MqttCallback implements Callback {
+public class MqttCallback implements Callback<Void> {
 
 	private final byte[] address64;
 	private final byte[] address16;
@@ -17,7 +17,8 @@ public class MqttCallback implements Callback {
 		this.isValid = isValid;
 	}
 
-	public void onSuccess(Object value) {
+	@Override
+	public void onSuccess(Void value) {
 		Log.print("Success on connect callback");
 		connack();
 	}
