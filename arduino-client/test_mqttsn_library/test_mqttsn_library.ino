@@ -1,10 +1,15 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
-#include <mqttsn-messages.h>
+#include <Logs.h>
+#include <Mqttsn.h>
+#include <MqttsnApi.h>
 #include <SoftwareSerial.h>
 
-MQTTSN mqttsn; //objet qui permet d'appeler les methodes de la librairie mqttsn
+Logs logs; // objet pour ecrire des logs dans la console
+MQTTSN mqttsn; // objet qui permet d'appeler les methodes de la librairie mqttsn
+MqttsnApi api; // API de manipulation du protocole MQTT-SN
+
 SoftwareSerial XBee(5, 4); //objet qui permet d'appeler les méthodes pour envoyer des données via le module XBee
 
 SoftwareSerial Rfid(2, 3);
@@ -18,34 +23,60 @@ long time = millis();
 
 void setup() {
 
-  delay(1000);
+  delay(500);
   
   Serial.begin(9600);
   XBee.begin(9600);
   // Rfid.begin(9600);
   XBee.listen();
-  if(sn_init() == ACCEPTED){
-    Serial.println("Sn_init Ok");
+
+// if(ABSTRCT_init() == ACCEPTED){
+  if(api.init() == ACCEPTED){
+    Serial.println("\nINIT OK");
   } else {
-    Serial.println("Sn_init KO");
+    Serial.println("\nINIT KO!");
+    // delay(500);
+    // exit(-1);
   }
-}
 
-void loop() {
-
-    /*
-    if(time + 10000 <= millis()) {
+/*
+  // if(time + 10000 <= millis()) {
       XBee.listen();
       if(XBee.isListening()){
-        if(sn_connect(MODULE_NAME) == ACCEPTED){
-          Serial.println("Sn_connect Sub Ok");
-          
-          if(!is_topic_registered(TOPIC_SUB)){
-            if(sn_subscribe(TOPIC_SUB) == ACCEPTED){
-              Serial.println("Sn_subscribe Ok");
-            }
-          }
+        if(ABSTRCT_connect(MODULE_NAME) == ACCEPTED){
+          Serial.println("\nCONNECT OK");
+        }
+        else {
+          Serial.println("\nCONNECT KO!");
+        }
+      }
+    // }
 
+/*
+
+    // if(!ABSTRCT_is_topic_registered(TOPIC_SUB)){
+    //  Serial.println("TOPIC NOT REGISTERED");
+      if(ABSTRCT_subscribe(TOPIC_SUB) == ACCEPTED){
+        Serial.println("\nSn_subscribe Ok - TOPIC IS REGISTERED");
+      } else {
+        Serial.println("\nTOPIC NOT REGISTERED");
+      }
+
+      if(ABSTRCT_subscribe("POW POW POW") == ACCEPTED){
+        Serial.println("\nSn_subscribe Ok - TOPIC IS REGISTERED");
+      } else {
+        Serial.println("\nTOPIC NOT REGISTERED");
+      }
+    /*  
+    } else {
+      Serial.println("TOPIC REGISTERED");
+    }
+    */
+}
+
+void loop() {    
+
+/*
           Serial.println("# GET MESSAGES 0");
           String received = sn_get_message_from_subscribed_topics();
           Serial.println("# GET MESSAGES 1");
