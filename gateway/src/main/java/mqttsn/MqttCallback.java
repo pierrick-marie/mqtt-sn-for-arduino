@@ -25,7 +25,7 @@ public class MqttCallback implements Callback<Void> {
 
 	public void onFailure(Throwable e) {
 		Log.print("Failure on connect callback");
-		Log.debug(e.getMessage());
+		Log.debug("MqttCallback", "onFailure", e.getMessage());
 	}
 
 	public void connack() {

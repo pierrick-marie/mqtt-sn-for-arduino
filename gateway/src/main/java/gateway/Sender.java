@@ -64,7 +64,7 @@ public class Sender extends Thread {
 
         // the message has not been acquit -> resend
         if( !Main.MessageIdAck.contains(Main.MessageId) ){
-            Log.debug("Resend the message");
+            Log.debug("Sender", "sendMessage", "Resend the message");
             sendMessage();
         }
     }

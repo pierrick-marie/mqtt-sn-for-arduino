@@ -6,9 +6,8 @@ public class Time {
 		try {
 			Thread.sleep(millis);
 		} catch (InterruptedException e) {
-			Log.error("Time.sleep(" + millis + ")");
-			Log.error(errorMessage);
-			Log.debug(e.getMessage());
+			Log.error("Time", "sleep","An exception have been captured");
+			Log.debug("Time", "sleep", e.getMessage());
 		}
 	}
 }
