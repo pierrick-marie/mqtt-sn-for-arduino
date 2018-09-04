@@ -3,6 +3,7 @@ package gateway;
 import mqttsn.Utils;
 import org.fusesource.mqtt.client.Callback;
 import org.fusesource.mqtt.client.CallbackConnection;
+import utils.State;
 
 import java.beans.ExceptionListener;
 import java.text.DateFormat;
@@ -26,7 +27,7 @@ public class TimeOut implements Runnable, ExceptionListener {
     public void start() {
         for(int i=0;i<duration;i++){
             //System.out.println((duration-i)+" "+Main.AddressClientMap.get(Utils.byteArrayToString(address64))+" "+Main.ClientState.get(Utils.byteArrayToString(address64)));
-            if(!Main.ClientState.get(Utils.byteArrayToString(add64)).equals("Asleep")){
+            if(!Main.ClientState.get(Utils.byteArrayToString(add64)).equals(State.ASLEEP)){
                 System.out.println(Main.AddressClientMap.get(Utils.byteArrayToString(add64))+" not asleep anymore");
                 return;
             }
@@ -40,8 +41,8 @@ public class TimeOut implements Runnable, ExceptionListener {
     }
 
     public void clientTimeOut(byte[] add64){
-        Main.ClientState.put(Utils.byteArrayToString(add64), "Lost");
-        CallbackConnection connection=Main.AddressConnectiontMap.get(Utils.byteArrayToString(add64));
+        Main.ClientState.put(Utils.byteArrayToString(add64), State.LOST);
+        CallbackConnection connection=Main.AddressConnectionMap.get(Utils.byteArrayToString(add64));
         connection.disconnect(new Callback<Void>() {
             @Override
             public void onSuccess(Void value) {

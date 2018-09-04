@@ -48,7 +48,7 @@ public class Subscribe extends Thread {
         if(Main.TopicName.containsKey(topicName)){
             topicID=Main.TopicName.get(topicName);
             //System.out.println("TOPICID "+topicID);
-            CallbackConnection connection=Main.AddressConnectiontMap.get(Utils.byteArrayToString(add64));
+            CallbackConnection connection=Main.AddressConnectionMap.get(Utils.byteArrayToString(add64));
             Topic[] topics={new Topic(topicName, Utils.getQoS(qos))};
             final int finalTopicID = topicID;
             connection.subscribe(topics, new Callback<byte[]>() {

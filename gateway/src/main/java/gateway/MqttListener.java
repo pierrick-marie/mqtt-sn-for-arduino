@@ -13,12 +13,12 @@ import java.util.Date;
 /**
  * Created by arnaudoglaza on 03/07/2017.
  */
-public class Mqtt_Listener implements Listener {
+public class MqttListener implements Listener {
 
     byte[] add64;
     private static final DateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 
-    public Mqtt_Listener(byte[] add64){
+    public MqttListener(byte[] add64){
         this.add64=add64;
     }
 

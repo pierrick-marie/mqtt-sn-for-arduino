@@ -4,7 +4,7 @@ import jssc.*;
 import mqttsn.*;
 import org.fusesource.mqtt.client.CallbackConnection;
 import org.fusesource.mqtt.client.MQTT;
-import utils.ClientsManager;
+import utils.State;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -22,10 +22,10 @@ public class Main {
     // @todo DEBUG: use the ClientManager instead
     public final static HashMap<String, MQTT> ClientMap = new HashMap<>();
     public final static HashMap<String, String> AddressClientMap = new HashMap<>();
-    public final static HashMap<String, String> ClientState = new HashMap<>();
+    public final static HashMap<String, State> ClientState = new HashMap<>();
     public final static HashMap<String, Integer> ClientDuration = new HashMap<>();
     public final static HashMap<String, ArrayList<Message>> ClientBufferedMessage = new HashMap<>();
-    public final static HashMap<String, CallbackConnection> AddressConnectiontMap = new HashMap<>();
+    public final static HashMap<String, CallbackConnection> AddressConnectionMap = new HashMap<>();
     public final static HashMap<String, Integer> TopicName = new HashMap<>();
     public final static ArrayList<Integer> MessageIdAck = new ArrayList<>();
     public final static HashMap<String, Boolean> WillTopicAck = new HashMap<>();
@@ -219,7 +219,7 @@ public class Main {
         switch ( data_type ){
             case 0x01:
                 //SEARCHGW
-                SearchGW searchGW = new SearchGW(address64, address16, payload[2]);
+                SearchGateway searchGW = new SearchGateway(address64, address16, payload[2]);
                 searchGW.start();
                 break;
 

@@ -1,27 +1,9 @@
 package utils;
 
-
-// public class ClientsState {
-
 import gateway.Message;
 import org.fusesource.mqtt.client.MQTT;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-
-enum State {
-	ASLEEP("Asleep"),	LOST("Lost"), ACTIVE("Active");
-
-	private String state;
-
-	public String getState() {
-		return this.state;
-	}
-
-	State(final String state) {
-		this.state = state;
-	}
-}
 
 public class Client {
 

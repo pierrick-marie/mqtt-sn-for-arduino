@@ -1,17 +1,15 @@
 package mqttsn;
 
 import gateway.Main;
-import gateway.Mqtt_Listener;
-import gateway.Serial;
-import org.fusesource.mqtt.client.Callback;
+import gateway.MqttListener;
 import org.fusesource.mqtt.client.CallbackConnection;
 import org.fusesource.mqtt.client.MQTT;
 import utils.Log;
+import utils.State;
 import utils.Time;
 
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
-import java.util.Date;
 
 /**
  * Created by arnaudoglaza on 07/07/2017.
@@ -64,26 +62,30 @@ public class Connect extends Thread {
 		if (Main.ClientMap.containsKey(clientId)) {
 			Log.debug("Connect", "connect","The client is already knew and its status is \"sleeping\"");
 
-			if (Main.ClientState.get(Utils.byteArrayToString(address64)).equals("Asleep")) {
+			if (Main.ClientState.get(Utils.byteArrayToString(address64)).equals(utils.State.ASLEEP)) {
 				Log.debug("Connect", "connect","device = " + Main.AddressClientMap.get(Utils.byteArrayToString(address64)) + " come back from sleep");
 
-				Main.ClientState.put(Utils.byteArrayToString(address64), "Active");
+				// @DEBUG SAME CODE
+				Main.ClientState.put(Utils.byteArrayToString(address64), utils.State.ACTIVE);
+				// @DEBUG SAME CODE
 
-				Time.sleep((long) 10, "Connect.java -> connect(): An error occurs when trying to sleep the current thread");
+				Time.sleep((long) 10, "Connect.connect(): An error occurs when trying to sleep the current thread");
 
 				validCallBack.connack();
 
-			} else if (Main.ClientState.get(Utils.byteArrayToString(address64)).equals("Lost")) {
+			} else if (Main.ClientState.get(Utils.byteArrayToString(address64)).equals(utils.State.LOST)) {
 				Log.debug("Connect", "connect","The client is knew and its status is \"lost\"");
 
-				Main.ClientState.put(Utils.byteArrayToString(address64), "Active");
-				Mqtt_Listener listener = new Mqtt_Listener(address64);
 
+				// @DEBUG SAME CODE
+				Main.ClientState.put(Utils.byteArrayToString(address64), utils.State.ACTIVE);
 				CallbackConnection connection = mqtt.callbackConnection();
-				Main.AddressConnectiontMap.put(Utils.byteArrayToString(address64), connection);
+				Main.AddressConnectionMap.put(Utils.byteArrayToString(address64), connection);
+				MqttListener listener = new MqttListener(address64);
 				connection.listener(listener);
-				connection.connect(validCallBack);
+				// @DEBUG SAME CODE
 
+				connection.connect(invalidCallBack);
 				if (will) {
 					createWillHandlers();
 				}
@@ -95,13 +97,18 @@ public class Connect extends Thread {
 
 			Main.AddressClientMap.put(Utils.byteArrayToString(address64), clientId);
 			Main.ClientMap.put(clientId, mqtt);
-			Main.ClientState.put(Utils.byteArrayToString(address64), "Active");
 
+			// @DEBUG SAME CODE
+			Main.ClientState.put(Utils.byteArrayToString(address64), utils.State.ACTIVE);
 			CallbackConnection connection = mqtt.callbackConnection();
-			Main.AddressConnectiontMap.put(Utils.byteArrayToString(address64), connection);
-			Mqtt_Listener listener = new Mqtt_Listener(address64);
+			Main.AddressConnectionMap.put(Utils.byteArrayToString(address64), connection);
+			MqttListener listener = new MqttListener(address64);
 			connection.listener(listener);
-			connection.connect(invalidCallBack);
+			// @DEBUG SAME CODE
+
+			// @DEBUG Valid the first connexion of the client
+			connection.connect(validCallBack);
+			validCallBack.connack();
 
 			if (will) {
 				createWillHandlers();

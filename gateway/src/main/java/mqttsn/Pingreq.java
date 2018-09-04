@@ -1,6 +1,7 @@
 package mqttsn;
 
 import gateway.*;
+import utils.State;
 
 import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
@@ -29,7 +30,7 @@ public class Pingreq extends Thread {
         Date date = new Date();
         System.out.println(sdf.format(date)+": -> "+clientId+" Pingreq");
         //if(Main.ClientState.get(Utils.byteArrayToString(address64)).equals("Asleep")){
-            Main.ClientState.put(Utils.byteArrayToString(add64),"Awake");
+            Main.ClientState.put(Utils.byteArrayToString(add64), utils.State.AWAKE);
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {

@@ -51,7 +51,7 @@ public class Publish extends Thread {
         //System.out.println(topicID);
         if(Main.TopicName.containsValue(topicID)){
             String topicName=getKeyByValue(Main.TopicName,topicID);
-            CallbackConnection connection=Main.AddressConnectiontMap.get(Utils.byteArrayToString(add64));
+            CallbackConnection connection=Main.AddressConnectionMap.get(Utils.byteArrayToString(add64));
             if(connection!=null){
                 connection.publish(topicName, data, Utils.getQoS(qos), retain, new Callback<Void>() {
                     @Override

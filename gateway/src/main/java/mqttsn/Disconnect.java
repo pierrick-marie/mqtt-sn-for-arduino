@@ -4,6 +4,7 @@ import gateway.Main;
 import gateway.Serial;
 import gateway.Threading;
 import gateway.TimeOut;
+import utils.State;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -27,12 +28,12 @@ public class Disconnect extends Thread {
 
     public void disconnect(){
         Date date = new Date();
-        System.out.println(sdf.format(date)+": -> "+ Main.AddressClientMap.get(Utils.byteArrayToString(add64))+" Disconnect");
+        System.out.println(sdf.format(date)+": -> "+ Main.AddressClientMap.get(Utils.byteArrayToString(add64)) + " Disconnect");
         if(msg.length==4){
             int duration=(msg[0]<<8)+(msg[1]&0xFF);
             //System.out.println("Duration: "+duration);
             if(duration>0){
-                Main.ClientState.put(Utils.byteArrayToString(add64),"Asleep");
+                Main.ClientState.put(Utils.byteArrayToString(add64), utils.State.ASLEEP);
                 Main.ClientDuration.put(Utils.byteArrayToString(add64), duration);
                 disconnectack(add64, add16);
                 //System.out.println(Main.AddressClientMap.get(Utils.byteArrayToString(address64))+" going into sleep");
@@ -41,7 +42,7 @@ public class Disconnect extends Thread {
             }
         }else{
             //TODO REAL DISCONNECT
-            Main.ClientState.put(Utils.byteArrayToString(add64),"Disconnected");
+            Main.ClientState.put(Utils.byteArrayToString(add64), utils.State.DISCONNECTED);
             disconnectack(add64, add16);
         }
     }

@@ -1,6 +1,7 @@
 package gateway;
 
 import mqttsn.Utils;
+import utils.State;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -66,8 +67,8 @@ public class MultipleSender extends Thread {
         ret[0]=(byte)0x02;
         ret[1]=(byte)0x17;
         Serial.write(Main.SerialPort, add64, add16, ret);
-        if(Main.ClientState.get(Utils.byteArrayToString(add64)).equals("Awake")) {
-            Main.ClientState.put(Utils.byteArrayToString(add64), "Asleep");
+        if(Main.ClientState.get(Utils.byteArrayToString(add64)).equals(utils.State.AWAKE)) {
+            Main.ClientState.put(Utils.byteArrayToString(add64), utils.State.ASLEEP);
             //System.out.println(Main.AddressClientMap.get(Utils.byteArrayToString(address64))+" goes to sleep");
             if(Main.ClientDuration.get(Utils.byteArrayToString(add64)) != null){
                 TimeOut timeOut=new TimeOut(Main.ClientDuration.get(Utils.byteArrayToString(add64)), add64);

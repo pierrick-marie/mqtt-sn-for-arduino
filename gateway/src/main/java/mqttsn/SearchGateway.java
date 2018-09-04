@@ -7,22 +7,22 @@ import utils.Log;
 /**
  * Created by arnaudoglaza on 07/07/2017.
  */
-public class SearchGW extends Thread {
+public class SearchGateway extends Thread {
 
     byte[] address64;
     byte[] address16;
     int radius;
 
-    public SearchGW(byte[] address64, byte[] address16, int radius) {
+    public SearchGateway(byte[] address64, byte[] address16, int radius) {
 
         this.address16 = address16;
         this.address64 = address64;
         this.radius = radius;
     }
 
-    public void searchGW(){
+    public void searchGateway() {
 
-        Log.print(" -> SearchGW");
+        Log.print(" -> Search gateway");
 
         byte[] ret=new byte[3];
         ret[0]=(byte)0x03;
@@ -33,6 +33,6 @@ public class SearchGW extends Thread {
     }
 
     public void run() {
-        searchGW();
+        searchGateway();
     }
 }
