@@ -29,7 +29,7 @@ void Logs::debug(const char* className, const char* methodeName, const char* mes
 		Serial.print("(): ");
 		Serial.print(message);
 		Serial.print(" ");
-		Serial.print(value);
+		Serial.println(value);
 	}
 }
 
@@ -42,6 +42,6 @@ void Logs::debug(const char* className, const char* methodeName, const char* mes
 		Serial.print("(): ");
 		Serial.print(message);
 		Serial.print(" ");
-		Serial.print(value);
+		Serial.println(value);
 	}
 }

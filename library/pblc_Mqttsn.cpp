@@ -52,27 +52,28 @@ THE SOFTWARE.
  *
  **/
 
-MQTTSN::MQTTSN() :
-      WaitingForResponse(false),
-      WaitingForSuback(false),
-      WaitingForPuback(false),
-      WaitingForPingresp(false),
-      Connected(false),
-      MessageId(0),
-      TopicCount(0),
-      GatewayId(0),
-      ResponseTimer(0),
-      ResponseRetries(0),
-      PingrespTimer(0),
-      PingrespRetries(0),
-      SubackTimer(0),
-      SubackRetries(0),
-      PubackTimer(0),
-      PubackRetries(0)
-{
-	memset(TopicTable, 0, sizeof(topic) * MAX_TOPICS);
-	memset(MessageBuffer, 0, MAX_BUFFER_SIZE);
-	memset(ResponseBuffer, 0, MAX_BUFFER_SIZE);
+MQTTSN::MQTTSN() {
+
+	waitingForResponse = false ;
+	waitingForSubAck = false ;
+	waitingForPubAck = false ;
+	waitingForPingResp = false ;
+	connected = false ;
+	messageId = 0 ;
+	topicCount = 0 ;
+	gatewayId = 0 ;
+	responseTimer = 0 ;
+	responseRetries = 0 ;
+	pingRespTimer = 0 ;
+	pingRespRetries = 0 ;
+	subAckTimer = 0 ;
+	subAckRetries = 0 ;
+	pubAckTimer = 0 ;
+	pubAckRetries = 0 ;
+
+	memset(topicTable, 0, sizeof(topic) * MAX_TOPICS);
+	memset(messageBuffer, 0, MAX_BUFFER_SIZE);
+	memset(responseBuffer, 0, MAX_BUFFER_SIZE);
 }
 
 MQTTSN::~MQTTSN() {
@@ -85,7 +86,7 @@ void MQTTSN::pubrec() {
 	msg->type = PUBREC;
 	msg->message_id = bswap(_message_id);
 
-	send_message();
+	sendMessage();
 }
 
 void MQTTSN::pubrel() {
@@ -94,7 +95,7 @@ void MQTTSN::pubrel() {
 	msg->type = PUBREL;
 	msg->message_id = bswap(_message_id);
 
-	send_message();
+	sendMessage();
 }
 
 void MQTTSN::pubcomp() {
@@ -103,59 +104,47 @@ void MQTTSN::pubcomp() {
 	msg->type = PUBCOMP;
 	msg->message_id = bswap(_message_id);
 
-	send_message();
+	sendMessage();
 }
 #endif
 
 #ifdef USE_SERIAL
 /**
- * parse_stream(buf, len) is called at the end of the function CheckSerial() in _MeshBee.ino.
- * CheckSerial() gets all incoming data from the gateway and call parse_stream with the buffer of data (@buf) and it's size (@len).
+ * parseStream(buf, len) is called at the end of the function CheckSerial() in _MeshBee.ino.
+ * CheckSerial() gets all incoming data from the gateway and call parseStream with the buffer of data (@buf) and it's size (@len).
  **/
-void MQTTSN::parse_stream(uint8_t* buf, uint16_t len) {
+void MQTTSN::parseStream(uint8_t* buf, uint16_t len) {
 
-	if(WaitingForPingresp){
-		PingrespTimer = millis();
+	logs.debug("Mqttsn", "parseStream", "");
+
+	if(waitingForPingResp){
+		pingRespTimer = millis();
 	}
-	memset(ResponseBuffer, 0, MAX_BUFFER_SIZE);
-	memcpy(ResponseBuffer, (const void*)buf, len);
+	memset(responseBuffer, 0, MAX_BUFFER_SIZE);
+	memcpy(responseBuffer, (const void*)buf, len);
 
-	// WaitingForResponse is set to false to allow another request
-	WaitingForResponse = false;
+	// waitingForResponse is set to false to allow another request
+	waitingForResponse = false;
 	dispatch();
 }
 #endif
 
-/**
- * @brief MQTTSN::searchgw The function sends a message to the search the closest gateway arround @radius scale.
- * @param radius The max hop to search an available gateway.
- **/
-void MQTTSN::searchgw(const uint8_t radius) {
+void MQTTSN::gatewayInfoHandler(const msg_gwinfo* message) {
 
-	msg_searchgw* msg = reinterpret_cast<msg_searchgw*>(MessageBuffer);
-
-	msg->length = sizeof(msg_searchgw);
-	msg->type = SEARCHGW;
-	msg->radius = radius;
-
-	send_message();
-
-	// Waiting a response, set to false in @MQTTSN_parse_stream()
-	WaitingForResponse = true;
+	if(message->gw_id == 1) {
+		initOk = true;
+	} else {
+		initOk = false;
+	}
 }
 
-extern void MQTTSN_gwinfo_handler(const msg_gwinfo* msg);
-void MQTTSN::gwinfo_handler(const msg_gwinfo* msg) {
-	MQTTSN_gwinfo_handler(msg);
-}
-
-bool MQTTSN::connected() {
-	return Connected;
+bool MQTTSN::isConnected() {
+	return connected;
 }
 
 extern void MQTTSN_connack_handler(const msg_connack* msg);
 void MQTTSN::connack_handler(const msg_connack* msg) {
-	Connected = true;
+	connected = true;
 	MQTTSN_connack_handler(msg);
 }
 
@@ -171,14 +160,14 @@ void MQTTSN::connack_handler(const msg_connack* msg) {
  **/
 int MQTTSN::register_topic(const char* topic_name) {
 
-	// WaitingForResponse is set to false in function @MQTTSN_parse_stream.
+	// waitingForResponse is set to false in function @MQTTSN_parseStream.
 	// As a consequence, in nominal case, it should be equals to false.
-	if (WaitingForResponse) {
+	if (waitingForResponse) {
 		logs.debug("MQTTSN", "register_topic", "waitingForResponse is true");
 		return -2;
 	}
 
-	if(TopicCount >= MAX_TOPICS) {
+	if(topicCount >= MAX_TOPICS) {
 		logs.debug("MQTTSN", "register_topic", "topicCount > MAX_TOPICS");
 		return -2;
 	}
@@ -193,23 +182,23 @@ int MQTTSN::register_topic(const char* topic_name) {
 	// the next topic when we get a REGACK from the broker. So don't issue
 	// another REGISTER until we have resolved this one.
 	// @topic_name is save now because it will be lost at the end of this function.
-	TopicTable[TopicCount].name = topic_name;
+	topicTable[topicCount].name = topic_name;
 	// A magic number while the gateway respond: @see:regack_handler()
-	TopicTable[TopicCount].id = DEFAULT_TOPIC_ID;
+	topicTable[topicCount].id = DEFAULT_TOPIC_ID;
 
-	msg_register* msg = reinterpret_cast<msg_register*>(MessageBuffer);
-	MessageId++;
+	msg_register* msg = reinterpret_cast<msg_register*>(messageBuffer);
+	messageId++;
 	msg->length = sizeof(msg_register) + strlen(topic_name);
 	msg->type = REGISTER;
 	msg->topic_id = 0;
-	msg->message_id = bswap(MessageId);
+	msg->message_id = bswap(messageId);
 	strcpy(msg->topic_name, topic_name);
-	send_message();
+	sendMessage();
 
 	logs.debug("MQTTSN", "register_topic", "Register topic message is sent");
 
-	// Waiting a response, set to false in @MQTTSN_parse_stream()
-	WaitingForResponse = true;
+	// Waiting a response, set to false in @MQTTSN_parseStream()
+	waitingForResponse = true;
 
 	return -1;
 }
@@ -222,24 +211,24 @@ int MQTTSN::register_topic(const char* topic_name) {
  **/
 bool MQTTSN::wait_for_response() {
 
-	if (WaitingForResponse) {
+	if (waitingForResponse) {
 
 		// TODO: Watch out for overflow.
-		if ((millis() - ResponseTimer) > (T_RETRY * 1000L)) {
-			ResponseTimer = millis();
+		if ((millis() - responseTimer) > (T_RETRY * 1000L)) {
+			responseTimer = millis();
 
-			if (ResponseRetries == 0) {
-				WaitingForResponse = false;
+			if (responseRetries == 0) {
+				waitingForResponse = false;
 				disconnect_handler(NULL);
 			} else {
-				send_message();
+				sendMessage();
 			}
 			Serial.print("RESPONSE RETRIES ");
-			Serial.println(ResponseRetries);
-			--ResponseRetries;
+			Serial.println(responseRetries);
+			--responseRetries;
 		}
 	}
-	return WaitingForResponse;
+	return waitingForResponse;
 }
 
 /**
@@ -249,23 +238,23 @@ bool MQTTSN::wait_for_response() {
  * @todo DEBUG
  **/
 bool MQTTSN::wait_for_suback() {
-	if (WaitingForSuback) {
+	if (waitingForSubAck) {
 		// TODO: Watch out for overflow.
-		if ((millis() - SubackTimer) > (T_RETRY * 1000L)) {
-			SubackTimer = millis();
+		if ((millis() - subAckTimer) > (T_RETRY * 1000L)) {
+			subAckTimer = millis();
 
-			if (SubackRetries == 0) {
-				WaitingForSuback = false;
+			if (subAckRetries == 0) {
+				waitingForSubAck = false;
 				disconnect_handler(NULL);
 			} else {
-				send_message();
+				sendMessage();
 			}
 			Serial.print("RESPONSE RETRIES ");
-			Serial.println(SubackRetries);
-			--SubackRetries;
+			Serial.println(subAckRetries);
+			--subAckRetries;
 		}
 	}
-	return WaitingForSuback;
+	return waitingForSubAck;
 }
 
 /**
@@ -275,23 +264,23 @@ bool MQTTSN::wait_for_suback() {
  * @todo DEBUG
  **/
 bool MQTTSN::wait_for_puback() {
-	if (WaitingForPuback) {
+	if (waitingForPubAck) {
 		// TODO: Watch out for overflow.
-		if ((millis() - PubackTimer) > (T_RETRY * 1000L)) {
-			PubackTimer = millis();
+		if ((millis() - pubAckTimer) > (T_RETRY * 1000L)) {
+			pubAckTimer = millis();
 
-			if (PubackRetries == 0) {
-				WaitingForPuback = false;
+			if (pubAckRetries == 0) {
+				waitingForPubAck = false;
 				disconnect_handler(NULL);
 			} else {
-				send_message();
+				sendMessage();
 			}
 			Serial.print("RESPONSE RETRIES ");
-			Serial.println(PubackRetries);
-			--PubackRetries;
+			Serial.println(pubAckRetries);
+			--pubAckRetries;
 		}
 	}
-	return WaitingForPuback;
+	return waitingForPubAck;
 }
 
 /**
@@ -301,23 +290,23 @@ bool MQTTSN::wait_for_puback() {
  * @todo DEBUG
  **/
 bool MQTTSN::wait_for_pingresp() {
-	if (WaitingForPingresp) {
+	if (waitingForPingResp) {
 		// TODO: Watch out for overflow.
-		if ((millis() - PingrespTimer) > (PR_RETRY * 1000L)) {
-			PingrespTimer = millis();
+		if ((millis() - pingRespTimer) > (PR_RETRY * 1000L)) {
+			pingRespTimer = millis();
 
-			if (PingrespRetries == 0) {
-				WaitingForPingresp = false;
+			if (pingRespRetries == 0) {
+				waitingForPingResp = false;
 				disconnect_handler(NULL);
 			} else {
-				send_message();
+				sendMessage();
 			}
 			Serial.print("PINGRESP RETRIES ");
-			Serial.println(PingrespRetries);
-			--PingrespRetries;
+			Serial.println(pingRespRetries);
+			--pingRespRetries;
 		}
 	}
-	return WaitingForPingresp;
+	return waitingForPingResp;
 }
 
 extern void MQTTSN_willtopicreq_handler(const message_header* msg);
@@ -333,25 +322,25 @@ void MQTTSN::willmsgreq_handler(const message_header* msg) {
 
 extern void MQTTSN_puback_handler(const msg_puback* msg);
 void MQTTSN::puback_handler(const msg_puback* msg) {
-	WaitingForPuback=false;
+	waitingForPubAck=false;
 	MQTTSN_puback_handler(msg);
 }
 
 extern void MQTTSN_suback_handler(const msg_suback* msg);
 void MQTTSN::suback_handler(const msg_suback* msg) {
-	WaitingForSuback=false;
+	waitingForSubAck=false;
 	MQTTSN_suback_handler(msg);
 }
 
 extern void MQTTSN_disconnect_handler(const msg_disconnect* msg);
 void MQTTSN::disconnect_handler(const msg_disconnect* msg) {
-	Connected = false;
+	connected = false;
 	MQTTSN_disconnect_handler(msg);
 }
 
 extern void MQTTSN_pingresp_handler(); 
 void MQTTSN::pingresp_handler() {
-	WaitingForPingresp=false;
+	waitingForPingResp=false;
 	MQTTSN_pingresp_handler();
 }
 
@@ -360,8 +349,8 @@ void MQTTSN::publish_handler(const msg_publish* msg) {
 	//if (msg->flags & FLAG_QOS_1) {
 	return_code_t ret = REJECTED_INVALID_TOPIC_ID;
 	const uint16_t topic_id = bswap(msg->topic_id);
-	for (uint8_t i = 0; i < TopicCount; ++i) {
-		if (TopicTable[i].id == topic_id) {
+	for (uint8_t i = 0; i < topicCount; ++i) {
+		if (topicTable[i].id == topic_id) {
 			ret = ACCEPTED;
 			MQTTSN_publish_handler(msg);
 			break;
@@ -374,65 +363,65 @@ void MQTTSN::publish_handler(const msg_publish* msg) {
 }
 
 void MQTTSN::pingreq(const char* client_id) {
-	msg_pingreq* msg = reinterpret_cast<msg_pingreq*>(MessageBuffer);
+	msg_pingreq* msg = reinterpret_cast<msg_pingreq*>(messageBuffer);
 	msg->length = sizeof(msg_pingreq) + strlen(client_id);
 	msg->type = PINGREQ;
 	strcpy(msg->client_id, client_id);
 
-	send_message();
+	sendMessage();
 
-	PingrespTimer = millis();
-	PingrespRetries = N_RETRY;
-	WaitingForPingresp = true;
+	pingRespTimer = millis();
+	pingRespRetries = N_RETRY;
+	waitingForPingResp = true;
 }
 
 void MQTTSN::pingresp() {
-	message_header* msg = reinterpret_cast<message_header*>(MessageBuffer);
+	message_header* msg = reinterpret_cast<message_header*>(messageBuffer);
 	msg->length = sizeof(message_header);
 	msg->type = PINGRESP;
-	send_message();
+	sendMessage();
 }
 
 void MQTTSN::unsubscribe_by_id(const uint8_t flags, const uint16_t topic_id) {
-	++MessageId;
+	++messageId;
 
-	msg_unsubscribe* msg = reinterpret_cast<msg_unsubscribe*>(MessageBuffer);
+	msg_unsubscribe* msg = reinterpret_cast<msg_unsubscribe*>(messageBuffer);
 
 	msg->length = sizeof(msg_unsubscribe);
 	msg->type = UNSUBSCRIBE;
 	msg->flags = (flags & QOS_MASK) | FLAG_TOPIC_PREDEFINED_ID;
-	msg->message_id = bswap(MessageId);
+	msg->message_id = bswap(messageId);
 	msg->topic_id = bswap(topic_id);
 
-	send_message();
+	sendMessage();
 
 	if ((flags & QOS_MASK) == FLAG_QOS_1 || (flags & QOS_MASK) == FLAG_QOS_2) {
-		WaitingForResponse = true;
+		waitingForResponse = true;
 	}
 }
 
 void MQTTSN::unsubscribe_by_name(const uint8_t flags, const char* topic_name) {
-	++MessageId;
+	++messageId;
 
-	msg_unsubscribe* msg = reinterpret_cast<msg_unsubscribe*>(MessageBuffer);
+	msg_unsubscribe* msg = reinterpret_cast<msg_unsubscribe*>(messageBuffer);
 
 	// The -2 here is because we're unioning a 0-length member (topic_name)
 	// with a uint16_t in the msg_unsubscribe struct.
 	msg->length = sizeof(msg_unsubscribe) + strlen(topic_name) - 2;
 	msg->type = UNSUBSCRIBE;
 	msg->flags = (flags & QOS_MASK) | FLAG_TOPIC_NAME;
-	msg->message_id = bswap(MessageId);
+	msg->message_id = bswap(messageId);
 	strcpy(msg->topic_name, topic_name);
 
-	send_message();
+	sendMessage();
 
 	if ((flags & QOS_MASK) == FLAG_QOS_1 || (flags & QOS_MASK) == FLAG_QOS_2) {
-		WaitingForResponse = true;
+		waitingForResponse = true;
 	}
 }
 
 void MQTTSN::disconnect(const uint16_t duration) {
-	msg_disconnect* msg = reinterpret_cast<msg_disconnect*>(MessageBuffer);
+	msg_disconnect* msg = reinterpret_cast<msg_disconnect*>(messageBuffer);
 
 	msg->length = sizeof(message_header);
 	msg->type = DISCONNECT;
@@ -442,101 +431,101 @@ void MQTTSN::disconnect(const uint16_t duration) {
 		msg->duration = bswap(duration);
 	}
 
-	send_message();
-	WaitingForResponse = true;
+	sendMessage();
+	waitingForResponse = true;
 }
 
 void MQTTSN::subscribe_by_name(const uint8_t flags, const char* topic_name) {
-	++MessageId;
+	++messageId;
 
-	msg_subscribe* msg = reinterpret_cast<msg_subscribe*>(MessageBuffer);
+	msg_subscribe* msg = reinterpret_cast<msg_subscribe*>(messageBuffer);
 
 	// The -2 here is because we're unioning a 0-length member (topic_name)
 	// with a uint16_t in the msg_subscribe struct.
 	msg->length = sizeof(msg_subscribe) + strlen(topic_name) - 2;
 	msg->type = SUBSCRIBE;
 	msg->flags = (flags & QOS_MASK) | FLAG_TOPIC_NAME;
-	msg->message_id = bswap(MessageId);
+	msg->message_id = bswap(messageId);
 	strcpy(msg->topic_name, topic_name);
 
-	send_message();
+	sendMessage();
 
 	//if ((flags & QOS_MASK) == FLAG_QOS_1 || (flags & QOS_MASK) == FLAG_QOS_2) {
-	WaitingForSuback = true;
+	waitingForSubAck = true;
 	//}
 }
 
 void MQTTSN::publish(const uint8_t flags, const uint16_t topic_id, const void* data, const uint8_t data_len) {
-	++MessageId;
+	++messageId;
 
-	msg_publish* msg = reinterpret_cast<msg_publish*>(MessageBuffer);
+	msg_publish* msg = reinterpret_cast<msg_publish*>(messageBuffer);
 
 	msg->length = sizeof(msg_publish) + data_len;
 	msg->type = PUBLISH;
 	msg->flags = flags;
 	msg->topic_id = bswap(topic_id);
-	msg->message_id = bswap(MessageId);
+	msg->message_id = bswap(messageId);
 	memcpy(msg->data, data, data_len);
 
-	send_message();
+	sendMessage();
 
 	//if ((flags & QOS_MASK) == FLAG_QOS_1 || (flags & QOS_MASK) == FLAG_QOS_2) {
-	WaitingForPuback = true;
+	waitingForPubAck = true;
 	//}
 }
 
 void MQTTSN::subscribe_by_id(const uint8_t flags, const uint16_t topic_id) {
-	++MessageId;
+	++messageId;
 
-	msg_subscribe* msg = reinterpret_cast<msg_subscribe*>(MessageBuffer);
+	msg_subscribe* msg = reinterpret_cast<msg_subscribe*>(messageBuffer);
 
 	msg->length = sizeof(msg_subscribe);
 	msg->type = SUBSCRIBE;
 	msg->flags = (flags & QOS_MASK) | FLAG_TOPIC_PREDEFINED_ID;
-	msg->message_id = bswap(MessageId);
+	msg->message_id = bswap(messageId);
 	msg->topic_id = bswap(topic_id);
 
-	send_message();
+	sendMessage();
 
 	if ((flags & QOS_MASK) == FLAG_QOS_1 || (flags & QOS_MASK) == FLAG_QOS_2) {
-		WaitingForResponse = true;
+		waitingForResponse = true;
 	}
 }
 
 void MQTTSN::will_topic(const uint8_t flags, const char* will_topic, const bool update) {
 	if (will_topic == NULL) {
-		message_header* msg = reinterpret_cast<message_header*>(MessageBuffer);
+		message_header* msg = reinterpret_cast<message_header*>(messageBuffer);
 
 		msg->type = update ? WILLTOPICUPD : WILLTOPIC;
 		msg->length = sizeof(message_header);
 	} else {
-		msg_willtopic* msg = reinterpret_cast<msg_willtopic*>(MessageBuffer);
+		msg_willtopic* msg = reinterpret_cast<msg_willtopic*>(messageBuffer);
 
 		msg->type = update ? WILLTOPICUPD : WILLTOPIC;
 		msg->flags = flags;
 		strcpy(msg->will_topic, will_topic);
 	}
 
-	send_message();
+	sendMessage();
 
 	if ((flags & QOS_MASK) == FLAG_QOS_1 || (flags & QOS_MASK) == FLAG_QOS_2) {
-		WaitingForResponse = true;
+		waitingForResponse = true;
 	}
 }
 
 void MQTTSN::will_messsage(const void* will_msg, const uint8_t will_msg_len, const bool update) {
-	msg_willmsg* msg = reinterpret_cast<msg_willmsg*>(MessageBuffer);
+	msg_willmsg* msg = reinterpret_cast<msg_willmsg*>(messageBuffer);
 
 	msg->length = sizeof(msg_willmsg) + will_msg_len;
 	msg->type = update ? WILLMSGUPD : WILLMSG;
 	memcpy(msg->willmsg, will_msg, will_msg_len);
 
-	send_message();
+	sendMessage();
 }
 
 void MQTTSN::connect(const uint8_t flags, const uint16_t duration, const char* client_id) {
 
-	msg_connect* msg = reinterpret_cast<msg_connect*>(MessageBuffer);
+	msg_connect* msg = reinterpret_cast<msg_connect*>(messageBuffer);
 
 	msg->length = sizeof(msg_connect) + strlen(client_id);
 	msg->type = CONNECT;
@@ -545,7 +534,150 @@ void MQTTSN::connect(const uint8_t flags, const uint16_t duration, const char* c
 	msg->duration = bswap(duration);
 	strcpy(msg->client_id, client_id);
 
-	send_message();
-	Connected = false;
-	WaitingForResponse = true;
+	sendMessage();
+	connected = false;
+	waitingForResponse = true;
+}
+
+int MQTTSN::init() {
+
+	int nb_try = 0;
+	int radius = 0;
+
+	logs.debug("MqttsnApi", "init", "first try to search a gateway");
+
+	searchGateway(radius);
+
+	while( !checkSerial() && nb_try < MAX_TRY) {
+		logs.debug("MqttsnApi", "init", "the gateway did not respond, iteration: ", nb_try);
+		nb_try++;
+		// delay(1000);
+		searchGateway(radius);
+	}
+
+	if( nb_try == MAX_TRY) {
+		logs.debug("MqttsnApi", "init", "REJECTED");
+		return _REJECTED;
+	}
+
+	logs.debug("MqttsnApi", "init", "parsing the received data");
+	parseData();
+
+	logs.debug("MqttsnApi", "init", "checking the response from the gateway");
+	if(initOk) {
+		return _ACCEPTED;
+	} else {
+		return _REJECTED;
+	}
+
+	return _ACCEPTED;
+}
+
+void MQTTSN::setXBee(SoftwareSerial* _xBee) {
+	xBee = _xBee;
+}
+
+int MQTTSN::connect(const char* moduleName) {
+
+	logs.debug("Mqttsn", "connect", "send a connect message");
+	connect(FLAG, KEEP_ALIVE, moduleName);
+
+	logs.debug("Mqttsn", "connect", "waiting for a response");
+	if( !multiCheckSerial(MAX_TRY) ) {
+		logs.debug("Mqttsn", "connect", "check serial rejected");
+		return _REJECTED;
+	}
+
+	logs.debug("Mqttsn", "connect", "parsing the received data");
+	parseData();
+
+	logs.debug("Mqttsn", "connect", "response from the gateway:", connAckReturnCode);
+	return connAckReturnCode;
+}
+
+/**
+ * The function waits a response from the gateway (@wait_data). If a response is available, the function analyse and store the message if necessary.
+ *
+ * Returns:
+ * True if a correct message have been received, else false.
+ **/
+bool MQTTSN::checkSerial() {
+
+    int i, frame_size, payload_lenght;
+    uint8_t delimiter, length1, length2, frame_buffer;
+    bool checksum;
+
+    // no data is available
+    if(!wait_data()) {
+	  return false;
+    }
+
+    // data available before the timeout
+    delimiter = xBee->read();
+
+    // verifiy if the delimiter is OK
+    if(delimiter != 0x7E) {
+	  return false;
+    }
+
+    if(xBee->available() > 0) {
+	  length1=xBee->read();
+	  length2=xBee->read();
+	  frame_size=(length1*16)+length2+1;
+
+	  // store the data in @frameBuffer
+	  for(i = 0; i < frame_size; i++){
+		delay(10);
+		frameBufferIn[i]=xBee->read();
+	  }
+
+	  // verify the checksum
+	  if(!verify_checksum(frameBufferIn, frame_size)) {
+		return false;
+	  }
+
+	  // check the type of received message
+	  if(is_transmit_status()) {
+		return false;
+	  }
+
+	  if(is_data_packet()) {
+		// this is a data packet, copy the gateway address
+		if(gatewayAddress[0]==0 && gatewayAddress[1]==0 && gatewayAddress[2]==0 && gatewayAddress[3]==0){
+			gatewayAddress[0] = frameBufferIn[1];
+		    gatewayAddress[1] = frameBufferIn[2];
+		    gatewayAddress[2] = frameBufferIn[3];
+		    gatewayAddress[3] = frameBufferIn[4];
+		    gatewayAddress[4] = frameBufferIn[5];
+		    gatewayAddress[5] = frameBufferIn[6];
+		    gatewayAddress[6] = frameBufferIn[7];
+		    gatewayAddress[7] = frameBufferIn[8];
+		}
+		// all data have been store in @frameBufferIn
+		return true;
+	  }
+    }
+    // not data is available, clear the buffer and return false
+    memset(frameBufferIn, 0, sizeof(frameBufferIn));
+    return false;
+}
+
+/**
+ *
+ * ****************************
+ * ****************************
+ *
+ * GETTERS & SETTERS
+ *
+ * ****************************
+ * ****************************
+ *
+ **/
+
+bool MQTTSN::getInitOk() {
+	return initOk;
+}
+
+void MQTTSN::setInitOk(const bool init_ok) {
+	initOk = init_ok;
 }

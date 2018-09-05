@@ -1,14 +1,14 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+
+#include <SoftwareSerial.h>
+
 #include <Logs.h>
 #include <Mqttsn.h>
-#include <MqttsnApi.h>
-#include <SoftwareSerial.h>
 
 Logs logs; // objet pour ecrire des logs dans la console
 MQTTSN mqttsn; // objet qui permet d'appeler les methodes de la librairie mqttsn
-MqttsnApi api; // API de manipulation du protocole MQTT-SN
 
 SoftwareSerial XBee(5, 4); //objet qui permet d'appeler les méthodes pour envoyer des données via le module XBee
 
@@ -27,30 +27,27 @@ void setup() {
   
   Serial.begin(9600);
   XBee.begin(9600);
-  // Rfid.begin(9600);
   XBee.listen();
+  // Rfid.begin(9600);
 
-// if(ABSTRCT_init() == ACCEPTED){
-  if(api.init() == ACCEPTED){
+  mqttsn.setXBee(&XBee);
+
+  if(mqttsn.init() == ACCEPTED){
     Serial.println("\nINIT OK");
+    if(XBee.isListening()) {
+      if(mqttsn.connect(MODULE_NAME) == ACCEPTED){
+        Serial.println("\nCONNECT OK");
+      }
+      else {
+        Serial.println("\nCONNECT KO!");
+      }
+    }
   } else {
     Serial.println("\nINIT KO!");
-    // delay(500);
-    // exit(-1);
   }
 
-/*
-  // if(time + 10000 <= millis()) {
-      XBee.listen();
-      if(XBee.isListening()){
-        if(ABSTRCT_connect(MODULE_NAME) == ACCEPTED){
-          Serial.println("\nCONNECT OK");
-        }
-        else {
-          Serial.println("\nCONNECT KO!");
-        }
-      }
-    // }
+      
+
 
 /*
 

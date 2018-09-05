@@ -94,6 +94,11 @@ enum message_type {
 	REREGISTER = 0x1E
 };
 
+typedef struct {
+	const char* name;
+	short id;
+} topic;
+
 struct message_header {
 	uint8_t length;
 	uint8_t type;

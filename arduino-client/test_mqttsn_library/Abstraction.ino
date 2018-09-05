@@ -1,11 +1,3 @@
-#define FLAG 0
-#define KEEP_ALIVE 60
-#define REJECTED 3
-#define ACCEPTED 0
-#define DEBUG false
-
-#define TIME_TO_WAIT 2000
-#define MAX_TRY 5
 
 typedef struct {
   int topic_id;
@@ -25,6 +17,7 @@ bool init_ok = false;
 
 int sn_init(){
 
+/*
   // Search gateway
   mqttsn.searchgw(0);
   delay(500);
@@ -50,7 +43,7 @@ int sn_init(){
   Serial.println(test);
   
   // Read the response
-  CheckSerial();
+  mqttsn.checkSerial();
 
   // Wait for checking the response @MQTTSN_gwinfo_handler()
   while(!init_ok && time + TIME_TO_WAIT > millis()) {}
@@ -58,14 +51,15 @@ int sn_init(){
   if(init_ok) {
     return ACCEPTED;
   } else {
-    return REJECTED;
+    return _REJECTED;
   }
+  */
 }
 
 int sn_connect(const char* module_name){
   mqttsn.connect(FLAG, KEEP_ALIVE, module_name);
   while(mqttsn.wait_for_response()){
-    CheckSerial();
+    mqttsn.checkSerial();
   }
   delay(1000);
   return connack_return_code;
@@ -93,7 +87,7 @@ int sn_register(const char* topic_name){
   mqttsn.register_topic(topic_name);
   my_topic_dictionnary[nb_topic_registered].topic_name = topic_name;
   while(mqttsn.wait_for_response()){
-    CheckSerial();
+    mqttsn.checkSerial();
   }
   //Serial.print("Regack_return_code ");
   //Serial.println(regack_return_code);
@@ -106,12 +100,12 @@ int sn_register(const char* topic_name){
 int sn_subscribe(const char* topic_name){
   if(!is_topic_registered(topic_name)){
     if(sn_register(topic_name) != ACCEPTED){
-      return REJECTED;
+      return _REJECTED;
     }
   }
   mqttsn.subscribe_by_name(FLAG, topic_name);
   while(mqttsn.wait_for_suback()){
-    CheckSerial();
+    mqttsn.checkSerial();
   }
   delay(1000);
   return suback_return_code;
@@ -121,18 +115,18 @@ int sn_publish(String message, const char* topic_name){
   int topic_id;
   if(!is_topic_registered(topic_name)){
     if(sn_register(topic_name) != ACCEPTED){
-      return REJECTED;
+      return _REJECTED;
     }else{
       sn_publish(message, topic_name);
     }
   }
   topic_id = topic_id_for_topic_name(topic_name);
   if(topic_id == -1){
-    return REJECTED;
+    return _REJECTED;
   }
   mqttsn.publish(FLAG, topic_id, message.c_str(), message.length());
   while(mqttsn.wait_for_puback()){
-    CheckSerial();
+    mqttsn.checkSerial();
   }
   delay(1000);
   return puback_return_code;
@@ -147,7 +141,7 @@ String sn_get_message_from_subscribed_topics(){
   message = "";
   mqttsn.pingreq(MODULE_NAME);
   while(mqttsn.wait_for_pingresp()){
-    CheckSerial();
+    mqttsn.checkSerial();
   }
   delay(1000);
   return message;
@@ -167,13 +161,13 @@ void debugln(String message){
 
 void MQTTSN_connack_handler(const msg_connack* msg){
   debug("Entering connack ");
-  debugln(stringFromReturnCode(msg->return_code));
+  debugln(mqttsn.stringFromReturnCode(msg->return_code));
   connack_return_code = msg->return_code;
 }
 
 void MQTTSN_regack_handler(const msg_regack* msg){ 
   debug("Entering regack ");
-  debugln(stringFromReturnCode(msg->return_code));
+  debugln(mqttsn.stringFromReturnCode(msg->return_code));
   regack_return_code = msg->return_code;
   if(msg->return_code == ACCEPTED){
     my_topic_dictionnary[nb_topic_registered].topic_id = msg->topic_id;
@@ -183,13 +177,13 @@ void MQTTSN_regack_handler(const msg_regack* msg){
 
 void MQTTSN_suback_handler(const msg_suback* msg){
   debug("Entering suback ");
-  debugln(stringFromReturnCode(msg->return_code));
+  debugln(mqttsn.stringFromReturnCode(msg->return_code));
   suback_return_code = msg->return_code;
 }
 
 void MQTTSN_puback_handler(const msg_puback* msg){ 
   debug("Entering puback ");
-  debugln(stringFromReturnCode(msg->return_code));
+  debugln(mqttsn.stringFromReturnCode(msg->return_code));
   puback_return_code   = msg->return_code;
 }
 
@@ -206,6 +200,7 @@ void MQTTSN_pingresp_handler(){
   debugln("Entering pingresp");
 }
 
+
 void MQTTSN_gwinfo_handler(const msg_gwinfo* msg){ 
   if(msg->gw_id == 1) {
     init_ok = true;
@@ -213,6 +208,7 @@ void MQTTSN_gwinfo_handler(const msg_gwinfo* msg){
     init_ok = false;
   }
 }
+
 
 void MQTTSN_reregister_handler(msg_reregister const*){
   //RESERVERD
