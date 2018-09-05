@@ -24,17 +24,19 @@ public class Log {
 	public static void debug(final String className, final String methodeName, final String message) {
 		if (Main.DEBUG) {
 			bYellow(" # [ DEBUG ] ");
-			red(className + ".");
-			red(methodeName + "(): ");
+			yellow(className + ".");
+			yellow(methodeName + "(): ");
 			yellow(message + "\n");
 		}
 	}
 
 	public static void error(final String className, final String methodeName, final String message) {
-		bRed(" ! [ ERROR ] ");
-		red(className + ".");
-		red(methodeName + "(): ");
-		red(message + "\n");
+		if (Main.ERROR) {
+			bRed(" ! [ ERROR ] ");
+			red(className + ".");
+			red(methodeName + "(): ");
+			red(message + "\n");
+		}
 	}
 
 	private static void blue(final String message) {

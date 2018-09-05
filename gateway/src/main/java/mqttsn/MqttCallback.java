@@ -3,17 +3,16 @@ package mqttsn;
 import gateway.Main;
 import gateway.Serial;
 import org.fusesource.mqtt.client.Callback;
+import utils.Client;
 import utils.Log;
 
 public class MqttCallback implements Callback<Void> {
 
-	private final byte[] address64;
-	private final byte[] address16;
+	private final Client client;
 	private final Boolean isValid;
 
-	public MqttCallback(byte[] address64, byte[] address16, final Boolean isValid) {
-		this.address16 = address16;
-		this.address64 = address64;
+	public MqttCallback(final Client client, final Boolean isValid) {
+		this.client = client;
 		this.isValid = isValid;
 	}
 
@@ -30,7 +29,7 @@ public class MqttCallback implements Callback<Void> {
 
 	public void connack() {
 
-		Log.print("<- " + Main.AddressClientMap.get(Utils.byteArrayToString(address64)) + " Connack");
+		Log.print("<- " + client.name() + " Connack");
 
 		byte[] serialMesasge = new byte[3];
 		serialMesasge[0] = (byte) 0x03;
@@ -42,6 +41,6 @@ public class MqttCallback implements Callback<Void> {
 			serialMesasge[2] = (byte) 0x03;
 		}
 
-		Serial.write(Main.SerialPort, address64, address16, serialMesasge);
+		Serial.write(Main.SerialPort, client.address64(), client.address16(), serialMesasge);
 	}
 }

@@ -1,70 +1,89 @@
 package utils;
 
 import gateway.Message;
+import org.fusesource.mqtt.client.CallbackConnection;
 import org.fusesource.mqtt.client.MQTT;
 
 import java.util.ArrayList;
 
 public class Client {
 
-	private String name = null;
-	private String id = null;
+	private String name = "";
+	private Integer duration = 0;
+	private State state = State.DISCONNECTED;
 	private MQTT mqttClient = null;
-	private String address = null;
-	private State state = null;
-	private Integer duration = null;
+	private byte[] address64 = null;
+	private byte[] address16 = null;
 
+	private CallbackConnection connection = null;
 	public final ArrayList<Message> messages = new ArrayList<>();
 
-	public Client() {
+	protected Client() { }
 
+	public byte[] address16() {
+		return address16;
 	}
 
-	public String getName() {
+	public void setAddress16(final byte[] address) {
+		if( null == address) { Log.error("Client", "setAddress16", "asddress is null"); }
+		address16 = address;
+	}
+
+	public CallbackConnection connection() {
+		return connection;
+	}
+
+	public void setConnection(final CallbackConnection connection) {
+		if( null == connection) { Log.error("Client", "setConnection", "connection is null"); }
+		this.connection = connection;
+	}
+
+	public String name() {
 		return name;
 	}
 
-	public void setName(String name) {
+	public void setName(final String name) {
+		if( null == name) { Log.error("Client", "setName", "name is null"); }
 		this.name = name;
 	}
 
-	public String getId() {
-		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
-	}
-
-	public MQTT getMqttClient() {
+	public MQTT mqttClient() {
 		return mqttClient;
 	}
 
-	public void setMqttClient(MQTT mqttClient) {
+	public void setMqttClient(final MQTT mqttClient) {
+		if( null == mqttClient) { Log.error("Client", "setMqttClient", "mqttClient is null"); }
 		this.mqttClient = mqttClient;
 	}
 
-	public String getAddress() {
-		return address;
+	public byte[] address64() {
+		return address64;
 	}
 
-	public void setAddress(String address) {
-		this.address = address;
+	public void setAddress64(final byte[] address) {
+		if( null == address) { Log.error("Client", "setAddress64", "address is null"); }
+		address64 = address;
 	}
 
-	public State getState() {
+	public State state() {
 		return state;
 	}
 
-	public void setState(State state) {
+	public void setState(final State state) {
+		if( null == state) { Log.error("Client", "setState", "state is null"); }
 		this.state = state;
 	}
 
-	public Integer getDuration() {
+	public Integer duration() {
 		return duration;
 	}
 
-	public void setDuration(Integer duration) {
+	public void setDuration(final Integer duration) {
+		if( null == duration) { Log.error("Client", "setDuration", "duration is null"); }
 		this.duration = duration;
+	}
+
+	public String toString() {
+		return name;
 	}
 }
