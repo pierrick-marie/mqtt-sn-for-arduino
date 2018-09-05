@@ -1,19 +1,13 @@
 
-typedef struct {
-  int topic_id;
-  char* topic_name;
-} topic_dictionnary;
-
 int connack_return_code;
 int regack_return_code;
 int suback_return_code;
 int puback_return_code;
 String message;
 
-topic_dictionnary my_topic_dictionnary[10];
-int nb_topic_registered=0;
+// int nb_topic_registered=0;
 
-bool init_ok = false;
+// bool init_ok = false;
 
 int sn_init(){
 
@@ -66,52 +60,35 @@ int sn_connect(const char* module_name){
 }
 
 bool is_topic_registered(const char* topic_name){
+  /*
+   * @DEBUG
+   *
   for(int i=0;i<sizeof(my_topic_dictionnary)/sizeof(topic_dictionnary);i++){
     if(my_topic_dictionnary[i].topic_name == topic_name){
       return true;
     }
   }
+  */
   return false;
 }
 
 int topic_id_for_topic_name(const char* topic_name){
+  /*
+   * @DEBUG
+   *
   for(int i=0;i<sizeof(my_topic_dictionnary)/sizeof(topic_dictionnary);i++){
     if(my_topic_dictionnary[i].topic_name == topic_name){
       return my_topic_dictionnary[i].topic_id;
     }
   }
+  */
   return -1;
 }
 
-int sn_register(const char* topic_name){
-  mqttsn.register_topic(topic_name);
-  my_topic_dictionnary[nb_topic_registered].topic_name = topic_name;
-  while(mqttsn.wait_for_response()){
-    mqttsn.checkSerial();
-  }
-  //Serial.print("Regack_return_code ");
-  //Serial.println(regack_return_code);
-  //Serial.print("Regack_topic_id ");
-  //Serial.println(my_topic_dictionnary[nb_topic_registered-1].topic_id);
-  delay(1000);
-  return regack_return_code;
-}
-
-int sn_subscribe(const char* topic_name){
-  if(!is_topic_registered(topic_name)){
-    if(sn_register(topic_name) != ACCEPTED){
-      return _REJECTED;
-    }
-  }
-  mqttsn.subscribe_by_name(FLAG, topic_name);
-  while(mqttsn.wait_for_suback()){
-    mqttsn.checkSerial();
-  }
-  delay(1000);
-  return suback_return_code;
-}
-
 int sn_publish(String message, const char* topic_name){
+  /*
+   * @DEBUG
+   *
   int topic_id;
   if(!is_topic_registered(topic_name)){
     if(sn_register(topic_name) != ACCEPTED){
@@ -130,6 +107,8 @@ int sn_publish(String message, const char* topic_name){
   }
   delay(1000);
   return puback_return_code;
+  */
+  return 0;
 }
 
 void sn_disconnect(){
@@ -170,8 +149,12 @@ void MQTTSN_regack_handler(const msg_regack* msg){
   debugln(mqttsn.stringFromReturnCode(msg->return_code));
   regack_return_code = msg->return_code;
   if(msg->return_code == ACCEPTED){
+    /*
+     * @DEBUG
+     *
     my_topic_dictionnary[nb_topic_registered].topic_id = msg->topic_id;
     nb_topic_registered++;
+    */
   }
 }
 
@@ -202,11 +185,15 @@ void MQTTSN_pingresp_handler(){
 
 
 void MQTTSN_gwinfo_handler(const msg_gwinfo* msg){ 
+  /*
+   * @DEBUG
+   *
   if(msg->gw_id == 1) {
     init_ok = true;
   } else {
     init_ok = false;
   }
+  */
 }
 
 

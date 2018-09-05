@@ -8,11 +8,11 @@
 #include <Mqttsn.h>
 
 Logs logs; // objet pour ecrire des logs dans la console
-MQTTSN mqttsn; // objet qui permet d'appeler les methodes de la librairie mqttsn
+Mqttsn mqttsn; // objet qui permet d'appeler les methodes de la librairie mqttsn
 
 SoftwareSerial XBee(5, 4); //objet qui permet d'appeler les méthodes pour envoyer des données via le module XBee
 
-SoftwareSerial Rfid(2, 3);
+// SoftwareSerial Rfid(2, 3);
 
 #define TOPIC_PUB "ObiOne-RFID"
 #define TOPIC_SUB "ObiPop"
@@ -47,7 +47,12 @@ void setup() {
   }
 
       
-
+  if(-1 == mqttsn.findTopicId(TOPIC_SUB)) {
+    Serial.println("\nNOT REGISTERED");
+    mqttsn.registerByName(TOPIC_SUB);
+  } else {
+    Serial.println("\nREGISTERED");
+  }
 
 /*
 
