@@ -1,5 +1,5 @@
 /*
-mqttsn-messages.h
+Mqttsn-messages.h
 
 The MIT License (MIT)
 
@@ -24,8 +24,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#ifndef __MQTTSN_MESSAGES_H__
-#define __MQTTSN_MESSAGES_H__
+#ifndef __Mqttsn_MESSAGES_H__
+#define __Mqttsn_MESSAGES_H__
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -53,21 +53,19 @@ THE SOFTWARE.
 
 #define FLAG 0
 #define KEEP_ALIVE 60
-#define _REJECTED 3
-#define _ACCEPTED 0
 
 #define TIME_TO_WAIT 2000
 #define MAX_TRY 5
 
-class MQTTSN {
+class Mqttsn {
 
 public:
 
-	MQTTSN();
-	~MQTTSN();
+	Mqttsn(SoftwareSerial* _xBee) ;
+	~Mqttsn() ;
 
 	bool wait_for_response();
-	bool wait_for_suback();
+	bool waitForSubAck();
 	bool wait_for_puback();
 	bool wait_for_pingresp();
 	bool isConnected();
@@ -79,7 +77,7 @@ public:
 	void connect(const uint8_t flags, const uint16_t duration, const char* client_id);
 	void will_topic(const uint8_t flags, const char* will_topic, const bool update = false);
 	void will_messsage(const void* will_msg, const uint8_t will_msg_len, const bool update = false);
-	int  register_topic(const char* name);
+
 	void publish(const uint8_t flags, const uint16_t topic_id, const void* data, const uint8_t data_len);
 
 #ifdef USE_QOS2
@@ -88,24 +86,21 @@ public:
 	void pubcomp();
 #endif
 
-	void subscribe_by_name(const uint8_t flags, const char* topic_name);
-	void subscribe_by_id(const uint8_t flags, const uint16_t topic_id);
-	void unsubscribe_by_name(const uint8_t flags, const char* topic_name);
-	void unsubscribe_by_id(const uint8_t flags, const uint16_t topic_id);
+	int subscribe(const char* topic_name) ;
 	void pingreq(const char* client_id);
 	void pingresp();
 	void disconnect(const uint16_t duration);
 
 	/**
 	 * @brief ABSTRCT_init The init function searches a gateway with a radius = 0.
-	 * @return _ACCEPTED if a correct response is received, else REJECTED.
+	 * @return ACCEPTED if a correct response is received, else REJECTED.
 	 **/
 	int init() ;
 
 	/**
 	 * @brief ABSTRCT_connect The funtion tries to connect the module to the gateway.
 	 * @param module_name The name of the module used to make the connection
-	 * @return _ACCEPTED if a correct response is received, else REJECTED.
+	 * @return ACCEPTED if a correct response is received, else REJECTED.
 	 **/
 	int connect(const char* moduleName) ;
 
@@ -115,11 +110,28 @@ public:
 	/**
 	 * The function returns the associated string status to corresponding to the given @return_code.
 	 **/
-	char* stringFromReturnCode(const uint8_t return_code) ;
+	char const* stringFromReturnCode(const uint8_t return_code) ;
 
 	bool checkSerial() ;
 
-	void setXBee(SoftwareSerial* _xBee) ;
+	/**
+	 * @brief Mqttsn::findTopicId The function search the index of a @topicName within @topicTable list.
+	 * @param topicName The name of the topic to search.
+	 * @return The index of the topic or -1 if not found.
+	 */
+	short findTopicId(const char* name) ;
+
+	/**
+	 * @brief Mqttsn::registerByName The function asks to the gateway to register a @topic_name.
+	 * @param name The topic name to register.
+	 *
+	 * @return
+	 *      -2 if it is not possible to register the @topic_name.
+	 *      -1 if the message to register @topic_name is sent.
+	 *      >= 0 the id of the @topic_name already registered.
+	 *
+	 **/
+	int registerByName(const char* name) ;
 
 private:
 
@@ -128,19 +140,18 @@ private:
 	SoftwareSerial* xBee;
 
 	void dispatch();
-	uint16_t bswap(const uint16_t val);
+	uint16_t bitSwap(const uint16_t val);
 	void sendMessage();
-	short find_topic_id(const char* name);
 
 	/**
-	 * @brief multiCheckSerial The function calls @MB_check_serial until @nb_max_try have been reach or a response from the gateway have been received.
-	 * @param nb_max_try The maximum number of try @MB_check_serial before the time out.
+	 * @brief multiCheckSerial The function calls @checkSerial until @nb_max_try have been reach or a response from the gateway have been received.
+	 * @param nb_max_try The maximum number of try @checkSerial before the time out.
 	 * @return True if a respense is received, else false.
 	 **/
 	bool multiCheckSerial(const int nb_max_try) ;
 
 	/**
-	 * @brief MQTTSN::searchgw The function sends a message to the search the closest gateway arround @radius scale.
+	 * @brief Mqttsn::searchgw The function sends a message to the search the closest gateway arround @radius scale.
 	 * @param radius The max hop to search an available gateway.
 	 **/
 	void searchGateway(const uint8_t radius);
@@ -149,7 +160,10 @@ private:
 
 
 
-
+	void subscribeByName(const uint8_t flags, const char* topic_name);
+	void subscribeById(const uint8_t flags, const uint16_t topic_id);
+	void unsubscribeByName(const uint8_t flags, const char* topic_name);
+	void unsubscribeById(const uint8_t flags, const uint16_t topic_id);
 
 
 
@@ -157,10 +171,10 @@ private:
 	/**
 	 * The function sends the @message_buffer through the xBee module according to its @lenght.
 	 **/
-	void serialSend(uint8_t* message_buffer, int length) ;
+	void serialSend(const uint8_t* message_buffer, const int length) ;
 
 	/**
-	 * The function analyses the incoming data (@FrameBufferIn) and calls the function @mqttsn.parseStream before cleaning the @FrameBufferIn.
+	 * The function analyses the incoming data (@FrameBufferIn) and calls the function @Mqttsn.parseStream before cleaning the @FrameBufferIn.
 	 **/
 	void parseData() ;
 
@@ -178,7 +192,7 @@ private:
 	 * Returns:
 	 * The size of the created frame.
 	 **/
-	int create_frame(uint8_t* data, int data_lenght, uint8_t* destination_address, uint8_t* frame, int frame_max_lenght, bool broadcast) ;
+	int createFrame(const uint8_t* data, const int data_lenght, const uint8_t* destination_address, uint8_t* frame, const int frame_max_lenght, const bool broadcast) ;
 
 	/**
 	 * The function verifies if the transmetted message in @FrameBufferIn is a data packet.
@@ -202,7 +216,7 @@ private:
 	 * Returns:
 	 * True if the checksum of @frame_buffer is ok, else false.
 	 **/
-	bool verify_checksum(uint8_t frame_buffer[], int frame_size) ;
+	bool verifyChecksum(uint8_t frame_buffer[], int frame_size) ;
 
 	/**
 	 * The function waits during one second if data is available. In that case it returns true else returns false.
@@ -210,7 +224,7 @@ private:
 	 * Returs:
 	 * True if a response is received (xBee.available() > 1), else false.
 	 **/
-	bool wait_data() ;
+	bool waitData() ;
 
 
 
@@ -239,7 +253,7 @@ private:
 	void connack_handler(const msg_connack* msg);
 	void willtopicreq_handler(const message_header* msg);
 	void willmsgreq_handler(const message_header* msg);
-	void regack_handler(const msg_regack* msg);
+	void regAckHandler(const msg_regack* msg);
 	void reregister_handler(const msg_reregister* msg);
 	void publish_handler(const msg_publish* msg);
 	void register_handler(const msg_register* msg);
@@ -307,11 +321,12 @@ private:
 	bool waitingForPubAck;
 	bool waitingForPingResp;
 	bool connected;
-	short topicCount;
 	int messageId;
 
 	uint8_t messageBuffer[MAX_BUFFER_SIZE];
 	uint8_t responseBuffer[MAX_BUFFER_SIZE];
+
+	short nbRegisteredTopic;
 	topic topicTable[MAX_TOPICS];
 
 	uint8_t gatewayId;

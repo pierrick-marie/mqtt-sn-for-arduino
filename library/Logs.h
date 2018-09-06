@@ -10,6 +10,8 @@ public:
 	Logs();
 	~Logs();
 
+	void debug(const char* className, const char* methodeName);
+
 	void debug(const char* className, const char* methodeName, const char* message);
 
 	void debug(const char* className, const char* methodeName, const char* message, const int value);

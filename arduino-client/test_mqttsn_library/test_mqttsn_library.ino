@@ -7,10 +7,10 @@
 #include <Logs.h>
 #include <Mqttsn.h>
 
-Logs logs; // objet pour ecrire des logs dans la console
-Mqttsn mqttsn; // objet qui permet d'appeler les methodes de la librairie mqttsn
-
 SoftwareSerial XBee(5, 4); //objet qui permet d'appeler les méthodes pour envoyer des données via le module XBee
+
+Logs logs ; // objet pour ecrire des logs dans la console
+Mqttsn mqttsn(&XBee) ; // objet qui permet d'appeler les methodes de la librairie mqttsn
 
 // SoftwareSerial Rfid(2, 3);
 
@@ -29,8 +29,6 @@ void setup() {
   XBee.begin(9600);
   XBee.listen();
   // Rfid.begin(9600);
-
-  mqttsn.setXBee(&XBee);
 
   if(mqttsn.init() == ACCEPTED){
     Serial.println("\nINIT OK");
