@@ -86,4 +86,25 @@ public class Client {
 	public String toString() {
 		return name;
 	}
+
+	public String getStringAddress64() {
+
+		return addressToString(address64);
+	}
+
+	public String getStringAddress16() {
+
+		return addressToString(address16);
+	}
+
+	public static String addressToString(final byte[] address) {
+
+		String ret = "";
+
+		for (int i = 0; i < address.length; i++) {
+			ret += address[i];
+		}
+
+		return ret;
+	}
 }

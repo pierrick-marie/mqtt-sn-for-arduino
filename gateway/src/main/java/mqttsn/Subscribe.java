@@ -5,6 +5,7 @@ import gateway.Serial;
 import org.fusesource.mqtt.client.Callback;
 import org.fusesource.mqtt.client.CallbackConnection;
 import org.fusesource.mqtt.client.Topic;
+import utils.Utils;
 
 import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;

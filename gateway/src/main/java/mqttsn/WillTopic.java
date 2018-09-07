@@ -2,6 +2,7 @@ package mqttsn;
 
 import gateway.Main;
 import org.fusesource.mqtt.client.MQTT;
+import utils.Utils;
 
 import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;

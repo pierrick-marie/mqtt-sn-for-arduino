@@ -16,7 +16,7 @@ import java.nio.charset.StandardCharsets;
 /**
  * This class is used to handle the connect message.
  *
- * @todo DEBUG
+ * @TODO DEBUG
  */
 public class Connect extends Thread {
 
@@ -37,7 +37,7 @@ public class Connect extends Thread {
 	/**
 	 * Method called after receiving a connect message.
 	 *
-	 * @todo DEBUG: use the ClientsManager instead
+	 * @TODO DEBUG: use the ClientsManager instead
 	 **/
 	public void connect()  {
 
@@ -92,8 +92,8 @@ public class Connect extends Thread {
 		} else {
 			Log.debug("Connect", "connect","Client " + clientName + " is unknown -> creating a new client");
 
-			client = ClientsManager.Instance.newClient(clientName);
-			client.setAddress64(address64);
+			client = ClientsManager.Instance.newClient(address64);
+			client.setName(clientName);
 			client.setAddress16(address16);
 			client.setState(utils.State.ACTIVE);
 

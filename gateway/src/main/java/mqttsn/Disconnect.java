@@ -4,7 +4,7 @@ import gateway.Main;
 import gateway.Serial;
 import gateway.Threading;
 import gateway.TimeOut;
-import utils.State;
+import utils.Utils;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;

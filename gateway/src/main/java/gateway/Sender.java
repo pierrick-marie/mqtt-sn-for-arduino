@@ -1,6 +1,6 @@
 package gateway;
 
-import mqttsn.Utils;
+import utils.Utils;
 import utils.Log;
 
 /**

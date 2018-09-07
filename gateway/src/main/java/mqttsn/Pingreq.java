@@ -1,7 +1,7 @@
 package mqttsn;
 
 import gateway.*;
-import utils.State;
+import utils.Utils;
 
 import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;

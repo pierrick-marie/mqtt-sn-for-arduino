@@ -3,11 +3,9 @@ package mqttsn;
 import gateway.Main;
 import gateway.Serial;
 import utils.Log;
+import utils.Utils;
 
 import java.nio.charset.StandardCharsets;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 /**
  * Created by arnaudoglaza on 07/07/2017.
@@ -31,7 +29,7 @@ public class Register extends Thread {
      */
     public void register() {
 
-        Log.print(Main.AddressClientMap.get(Utils.byteArrayToString(address64))+" Register");
+        Log.print(" -> " + Main.AddressClientMap.get(Utils.byteArrayToString(address64))+" Register");
 
         byte[] messageId = new byte[2];
         messageId[0]= message[2];
