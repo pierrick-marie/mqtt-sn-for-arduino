@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="hawtbuf-1.10">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/hawtbuf-1.10.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/hawtdispatch-1.21.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/hawtdispatch-transport-1.21.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/jssc-2.8.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/mqtt-client-1.12.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
