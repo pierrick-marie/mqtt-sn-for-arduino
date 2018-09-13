@@ -15,6 +15,8 @@ public class Client {
 	private State state = State.DISCONNECTED;
 	private MQTT mqttClient = null;
 	private Boolean willTopicReq = false;
+	private Boolean willTopicAck = false;
+	private Boolean willMessageAck = false;
 	private Boolean willMessageReq = false;
 	private CallbackConnection connection = null;
 
@@ -114,6 +116,36 @@ public class Client {
 		}
 
 		this.willTopicReq = willTopicReq;
+
+		return this;
+	}
+
+	public Boolean willTopicAck() {
+		return willTopicAck;
+	}
+
+	public Client setWillTopicAck(final Boolean willTopicAck) {
+
+		if (null == willTopicAck) {
+			Log.error("Client", "setWillTopicAck", "willTopicAck is null");
+		}
+
+		this.willTopicAck = willTopicAck;
+
+		return this;
+	}
+
+	public Boolean willMessageAck() {
+		return willMessageAck;
+	}
+
+	public Client setWillMessageAck(final Boolean willMessageAck) {
+
+		if (null == willMessageAck) {
+			Log.error("Client", "setWillMessageAck", "willMessageAck is null");
+		}
+
+		this.willMessageAck = willMessageAck;
 
 		return this;
 	}

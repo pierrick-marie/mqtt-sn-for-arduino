@@ -2,6 +2,8 @@ package mqttsn;
 
 import gateway.Main;
 import org.fusesource.mqtt.client.MQTT;
+import utils.Client;
+import utils.Log;
 import utils.Utils;
 
 import java.nio.charset.StandardCharsets;
@@ -14,49 +16,41 @@ import java.util.Date;
  */
 public class WillTopic extends Thread {
 
-	byte[] add64;
-	byte[] add16;
-	byte[] msg;
-	private static final DateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+	private Client client;
+	private byte[] msg;
 
-	public WillTopic(byte[] add64, byte[] add16, byte[] msg) {
-		this.add64 = add64;
-		this.add16 = add16;
+	public WillTopic(final Client client, final byte[] msg) {
+		this.client = client;
 		this.msg = msg;
 	}
 
 	public void willtopic() {
-		Date date = new Date();
 
-		// @TODO DEBUG
-		// System.out.println(sdf.format(date)+": -> "+Main.AddressClientMap.get(Utils.byteArrayToString(add64))+" Willtopic");
+		Log.output(client, "Will topic");
 
-		// @TODO DEBUG
-		// Main.WillTopicAck.put(Utils.byteArrayToString(add64), false);
+		client.setWillTopicAck(false);
 
 		if (msg.length == 0) {
 
-			// @TODO DEBUG
-			// String clientID=Main.AddressClientMap.get(Utils.byteArrayToString(add64));
-			// MQTT mqtt=Main.ClientMap.get(clientID);
-			// mqtt.setWillTopic("");
-			// mqtt.setWillMessage("");
+			client.mqttClient().setWillMessage("");
+			client.mqttClient().setWillTopic("");
+
 		} else {
+
 			byte flags = msg[0];
 			int will_QOS = flags & 0b01100000 >> 5;
-			//System.out.println(will_QOS);
 			boolean will_retain = (flags & 0b00010000) == 1;
 			byte[] data = new byte[msg.length - 1];
-			for (int i = 0; i < msg.length - 1; i++)
+
+			for (int i = 0; i < msg.length - 1; i++) {
 				data[i] = msg[i + 1];
+			}
+
 			String willtopic = new String(data, StandardCharsets.UTF_8);
 
-			// @TODO DEBUG
-			// String clientID = Main.AddressClientMap.get(Utils.byteArrayToString(add64));
-			// MQTT mqtt = Main.ClientMap.get(clientID);
-			// mqtt.setWillTopic(willtopic);
-			// mqtt.setWillQos(Utils.getQoS(will_QOS));
-			// mqtt.setWillRetain(will_retain);
+			client.mqttClient().setWillTopic(willtopic);
+			client.mqttClient().setWillQos(Utils.getQoS(will_QOS));
+			client.mqttClient().setWillRetain(will_retain);
 		}
 	}
 

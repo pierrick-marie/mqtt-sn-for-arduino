@@ -82,13 +82,13 @@ enum RawData {
 
 			case 0x07:
 				//WILLTOPIC
-				WillTopic willTopic = new WillTopic(address64, address16, message);
+				WillTopic willTopic = new WillTopic(client, message);
 				willTopic.start();
 				break;
 
 			case 0x09:
 				//WILLMESSAGE
-				WillMessage willMessage = new WillMessage(address64, address16, message);
+				WillMessage willMessage = new WillMessage(client, message);
 				willMessage.start();
 				break;
 

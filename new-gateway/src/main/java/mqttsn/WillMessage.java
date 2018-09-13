@@ -2,6 +2,8 @@ package mqttsn;
 
 import gateway.Main;
 import org.fusesource.mqtt.client.MQTT;
+import utils.Client;
+import utils.Log;
 import utils.Utils;
 
 import java.nio.charset.StandardCharsets;
@@ -14,31 +16,24 @@ import java.util.Date;
  */
 public class WillMessage extends Thread {
 
-	byte[] add64;
-	byte[] add16;
-	byte[] msg;
-	private static final DateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+	private Client client;
+	private byte[] msg;
 
-	public WillMessage(byte[] add64, byte[] add16, byte[] msg) {
-		this.add64 = add64;
-		this.add16 = add16;
+	public WillMessage(final Client client, final byte[] msg) {
+		this.client = client;
 		this.msg = msg;
 	}
 
 	public void willmessage() {
-		Date date = new Date();
 
-		// @TODO DEBUG
-		// System.out.println(sdf.format(date)+": -> "+Main.AddressClientMap.get(Utils.byteArrayToString(add64))+" Willmessage");
+		Log.output(client, "Will message");
 
-		// @TODO DEBUG
-		// Main.WillMessageAck.put(Utils.byteArrayToString(add64), false);
+		client.setWillMessageAck(false);
+
 		String willmessage = new String(msg, StandardCharsets.UTF_8);
 
-		// @TODO DEBUG
-		// String clientID=Main.AddressClientMap.get(Utils.byteArrayToString(add64));
-		// MQTT mqtt=Main.ClientMap.get(clientID);
-		// mqtt.setWillMessage(willmessage);
+		client.mqttClient().setWillMessage(willmessage);
+
 	}
 
 	public void run() {

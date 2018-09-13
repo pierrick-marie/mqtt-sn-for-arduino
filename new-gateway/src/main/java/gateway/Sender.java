@@ -22,8 +22,8 @@ public class Sender extends Thread {
 
 	private void sendMessage() {
 
-		byte[] serialMessage = new byte[7 + message.getBody().length()];
-		byte[] data = message.getBody().getBytes();
+		byte[] serialMessage = new byte[7 + message.body().length()];
+		byte[] data = message.body().getBytes();
 		int nbTry = 0;
 		int i;
 
@@ -46,7 +46,7 @@ public class Sender extends Thread {
 			serialMessage[6] = (byte) Main.MessageId;
 		}
 
-		for (i = 0; i < message.body.length(); i++) {
+		for (i = 0; i < message.body().length(); i++) {
 			serialMessage[7 + i] = data[i];
 		}
 
