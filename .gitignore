@@ -1,7 +1,8 @@
-gateway/bin/*
-gateway/lib/*
-gateway/.idea/*
-.idea/*
+gateway/bin/
+gateway/lib/
+gateway/.idea/
+new-gateway/.idea/
+
 
 .DS_Store
 
