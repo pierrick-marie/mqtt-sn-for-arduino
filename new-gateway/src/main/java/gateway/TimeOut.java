@@ -27,7 +27,7 @@ public class TimeOut implements Runnable, ExceptionListener {
 		for (int i = 0; i < duration; i++) {
 
 			if( client.state().equals(State.ASLEEP)) {
-				Log.debug("TimeOut", "start", "Not asleep anymore");
+				Log.debug(LogLevel.ACTIVATED,"TimeOut", "start", "Not asleep anymore");
 			}
 
 			Time.sleep((long)1000, "TimeOut.start()");
@@ -43,12 +43,12 @@ public class TimeOut implements Runnable, ExceptionListener {
 			@Override
 			public void onSuccess(Void value) {
 				// @TODO
-				Log.debug("TimeOut", "clientTimeOut", "Success");
+				Log.debug(LogLevel.ACTIVATED,"TimeOut", "clientTimeOut", "Success");
 			}
 
 			@Override
 			public void onFailure(Throwable value) {
-				Log.debug("TimeOut", "clientTimeOut", "Failure");
+				Log.debug(LogLevel.VERBOSE,"TimeOut", "clientTimeOut", "Failure");
 				Log.error("TimeOut", "clientTimeOut", value.getMessage());
 			}
 		});

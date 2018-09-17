@@ -3,6 +3,7 @@ package gateway.serial;
 import jssc.SerialPortException;
 import utils.Client;
 import utils.Log;
+import utils.LogLevel;
 
 public class SerialPortWriter {
 
@@ -49,7 +50,7 @@ public class SerialPortWriter {
 			XBeeSerialPort.Instance.serialPort.writeBytes(res);
 		} catch (SerialPortException e) {
 			Log.error("XBeeSerialPort", "write", "");
-			Log.debug("XBeeSerialPort", "write", e.getMessage());
+			Log.debug(LogLevel.ACTIVATED,"XBeeSerialPort", "write", e.getMessage());
 		}
 	}
 }

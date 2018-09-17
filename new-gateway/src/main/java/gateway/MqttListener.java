@@ -2,6 +2,7 @@ package gateway;
 
 import utils.Client;
 import utils.Log;
+import utils.LogLevel;
 import utils.Utils;
 import org.fusesource.hawtbuf.Buffer;
 import org.fusesource.hawtbuf.UTF8Buffer;
@@ -35,7 +36,7 @@ public class MqttListener implements Listener {
 	@Override
 	public void onPublish(UTF8Buffer topic, Buffer body, Runnable ack) {
 
-		Log.debug("MqttListener", "onPublish", client + " Buffering Message");
+		Log.debug(LogLevel.ACTIVATED,"MqttListener", "onPublish", client + " Buffering Message");
 
 		Message msg = new Message(topic.utf8().toString(), body.utf8().toString());
 		client.messages.add(msg);

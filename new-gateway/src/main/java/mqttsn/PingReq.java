@@ -1,10 +1,7 @@
 package mqttsn;
 
 import gateway.MultipleSender;
-import utils.Client;
-import utils.Log;
-import utils.State;
-import utils.Time;
+import utils.*;
 
 import java.nio.charset.StandardCharsets;
 
@@ -35,9 +32,9 @@ public class PingReq extends Thread {
 	private void sendBufferedMessage() {
 
 		MultipleSender multiSender = new MultipleSender(client);
-		Log.debug("PingReq", "sendBufferMessage", "Start multi-sender");
+		Log.debug(LogLevel.ACTIVATED,"PingReq", "sendBufferMessage", "Start multi-sender");
 		multiSender.start();
-		Log.debug("PingReq", "sendBufferMessage", "End multi-sender");
+		Log.debug(LogLevel.ACTIVATED,"PingReq", "sendBufferMessage", "End multi-sender");
 	}
 
 	public void run() {

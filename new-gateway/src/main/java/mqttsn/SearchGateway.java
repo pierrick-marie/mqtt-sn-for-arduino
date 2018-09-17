@@ -21,7 +21,7 @@ public class SearchGateway extends Thread {
 
 	private void searchGateway() {
 
-		Log.input(client, "Search gateway");
+		Log.input(client, "search gateway");
 
 		byte[] ret = new byte[3];
 		ret[0] = (byte) 0x03;

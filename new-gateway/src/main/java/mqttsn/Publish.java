@@ -6,6 +6,7 @@ import org.fusesource.mqtt.client.Callback;
 import org.fusesource.mqtt.client.CallbackConnection;
 import utils.Client;
 import utils.Log;
+import utils.LogLevel;
 import utils.Utils;
 
 import java.text.DateFormat;
@@ -59,7 +60,7 @@ public class Publish extends Thread {
 					@Override
 					public void onFailure(Throwable e) {
 						Log.error("Publish", "publish", "Error on publish");
-						Log.debug("Publish", "publish", e.getMessage());
+						Log.debug(LogLevel.ACTIVATED,"Publish", "publish", e.getMessage());
 					}
 				});
 			} else {

@@ -23,12 +23,17 @@ long time = millis();
 
 void setup() {
 
+<<<<<<< HEAD
   delay(500);
+=======
+  delay(1000);
+>>>>>>> d3d4d8dbd37a9f86fe94a54d2b26f800e173be7f
   
   Serial.begin(9600);
   XBee.begin(9600);
-  Rfid.begin(9600);
+  // Rfid.begin(9600);
   XBee.listen();
+<<<<<<< HEAD
   // if(ABSTRCT_init() == ACCEPTED){
   if(api.init() == ACCEPTED){
     Serial.println("\nINIT OK");
@@ -36,6 +41,12 @@ void setup() {
     Serial.println("\nINIT KO!");
     // delay(500);
     // exit(-1);
+=======
+  if(sn_init() == ACCEPTED){
+    Serial.println("Sn_init Ok");
+  } else {
+    Serial.println("Sn_init KO");
+>>>>>>> d3d4d8dbd37a9f86fe94a54d2b26f800e173be7f
   }
 
 /*
@@ -75,9 +86,25 @@ void setup() {
 
 void loop() {
 
+<<<<<<< HEAD
     
 
 /*
+=======
+    /*
+    if(time + 10000 <= millis()) {
+      XBee.listen();
+      if(XBee.isListening()){
+        if(sn_connect(MODULE_NAME) == ACCEPTED){
+          Serial.println("Sn_connect Sub Ok");
+          
+          if(!is_topic_registered(TOPIC_SUB)){
+            if(sn_subscribe(TOPIC_SUB) == ACCEPTED){
+              Serial.println("Sn_subscribe Ok");
+            }
+          }
+
+>>>>>>> d3d4d8dbd37a9f86fe94a54d2b26f800e173be7f
           Serial.println("# GET MESSAGES 0");
           String received = sn_get_message_from_subscribed_topics();
           Serial.println("# GET MESSAGES 1");

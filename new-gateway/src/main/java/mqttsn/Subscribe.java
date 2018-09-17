@@ -7,6 +7,7 @@ import org.fusesource.mqtt.client.CallbackConnection;
 import org.fusesource.mqtt.client.Topic;
 import utils.Client;
 import utils.Log;
+import utils.LogLevel;
 import utils.Utils;
 
 import java.nio.charset.StandardCharsets;
@@ -60,7 +61,7 @@ public class Subscribe extends Thread {
 				@Override
 				public void onFailure(Throwable e) {
 					Log.error("Subscribe", "subscribe", "Error on subscribe");
-					Log.debug("Subscribe", "subscribe", e.getMessage());
+					Log.debug(LogLevel.ACTIVATED,"Subscribe", "subscribe", e.getMessage());
 				}
 			});
 

@@ -5,6 +5,7 @@ import gateway.serial.SerialPortWriter;
 import org.fusesource.mqtt.client.Callback;
 import utils.Client;
 import utils.Log;
+import utils.LogLevel;
 
 public class MqttCallback implements Callback<Void> {
 
@@ -25,12 +26,12 @@ public class MqttCallback implements Callback<Void> {
 	@Override
 	public void onFailure(Throwable e) {
 		Log.print("Failure on connect callback");
-		Log.debug("MqttCallback", "onFailure", e.getMessage());
+		Log.debug(LogLevel.ACTIVATED,"MqttCallback", "onFailure", e.getMessage());
 	}
 
 	public void connack() {
 
-		Log.input(client, "Connack");
+		Log.output(client, "connack");
 
 		byte[] serialMesasge = new byte[3];
 		serialMesasge[0] = (byte) 0x03;

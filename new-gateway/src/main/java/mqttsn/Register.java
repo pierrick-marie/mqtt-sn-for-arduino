@@ -4,6 +4,7 @@ import gateway.Main;
 import gateway.serial.SerialPortWriter;
 import utils.Client;
 import utils.Log;
+import utils.LogLevel;
 
 import java.nio.charset.StandardCharsets;
 
@@ -26,7 +27,7 @@ public class Register extends Thread {
 	 */
 	private void register() {
 
-		Log.output(client, "Register");
+		Log.input(client, "register");
 
 		byte[] messageId = new byte[2];
 		messageId[0] = message[2];
@@ -44,10 +45,10 @@ public class Register extends Thread {
 		if (Main.TopicName.containsKey(topicName)) {
 			topicId = Main.TopicName.get(topicName);
 
-			Log.debug("Register", "register","topic " + topicName + " ( id:" + topicId + ") is contained");
+			Log.debug(LogLevel.ACTIVATED,"Register", "register","topic " + topicName + " (id:" + topicId + ") is contained");
 		} else {
 			topicId = Main.TopicName.size();
-			Log.debug("Register", "register","topic " + topicName + " ( id:" + topicId + ") is NOT contained");
+			Log.debug(LogLevel.ACTIVATED,"Register", "register","topic " + topicName + " (id:" + topicId + ") is NOT contained");
 			Main.TopicName.put(topicName, topicId);
 		}
 		if (topicId != -1)
@@ -65,7 +66,7 @@ public class Register extends Thread {
 	 */
 	private void regack(final byte[] messageId, final int topicId) {
 
-		Log.input(client, "Regack");
+		Log.output(client, "regack");
 
 		// the message to send
 		byte[] message = new byte[7];

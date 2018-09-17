@@ -5,6 +5,7 @@ import gateway.TimeOut;
 import gateway.serial.SerialPortWriter;
 import utils.Client;
 import utils.Log;
+import utils.LogLevel;
 
 /**
  * Created by arnaudoglaza on 07/07/2017.
@@ -32,7 +33,7 @@ public class Disconnect extends Thread {
 
 				disconnectAck();
 
-				Log.debug("Disconnect", "diconnect", "Going into sleep");
+				Log.debug(LogLevel.ACTIVATED,"Disconnect", "diconnect", "Going into sleep");
 
 				TimeOut timeOut = new TimeOut(client, duration);
 				Threading.thread(timeOut, false);

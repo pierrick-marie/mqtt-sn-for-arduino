@@ -7,25 +7,23 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-
-
 public class Log {
 
 	private static final DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 
-	private static final String INPUT = " <- ";
-	private static final String OUTPUT = " -> ";
+	private static final String INPUT = "received message - ";
+	private static final String OUTPUT = "send message - ";
 
 	public Log() {
 
 	}
 
 	public static void input(final Client client, final String message) {
-		print(INPUT + client + " " + message);
+		print(client + " - " + INPUT + message);
 	}
 
 	public static void output(final Client client, final String message) {
-		print(OUTPUT + client + " " + message);
+		print(client + " - " + OUTPUT + message);
 	}
 
 	public static void print(final String message) {
@@ -34,8 +32,8 @@ public class Log {
 		blue(message + "\n");
 	}
 
-	public static void debug(final String className, final String methodeName, final String message) {
-		if (Main.DEBUG) {
+	public static void debug(final LogLevel level, final String className, final String methodeName, final String message) {
+		if (level.ordinal() >= LogLevel.VERBOSE.ordinal()) {
 			bYellow(" # [ DEBUG ] ");
 			yellow(className + ".");
 			yellow(methodeName + "(): ");

@@ -3,6 +3,7 @@ package mqttsn;
 import gateway.serial.SerialPortWriter;
 import utils.Client;
 import utils.Log;
+import utils.LogLevel;
 import utils.Time;
 
 /**
@@ -37,7 +38,7 @@ public class WillMessageReq extends Thread {
 
 
 		if (client.willMessageReq()) {
-			Log.debug("WillMessageReq", "willMessageReq","Resend Will Message Req");
+			Log.debug(LogLevel.ACTIVATED,"WillMessageReq", "willMessageReq","Resend Will Message Req");
 			willMessagerReq();
 		}
 	}

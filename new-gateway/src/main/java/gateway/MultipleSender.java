@@ -1,10 +1,7 @@
 package gateway;
 
 import gateway.serial.SerialPortWriter;
-import utils.Client;
-import utils.Log;
-import utils.State;
-import utils.Utils;
+import utils.*;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -25,29 +22,29 @@ public class MultipleSender extends Thread {
 	public void run() {
 
 		// DEBUG
-		Log.debug("MultiSender", "run", "Begin Multiple Sender: " + client.messages);
+		Log.debug(LogLevel.ACTIVATED,"MultiSender", "run", "Begin Multiple Sender: " + client.messages);
 
 		for (Message message : client.messages) {
 
 			// DEBUG
-			Log.debug("MultiSender", "run", "Starting to send message " + message);
+			Log.debug(LogLevel.ACTIVATED,"MultiSender", "run", "Starting to send message " + message);
 
 			Sender sender = new Sender(client, message);
 
 			// DEBUG
-			Log.debug("MultiSender", "run", "Start sender");
+			Log.debug(LogLevel.ACTIVATED,"MultiSender", "run", "Start sender");
 			sender.start();
 			try {
 				sender.join();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-			Log.debug("MultiSender", "run", "End sender");
+			Log.debug(LogLevel.ACTIVATED,"MultiSender", "run", "End sender");
 		}
 
 		client.messages.clear();
 
-		Log.debug("MultiSender", "run", "End of multi-sender");
+		Log.debug(LogLevel.ACTIVATED,"MultiSender", "run", "End of multi-sender");
 
 
 		pingresp();
@@ -65,7 +62,7 @@ public class MultipleSender extends Thread {
 
 		if(client.state().equals(utils.State.AWAKE)) {
 			client.setState(utils.State.ASLEEP);
-			Log.debug("MultipleSender", "pingResp", client + " goes to sleep");
+			Log.debug(LogLevel.ACTIVATED,"MultipleSender", "pingResp", client + " goes to sleep");
 			if(0 != client.duration()) {
 				TimeOut timeOut = new TimeOut(client, client.duration());
 				Threading.thread(timeOut, false);

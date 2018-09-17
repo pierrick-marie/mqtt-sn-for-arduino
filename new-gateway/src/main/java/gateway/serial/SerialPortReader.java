@@ -4,6 +4,7 @@ import jssc.SerialPortEvent;
 import jssc.SerialPortEventListener;
 import jssc.SerialPortException;
 import utils.Log;
+import utils.LogLevel;
 
 import java.net.URISyntaxException;
 
@@ -14,7 +15,7 @@ public class SerialPortReader implements SerialPortEventListener {
 			XBeeSerialPort.Instance.serialPort.addEventListener(this);
 		} catch (SerialPortException e) {
 			Log.error("SerialPortReader", "constructor", "");
-			Log.debug("SerialPortReader", "constructor", e.getMessage());
+			Log.debug(LogLevel.ACTIVATED,"SerialPortReader", "constructor", e.getMessage());
 		}
 	}
 

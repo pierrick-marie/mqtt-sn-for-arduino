@@ -10,7 +10,7 @@ import java.util.ArrayList;
 
 public class Client {
 
-	private String name = "unknown";
+	private String name = "";
 	private Integer duration = 0;
 	private State state = State.DISCONNECTED;
 	private MQTT mqttClient = null;
@@ -20,8 +20,8 @@ public class Client {
 	private Boolean willMessageReq = false;
 	private CallbackConnection connection = null;
 
-	public final Address64 address64;
-	public final Address16 address16;
+	public Address64 address64 = null;
+	public Address16 address16 = null;
 
 	public final ArrayList<Message> messages = new ArrayList<>();
 
@@ -42,6 +42,8 @@ public class Client {
 
 		this.connection = connection;
 
+		save();
+
 		return this;
 	}
 
@@ -56,6 +58,8 @@ public class Client {
 		}
 
 		this.name = name;
+
+		save();
 
 		return this;
 	}
@@ -72,6 +76,8 @@ public class Client {
 
 		this.mqttClient = mqttClient;
 
+		save();
+
 		return this;
 	}
 
@@ -86,6 +92,8 @@ public class Client {
 		}
 
 		this.state = state;
+
+		save();
 
 		return this;
 	}
@@ -102,6 +110,8 @@ public class Client {
 
 		this.duration = duration;
 
+		save();
+
 		return this;
 	}
 
@@ -116,6 +126,8 @@ public class Client {
 		}
 
 		this.willTopicReq = willTopicReq;
+
+		save();
 
 		return this;
 	}
@@ -132,6 +144,8 @@ public class Client {
 
 		this.willTopicAck = willTopicAck;
 
+		save();
+
 		return this;
 	}
 
@@ -147,6 +161,8 @@ public class Client {
 
 		this.willMessageAck = willMessageAck;
 
+		save();
+
 		return this;
 	}
 
@@ -161,6 +177,8 @@ public class Client {
 		}
 
 		this.willMessageReq = willMessageReq;
+
+		save();
 
 		return this;
 	}
@@ -178,7 +196,7 @@ public class Client {
 		Client savedClient = ClientsManager.Instance.search(address64);
 
 		if( null == savedClient ) {
-			Log.error("Client","load", "Impossible to find the saved client");
+			Log.debug(LogLevel.VERBOSE,"Client","load", "Impossible to load the client with address: " + address64);
 			return false;
 		}
 
@@ -197,6 +215,10 @@ public class Client {
 	}
 
 	public String toString() {
-		return name;
+		if( "" == name ) {
+			return address64.toString();
+		} else {
+			return name;
+		}
 	}
 }

@@ -62,9 +62,8 @@ enum RawData {
 		}
 
 		Client client = new Client(new Address64(address64), new Address16(address16));
-		if (client.isSaved()) {
-			Log.debug("RawData", "parse", "Loading client with address " + client.address64);
-			client.load();
+		if(!client.load()){
+			client.save();
 		}
 
 		switch (data_type) {

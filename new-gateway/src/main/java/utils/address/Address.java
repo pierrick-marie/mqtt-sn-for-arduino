@@ -1,6 +1,8 @@
 package utils.address;
 
-public abstract class Address implements Comparable<Address> {
+import utils.Log;
+
+public abstract class Address {
 
 	public final byte address[];
 	public final String stringAddress;
@@ -28,15 +30,5 @@ public abstract class Address implements Comparable<Address> {
 
 	public String toString() {
 		return stringAddress;
-	}
-
-
-	@Override
-	public int compareTo(Address address) {
-		if(stringAddress.equals(address.stringAddress)) {
-			return 0;
-		}
-
-		return -1;
 	}
 }
