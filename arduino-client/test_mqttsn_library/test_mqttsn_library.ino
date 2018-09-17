@@ -23,7 +23,7 @@ long time = millis();
 
 void setup() {
 
-  delay(500);
+  delay(500); 
   
   Serial.begin(9600);
   XBee.begin(9600);
@@ -44,11 +44,11 @@ void setup() {
     Serial.println("\nINIT KO!");
   }
 
-      
   if(-1 == mqttsn.findTopicId(TOPIC_SUB)) {
     Serial.println("\nNOT REGISTERED");
-    mqttsn.registerByName(TOPIC_SUB);
-  } else {
+  }
+  
+  if(ACCEPTED == mqttsn.registerByName(TOPIC_SUB)) {
     Serial.println("\nREGISTERED");
   }
 
