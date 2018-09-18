@@ -41,7 +41,9 @@ public class Connect extends Thread {
 		boolean cleanSession = (flags >> 2) == 1;
 
 		if(client.name().equals("")) {
-			client.setName(getClientName());
+			String name = getClientName();
+			Log.debug(LogLevel.ACTIVATED,"Connect", "getClientName","setup the client's name with " + name);
+			client.setName(name);
 		}
 
 		Log.input(client, "connect");
@@ -115,7 +117,7 @@ public class Connect extends Thread {
 		}
 
 		String clientName = new String(name, StandardCharsets.UTF_8);
-		Log.debug(LogLevel.ACTIVATED,"Connect", "getClientName","Client's name is " + clientName);
+
 		return clientName;
 	}
 

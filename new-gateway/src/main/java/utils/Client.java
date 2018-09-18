@@ -42,6 +42,7 @@ public class Client {
 
 		this.connection = connection;
 
+		Log.debug(LogLevel.VERBOSE,"Client", "setConnect", "Register client's connection with " + connection);
 		save();
 
 		return this;
@@ -59,6 +60,7 @@ public class Client {
 
 		this.name = name;
 
+		Log.debug(LogLevel.VERBOSE,"Client", "setName", "Register client's name with " + name);
 		save();
 
 		return this;
@@ -76,6 +78,7 @@ public class Client {
 
 		this.mqttClient = mqttClient;
 
+		Log.debug(LogLevel.VERBOSE,"Client", "setMqttClient", "Register client's mqttClient with " + mqttClient);
 		save();
 
 		return this;
@@ -93,6 +96,7 @@ public class Client {
 
 		this.state = state;
 
+		Log.debug(LogLevel.VERBOSE,"Client", "setState", "Register client's state with " + state);
 		save();
 
 		return this;
@@ -110,6 +114,7 @@ public class Client {
 
 		this.duration = duration;
 
+		Log.debug(LogLevel.VERBOSE,"Client", "setDuration", "Register client's duration with " + duration);
 		save();
 
 		return this;
@@ -127,6 +132,7 @@ public class Client {
 
 		this.willTopicReq = willTopicReq;
 
+		Log.debug(LogLevel.VERBOSE,"Client", "setWillTopicReq", "Register client's willTopicReq with " + willTopicReq);
 		save();
 
 		return this;
@@ -144,6 +150,7 @@ public class Client {
 
 		this.willTopicAck = willTopicAck;
 
+		Log.debug(LogLevel.VERBOSE,"Client", "setWillTopicAck", "Register client's willTopicAck with " + willTopicAck);
 		save();
 
 		return this;
@@ -161,6 +168,7 @@ public class Client {
 
 		this.willMessageAck = willMessageAck;
 
+		Log.debug(LogLevel.VERBOSE,"Client", "setWillMessageAck", "Register client's willMessageAck with " + willMessageAck);
 		save();
 
 		return this;
@@ -178,6 +186,7 @@ public class Client {
 
 		this.willMessageReq = willMessageReq;
 
+		Log.debug(LogLevel.VERBOSE,"Client", "setWillMessageReq", "Register client's willMessageReq with " + willMessageReq);
 		save();
 
 		return this;
@@ -188,15 +197,17 @@ public class Client {
 	}
 
 	public Boolean save() {
+		Log.debug(LogLevel.ACTIVATED,"Client","save", "saving the client " + this);
 		return null != ClientsManager.Instance.save(this);
 	}
 
 	public Boolean load() {
 
+		Log.debug(LogLevel.ACTIVATED,"Client","load", "get the client with address " + address64);
 		Client savedClient = ClientsManager.Instance.search(address64);
 
 		if( null == savedClient ) {
-			Log.debug(LogLevel.VERBOSE,"Client","load", "Impossible to load the client with address: " + address64);
+			Log.debug(LogLevel.ACTIVATED,"Client","load", "client with address " + address64 + " is unknown");
 			return false;
 		}
 

@@ -33,8 +33,12 @@ public class Log {
 	}
 
 	public static void debug(final LogLevel level, final String className, final String methodeName, final String message) {
-		if (level.ordinal() >= LogLevel.VERBOSE.ordinal()) {
-			bYellow(" # [ DEBUG ] ");
+		if (Main.LEVEL.ordinal() >= level.ordinal()) {
+			if(level.ordinal() == LogLevel.VERBOSE.ordinal()) {
+				bYellow(" # [ " + LogLevel.VERBOSE.name() + " ] ");
+			} else {
+				bYellow(" # [ DEBUG ] ");
+			}
 			yellow(className + ".");
 			yellow(methodeName + "(): ");
 			yellow(message + "\n");

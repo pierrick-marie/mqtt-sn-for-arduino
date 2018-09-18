@@ -15,7 +15,7 @@ enum ClientsManager {
 		Client client = clients.get(address);
 
 		if (null == client) {
-			Log.debug(LogLevel.VERBOSE,"ClientsManager", "search", "client " + client + " is NOT registered");
+			Log.debug(LogLevel.VERBOSE,"ClientsManager", "search", "client with address " + address + " is NOT registered");
 		} else {
 			Log.debug(LogLevel.VERBOSE,"ClientsManager", "search", "client " + client + " is already registered");
 		}

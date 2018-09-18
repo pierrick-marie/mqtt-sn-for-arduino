@@ -48,12 +48,13 @@ public class Register extends Thread {
 			Log.debug(LogLevel.ACTIVATED,"Register", "register","topic " + topicName + " (id:" + topicId + ") is contained");
 		} else {
 			topicId = Main.TopicName.size();
-			Log.debug(LogLevel.ACTIVATED,"Register", "register","topic " + topicName + " (id:" + topicId + ") is NOT contained");
+			Log.debug(LogLevel.ACTIVATED,"Register", "register","topic " + topicName + " (id:" + topicId + ") is NOT contained -> saving the topic");
 			Main.TopicName.put(topicName, topicId);
 		}
-		if (topicId != -1)
+		if (topicId != -1) {
+			Log.debug(LogLevel.ACTIVATED, "Register", "register", "sending regack message");
 			regack(messageId, topicId);
-		else {
+		} else {
 			Log.error("Register", "register","TopicName:" + topicName);
 		}
 	}

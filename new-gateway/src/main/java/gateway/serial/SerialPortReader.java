@@ -14,8 +14,8 @@ public class SerialPortReader implements SerialPortEventListener {
 		try {
 			XBeeSerialPort.Instance.serialPort.addEventListener(this);
 		} catch (SerialPortException e) {
-			Log.error("SerialPortReader", "constructor", "");
-			Log.debug(LogLevel.ACTIVATED,"SerialPortReader", "constructor", e.getMessage());
+			Log.error("SerialPortReader", "constructor", "Serial port exception");
+			Log.debug(LogLevel.VERBOSE,"SerialPortReader", "constructor", e.getMessage());
 		}
 	}
 
@@ -34,11 +34,14 @@ public class SerialPortReader implements SerialPortEventListener {
 				}
 				checkDuplicate(XBeeSerialPort.Instance.serialPort.readBytes(totalInputSize));
 			} catch (SerialPortException e) {
-				e.printStackTrace();
+				Log.error("SerialPortReader", "serialEvent", "");
+				Log.debug(LogLevel.VERBOSE,"SerialPortReader", "serialEvent", e.getMessage());
 			} catch (InterruptedException e) {
-				e.printStackTrace();
+				Log.error("SerialPortReader", "serialEvent", "");
+				Log.debug(LogLevel.VERBOSE,"SerialPortReader", "serialEvent", e.getMessage());
 			} catch (URISyntaxException e) {
-				e.printStackTrace();
+				Log.error("SerialPortReader", "serialEvent", "");
+				Log.debug(LogLevel.VERBOSE,"SerialPortReader", "serialEvent", e.getMessage());
 			}
 		}
 	}
