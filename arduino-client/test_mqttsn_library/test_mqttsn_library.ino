@@ -14,8 +14,12 @@ Mqttsn mqttsn(&XBee) ; // objet qui permet d'appeler les methodes de la librairi
 
 // SoftwareSerial Rfid(2, 3);
 
-#define TOPIC_PUB "ObiOne-RFID"
-#define TOPIC_SUB "ObiPop"
+#define TOPIC_SUB "ObiOne-RFID"
+
+#define TOPIC_PUB_0 "ObiPop_0"
+#define TOPIC_PUB_1 "ObiPop_1"
+#define TOPIC_PUB_2 "ObiPop_2"
+
 #define MODULE_NAME "Arduino-RFID"
 
 String rfidId = "";
@@ -39,18 +43,25 @@ void setup() {
       else {
         Serial.println("\nCONNECT KO!");
       }
-    }
+    } 
   } else {
     Serial.println("\nINIT KO!");
   }
 
-  if(-1 == mqttsn.findTopicId(TOPIC_SUB)) {
+  if(-1 == mqttsn.findTopicId(TOPIC_PUB_0)) {
     Serial.println("\nNOT REGISTERED");
+    if(ACCEPTED == mqttsn.registerByName(TOPIC_PUB_0)) {
+      Serial.println("\nREGISTERED");
+    }
+    Serial.println(mqttsn.findTopicId(TOPIC_PUB_0));
   }
   
-  if(ACCEPTED == mqttsn.registerByName(TOPIC_SUB)) {
-    Serial.println("\nREGISTERED");
+  if(mqttsn.subscribe(TOPIC_SUB) == ACCEPTED){
+    Serial.println("\nSn_subscribe Ok");
+  } else {
+    Serial.println("\nSn_subscribe NOT ok");
   }
+  
 
 /*
 

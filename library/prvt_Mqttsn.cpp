@@ -94,8 +94,8 @@ void Mqttsn::register_handler(const msg_register* message) {
 	return_code_t ret = REJECTED_INVALID_TOPIC_ID;
 	short topic_id = findTopicId(message->topic_name);
 
-	logs.debug("Mqttsn", "register_handler", "received topic_name: ", message->topic_name);
-	logs.debug("Mqttsn", "register_handler", "found topic id: ", (int)topic_id);
+	// logs.debug(VERBOSE, "register_handler", "received topic_name: ", message->topic_name);
+	// logs.debug(VERBOSE, "register_handler", "found topic id: ", (int)topic_id);
 
 	if (topic_id != DEFAULT_TOPIC_ID) {
 		topicTable[topic_id].id = bitSwap(message->topic_id);
@@ -133,86 +133,103 @@ uint16_t Mqttsn::bitSwap(const uint16_t value) {
  **/
 void Mqttsn::dispatch() {
 
-	logs.debug("Mqttsn", "dispatch");
 
 	message_header* response_message = (message_header*)responseBuffer;
 	switch (response_message->type) {
 	case ADVERTISE:
+		// logs.debug(VERBOSE, "dispatch", "ADVERTISE");
 		advertise_handler((msg_advertise*)responseBuffer);
 		break;
 
 	case GWINFO:
+		// logs.debug(VERBOSE, "dispatch", "GWINFO");
 		gatewayInfoHandler((msg_gwinfo*)responseBuffer);
 		break;
 
 	case CONNACK:
+		// logs.debug(VERBOSE, "dispatch", "CONNACK");
 		connack_handler((msg_connack*)responseBuffer);
 		break;
 
 	case WILLTOPICREQ:
+		// logs.debug(VERBOSE, "dispatch", "WILLTOPICREQ");
 		willtopicreq_handler(response_message);
 		break;
 
 	case WILLMSGREQ:
+		// logs.debug(VERBOSE, "dispatch", "WILLMSGREQ");
 		willmsgreq_handler(response_message);
 		break;
 
 	case REGISTER:
+		// logs.debug(VERBOSE, "dispatch", "REGISTER");
 		register_handler((msg_register*)responseBuffer);
 		break;
 
 	case REGACK:
+		// logs.debug(VERBOSE, "dispatch", "REGACK");
 		regAckHandler((msg_regack*)responseBuffer);
 		break;
 
 	case REREGISTER:
+		// logs.debug(VERBOSE, "dispatch", "RE-REGISTER");
 		reregister_handler((msg_reregister*)responseBuffer);
 		break;
 
 	case PUBLISH:
+		// logs.debug(VERBOSE, "dispatch", "PUBLISH");
 		publish_handler((msg_publish*)responseBuffer);
 		break;
 
 	case PUBACK:
+		// logs.debug(VERBOSE, "dispatch", "PUBACK");
 		puback_handler((msg_puback*)responseBuffer);
 		break;
 
 	case SUBACK:
+		// logs.debug(VERBOSE, "dispatch", "SUBACK");
 		suback_handler((msg_suback*)responseBuffer);
 		break;
 
 	case UNSUBACK:
+		// logs.debug(VERBOSE, "dispatch", "UNSUBACK");
 		unsuback_handler((msg_unsuback*)responseBuffer);
 		break;
 
 	case PINGREQ:
+		// logs.debug(VERBOSE, "dispatch", "PINGREQ");
 		pingreq_handler((msg_pingreq*)responseBuffer);
 		break;
 
 	case PINGRESP:
+		// logs.debug(VERBOSE, "dispatch", "PINGRESP");
 		pingresp_handler();
 		break;
 
 	case DISCONNECT:
+		// logs.debug(VERBOSE, "dispatch", "DISCONNECT");
 		disconnect_handler((msg_disconnect*)responseBuffer);
 		break;
 
 	case WILLTOPICRESP:
+		// logs.debug(VERBOSE, "dispatch", "WILLTOPICRESP");
 		willtopicresp_handler((msg_willtopicresp*)responseBuffer);
 		break;
 
 	case WILLMSGRESP:
+		// logs.debug(VERBOSE, "dispatch", "WILLMSGRESP");
 		willmsgresp_handler((msg_willmsgresp*)responseBuffer);
 		break;
 
 	default:
+		// logs.debug(VERBOSE, "dispatch", "DEFAULT");
 		return;
 	}
 }
 
 void Mqttsn::sendMessage() {
 
-	logs.debug("Mqttsn", "sendMessage");
+	// logs.debug(VERBOSE, "sendMessage", "sending the message");
 
 	message_header* hdr = reinterpret_cast<message_header*>(messageBuffer);
 
@@ -247,7 +264,7 @@ void Mqttsn::sendMessage() {
 	* @todo END: DEBUG
 	**/
 
-	logs.debug("Mqttsn", "sendMessage", "Message is sent");
+	// logs.debug(VERBOSE, "sendMessage", "Message is sent");
 }
 
 void Mqttsn::advertise_handler(const msg_advertise* msg) {
@@ -258,10 +275,10 @@ bool Mqttsn::multiCheckSerial(const int nb_max_try) {
 
 	int nb_try = 0;
 
-	logs.debug("Mqttsn", "multiCheckSerial", "check serial iteration: ", nb_try);
+	// logs.debug(VERBOSE, "multiCheckSerial", "check serial iteration: ", nb_try);
 	while( !checkSerial() && nb_try < nb_max_try ) {
 		nb_try++;
-		logs.debug("Mqttsn", "multiCheckSerial", "check serial iteration: ", nb_try);
+		// logs.debug(VERBOSE, "multiCheckSerial", "check serial iteration: ", nb_try);
 	}
 
 	return nb_try != nb_max_try;
@@ -269,7 +286,7 @@ bool Mqttsn::multiCheckSerial(const int nb_max_try) {
 
 void Mqttsn::searchGateway(const uint8_t radius) {
 
-	logs.debug("MqttsnApi", "searchGateway");
+	// logs.debug(VERBOSE, "searchGateway", "preparing the message");
 
 	msg_searchgw* msg = reinterpret_cast<msg_searchgw*>(messageBuffer);
 
@@ -318,7 +335,6 @@ void Mqttsn::searchGateway(const uint8_t radius) {
 
 bool Mqttsn::waitData() {
 
-	logs.debug("MqttsnApi", "waitData");
 
 	int i = 1;
 
@@ -329,15 +345,15 @@ bool Mqttsn::waitData() {
 	}
 	if( i == 20 ) {
 		// timeout -> return false
+		// logs.debug(VERBOSE, "waitData", "No data received");
 		return false;
 	}
 
+	// logs.debug(VERBOSE, "waitData", "Data are received");
 	return true;
 }
 
 bool Mqttsn::verifyChecksum(uint8_t frame_buffer[], int frame_size) {
-
-	logs.debug("MqttsnApi", "verifyChecksum");
 
 	int i;
 	uint16_t checksum = 0x00;
@@ -346,6 +362,8 @@ bool Mqttsn::verifyChecksum(uint8_t frame_buffer[], int frame_size) {
 		checksum += frame_buffer[i];
 	}
 	checksum = checksum & 0xFF;
+
+	// logs.debug(VERBOSE, "verifyChecksum", "checksum is : ", (int) checksum);
 
 	return checksum == 0xFF ;
 }
@@ -430,7 +448,6 @@ int Mqttsn::createFrame(const uint8_t* data, const int data_lenght, const uint8_
 
 void Mqttsn::parseData() {
 
-	logs.debug("Mqttsn", "parseData");
 
 	int i;
 	int payload_lenght = frameBufferIn[12];
@@ -439,6 +456,9 @@ void Mqttsn::parseData() {
 	for(i = 0; i < payload_lenght; i++){
 		payload[i] = frameBufferIn[12+i];
 	}
+
+	// logs.debug(VERBOSE, "parseData", "data have been parsed -> parseStream()");
+
 	parseStream(payload, payload_lenght);
 
 	memset(frameBufferIn, 0, sizeof(frameBufferIn));
@@ -460,15 +480,13 @@ char const* Mqttsn::stringFromReturnCode(const uint8_t return_code) {
 
 void Mqttsn::serialSend(const uint8_t* messageBuffer, const int length) {
 
-	logs.debug("Mqttsn", "serialSend");
-
 	int _length = createFrame(messageBuffer, length, gatewayAddress, frameBufferOut, sizeof(frameBufferOut), false);
 	if (_length > 0) {
 		xBee->write(frameBufferOut, _length);
 		xBee->flush();
 	}
 
-	logs.debug("Mqttsn", "serialSend", "Message is sent");
+	// logs.debug(VERBOSE, "serialSend", "message is sent");
 }
 
 
@@ -545,6 +563,8 @@ void Mqttsn::unsubscribeByName(const uint8_t flags, const char* topic_name) {
 
 void Mqttsn::subscribeByName(const uint8_t flags, const char* topic_name) {
 
+	// logs.debug(VERBOSE, "subscribeByName", "topic :", topic_name);
+
 	++messageId;
 	msg_subscribe* msg = reinterpret_cast<msg_subscribe*>(messageBuffer);
 
@@ -556,11 +576,13 @@ void Mqttsn::subscribeByName(const uint8_t flags, const char* topic_name) {
 	msg->message_id = bitSwap(messageId);
 	strcpy(msg->topic_name, topic_name);
 
+	// logs.debug(VERBOSE, "subscribeByName", "sending message 'subscribe topic'");
+
 	sendMessage();
 
-	//if ((flags & QOS_MASK) == FLAG_QOS_1 || (flags & QOS_MASK) == FLAG_QOS_2) {
-	waitingForSubAck = true;
-	//}
+	if ((flags & QOS_MASK) == FLAG_QOS_1 || (flags & QOS_MASK) == FLAG_QOS_2) {
+		waitingForSubAck = true;
+	}
 }
 
 void Mqttsn::subscribeById(const uint8_t flags, const uint16_t topic_id) {
@@ -584,16 +606,17 @@ void Mqttsn::subscribeById(const uint8_t flags, const uint16_t topic_id) {
 // extern void Mqttsn_regAckHandler(const msg_regack* msg);
 void Mqttsn::regAckHandler(const msg_regack* msg) {
 
-	logs.debug("Mqttsn", "regAckHandler");
-
 	if (msg->return_code == 0 && nbRegisteredTopic < MAX_TOPICS && bitSwap(msg->message_id) == messageId) {
 		topicTable[nbRegisteredTopic].id = bitSwap(msg->topic_id);
 
-		logs.debug("Mqttsn", "regAckHandler", "The topic id is ", msg->topic_id);
-		logs.debug("Mqttsn", "regAckHandler", "The topic table id is ", topicTable[nbRegisteredTopic].id);
 
 		nbRegisteredTopic++;
 		regAckReturnCode = ACCEPTED;
+
+		// logs.debug(VERBOSE, "regAckHandler", "Topic registered, it's id is ", msg->topic_id);
+		// logs.debug(VERBOSE, "regAckHandler", "Topic registered, it's table id is ", topicTable[nbRegisteredTopic].id);
+	} else {
+		// logs.debug(VERBOSE, "regAckHandler", "Topic NOT registered");
 	}
 }
 
