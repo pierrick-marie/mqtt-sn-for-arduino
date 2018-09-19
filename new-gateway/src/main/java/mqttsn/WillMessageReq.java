@@ -38,7 +38,7 @@ public class WillMessageReq extends Thread {
 
 
 		if (client.willMessageReq()) {
-			Log.debug(LogLevel.ACTIVATED,"WillMessageReq", "willMessageReq","Resend Will Message Req");
+			Log.debug(LogLevel.ACTIVE,"WillMessageReq", "willMessageReq","Resend Will Message Req");
 			willMessagerReq();
 		}
 	}

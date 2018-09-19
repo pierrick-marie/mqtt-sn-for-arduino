@@ -2,12 +2,8 @@ package gateway;
 
 import utils.*;
 import org.fusesource.mqtt.client.Callback;
-import org.fusesource.mqtt.client.CallbackConnection;
 
 import java.beans.ExceptionListener;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 /**
  * Created by arnaudoglaza on 03/07/2017.
@@ -27,7 +23,7 @@ public class TimeOut implements Runnable, ExceptionListener {
 		for (int i = 0; i < duration; i++) {
 
 			if( client.state().equals(State.ASLEEP)) {
-				Log.debug(LogLevel.ACTIVATED,"TimeOut", "start", "Not asleep anymore");
+				Log.debug(LogLevel.ACTIVE,"TimeOut", "start", "Not asleep anymore");
 			}
 
 			Time.sleep((long)1000, "TimeOut.start()");
@@ -43,7 +39,7 @@ public class TimeOut implements Runnable, ExceptionListener {
 			@Override
 			public void onSuccess(Void value) {
 				// @TODO
-				Log.debug(LogLevel.ACTIVATED,"TimeOut", "clientTimeOut", "Success");
+				Log.debug(LogLevel.ACTIVE,"TimeOut", "clientTimeOut", "Success");
 			}
 
 			@Override

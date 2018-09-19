@@ -9,6 +9,9 @@ import java.util.Date;
 
 public class Log {
 
+	public static final Boolean ERROR = true;
+	public static final LogLevel LEVEL = LogLevel.VERBOSE;
+
 	private static final DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 
 	private static final String INPUT = "received message - ";
@@ -33,12 +36,10 @@ public class Log {
 	}
 
 	public static void debug(final LogLevel level, final String className, final String methodeName, final String message) {
-		if (Main.LEVEL.ordinal() >= level.ordinal()) {
-			if(level.ordinal() == LogLevel.VERBOSE.ordinal()) {
-				bYellow(" # [ " + LogLevel.VERBOSE.name() + " ] ");
-			} else {
-				bYellow(" # [ DEBUG ] ");
-			}
+		if (LEVEL.ordinal() >= level.ordinal()) {
+
+			bYellow(" # [ " + level.name() + " ] ");
+
 			yellow(className + ".");
 			yellow(methodeName + "(): ");
 			yellow(message + "\n");
@@ -46,7 +47,7 @@ public class Log {
 	}
 
 	public static void error(final String className, final String methodeName, final String message) {
-		if (Main.ERROR) {
+		if (ERROR) {
 			bRed(" ! [ ERROR ] ");
 			red(className + ".");
 			red(methodeName + "(): ");

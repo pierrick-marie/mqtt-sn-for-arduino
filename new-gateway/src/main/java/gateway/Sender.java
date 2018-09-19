@@ -30,7 +30,7 @@ public class Sender extends Thread {
 		serialMessage[1] = (byte) 0x0C;
 		serialMessage[2] = (byte) 0x00;
 
-		Log.debug(LogLevel.ACTIVATED,"Sender", "sendMessage", "topic = " + message.topic());
+		Log.debug(LogLevel.ACTIVE,"Sender", "sendMessage", "topic = " + message.topic());
 
 		serialMessage[3] = Utils.getTopicId(message.topic())[0];
 		serialMessage[4] = Utils.getTopicId(message.topic())[1];
@@ -58,7 +58,7 @@ public class Sender extends Thread {
 
 		// the message has not been acquit -> resend
 		if (!Main.MessageIdAck.contains(Main.MessageId)) {
-			Log.debug(LogLevel.ACTIVATED,"Sender", "sendMessage", "Resend the message");
+			Log.debug(LogLevel.ACTIVE,"Sender", "sendMessage", "Resend the message");
 			sendMessage();
 		}
 	}

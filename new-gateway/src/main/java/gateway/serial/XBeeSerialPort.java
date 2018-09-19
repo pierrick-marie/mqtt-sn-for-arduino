@@ -3,7 +3,6 @@ package gateway.serial;
 import gateway.Main;
 import jssc.SerialPort;
 import jssc.SerialPortException;
-import utils.Client;
 import utils.Log;
 import utils.LogLevel;
 
@@ -31,7 +30,7 @@ enum XBeeSerialPort {
 			serialPort.setEventsMask(mask);
 		} catch (SerialPortException e) {
 			Log.error("XBeeSerialPort", "getSerial", "Impossible to get the XBee module");
-			Log.debug(LogLevel.ACTIVATED,"XBeeSerialPort", "getSerial", e.getMessage());
+			Log.debug(LogLevel.ACTIVE,"XBeeSerialPort", "getSerial", e.getMessage());
 		}
 	}
 }

@@ -50,7 +50,7 @@ public class SerialPortWriter {
 			XBeeSerialPort.Instance.serialPort.writeBytes(res);
 		} catch (SerialPortException e) {
 			Log.error("XBeeSerialPort", "write", "");
-			Log.debug(LogLevel.ACTIVATED,"XBeeSerialPort", "write", e.getMessage());
+			Log.debug(LogLevel.ACTIVE,"XBeeSerialPort", "write", e.getMessage());
 		}
 	}
 }

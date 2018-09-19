@@ -3,14 +3,11 @@ package mqttsn;
 import gateway.Main;
 import gateway.serial.SerialPortWriter;
 import org.fusesource.mqtt.client.Callback;
-import org.fusesource.mqtt.client.CallbackConnection;
 import utils.Client;
 import utils.Log;
 import utils.LogLevel;
 import utils.Utils;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -60,7 +57,7 @@ public class Publish extends Thread {
 					@Override
 					public void onFailure(Throwable e) {
 						Log.error("Publish", "publish", "Error on publish");
-						Log.debug(LogLevel.ACTIVATED,"Publish", "publish", e.getMessage());
+						Log.debug(LogLevel.ACTIVE,"Publish", "publish", e.getMessage());
 					}
 				});
 			} else {

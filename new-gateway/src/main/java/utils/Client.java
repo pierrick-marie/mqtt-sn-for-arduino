@@ -28,6 +28,7 @@ public class Client {
 	public Client(final Address64 address64, final Address16 address16) {
 		this.address64 = address64;
 		this.address16 = address16;
+		state = State.FIRSTCONNECT;
 	}
 
 	public CallbackConnection connection() {
@@ -197,17 +198,17 @@ public class Client {
 	}
 
 	public Boolean save() {
-		Log.debug(LogLevel.ACTIVATED,"Client","save", "saving the client " + this);
+		Log.debug(LogLevel.ACTIVE,"Client","save", "saving the client " + this);
 		return null != ClientsManager.Instance.save(this);
 	}
 
 	public Boolean load() {
 
-		Log.debug(LogLevel.ACTIVATED,"Client","load", "get the client with address " + address64);
+		Log.debug(LogLevel.ACTIVE,"Client","load", "searching the client with address " + address64);
 		Client savedClient = ClientsManager.Instance.search(address64);
 
 		if( null == savedClient ) {
-			Log.debug(LogLevel.ACTIVATED,"Client","load", "client with address " + address64 + " is unknown");
+			Log.debug(LogLevel.ACTIVE,"Client","load", "client with address " + address64 + " is unknown");
 			return false;
 		}
 

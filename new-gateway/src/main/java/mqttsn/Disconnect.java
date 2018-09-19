@@ -33,7 +33,7 @@ public class Disconnect extends Thread {
 
 				disconnectAck();
 
-				Log.debug(LogLevel.ACTIVATED,"Disconnect", "diconnect", "Going into sleep");
+				Log.debug(LogLevel.ACTIVE,"Disconnect", "diconnect", "Going into sleep");
 
 				TimeOut timeOut = new TimeOut(client, duration);
 				Threading.thread(timeOut, false);

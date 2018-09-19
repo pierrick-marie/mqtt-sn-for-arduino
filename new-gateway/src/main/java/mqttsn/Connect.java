@@ -42,53 +42,51 @@ public class Connect extends Thread {
 
 		if(client.name().equals("")) {
 			String name = getClientName();
-			Log.debug(LogLevel.ACTIVATED,"Connect", "getClientName","setup the client's name with " + name);
+			Log.debug(LogLevel.ACTIVE,"Connect", "getClientName","setup the client's name with " + name);
 			client.setName(name);
 		}
 
 		Log.input(client, "connect");
+		MqttCallback validCallBack = new MqttCallback(client, true);
 
-		if (null != client) {
-			Log.debug(LogLevel.ACTIVATED,"Connect", "connect",client + " is known and its status is " + client.state());
+		Log.debug(LogLevel.ACTIVE, "Connect", "connect", client + " is known and its status is " + client.state());
 
-			MqttCallback validCallBack = new MqttCallback(client, true);
 
-			if (client.state().equals(utils.State.ASLEEP)) {
-				Log.debug(LogLevel.ACTIVATED,"Connect", "connect","device " + client + " comes back from sleep");
+		if (client.state().equals(utils.State.ASLEEP)) {
+			Log.debug(LogLevel.ACTIVE, "Connect", "connect", "device " + client + " comes back from sleep");
 
-				client.setState(utils.State.ACTIVE);
+			client.setState(utils.State.ACTIVE);
 
-				Time.sleep((long) 10, "Connect.connect(): An error occurs when trying to sleep the current thread");
+			Time.sleep((long) 10, "Connect.connect(): An error occurs when trying to sleep the current thread");
 
-				validCallBack.connack();
+			validCallBack.connack();
 
-			} else if (client.state().equals(utils.State.LOST)) {
+		} else if (client.state().equals(utils.State.LOST)) {
 
-				client.setState(utils.State.ACTIVE);
+			client.setState(utils.State.ACTIVE);
 
-				MQTT mqtt = client.mqttClient();
-				if(null == mqtt){
-					Log.error("Connect", "connect", "mqtt client is null");
-					mqtt = createMqttClient(cleanSession, duration);
-					client.setMqttClient(mqtt);
-				}
-
-				CallbackConnection connection = mqtt.callbackConnection();
-				MqttListener listener = new MqttListener(client);
-				connection.listener(listener);
-
-				MqttCallback invalidCallBack = new MqttCallback(client, false);
-				connection.connect(invalidCallBack);
-
-				client.setConnection(connection);
-
-				if (will) { createWillHandlers(); }
-
-			} else {
-				validCallBack.connack();
+			MQTT mqtt = client.mqttClient();
+			if (null == mqtt) {
+				Log.error("Connect", "connect", "mqtt client is null");
+				mqtt = createMqttClient(cleanSession, duration);
+				client.setMqttClient(mqtt);
 			}
-		} else {
-			Log.debug(LogLevel.ACTIVATED,"Connect", "connect","Client " + client + " is unknown -> creating a new client");
+
+			CallbackConnection connection = mqtt.callbackConnection();
+			MqttListener listener = new MqttListener(client);
+			connection.listener(listener);
+
+			MqttCallback invalidCallBack = new MqttCallback(client, false);
+			connection.connect(invalidCallBack);
+
+			client.setConnection(connection);
+
+			if (will) {
+				createWillHandlers();
+			}
+
+		} else if (client.state().equals(utils.State.FIRSTCONNECT)) {
+			Log.debug(LogLevel.ACTIVE, "Connect", "connect", "First connection for client " + client);
 
 			client.setState(utils.State.ACTIVE);
 
@@ -98,13 +96,17 @@ public class Connect extends Thread {
 			CallbackConnection connection = mqtt.callbackConnection();
 			MqttListener listener = new MqttListener(client);
 			connection.listener(listener);
-			client.setConnection(connection);
 
-			MqttCallback validCallBack = new MqttCallback(client, true);
 			connection.connect(validCallBack);
 			validCallBack.connack();
 
-			if (will) { createWillHandlers(); }
+			client.setConnection(connection);
+
+			if (will) {
+				createWillHandlers();
+			}
+		} else {
+			validCallBack.connack();
 		}
 	}
 
@@ -123,7 +125,7 @@ public class Connect extends Thread {
 
 	private void createWillHandlers() {
 
-		Log.debug(LogLevel.ACTIVATED,"Connect", "createWillHandlers","");
+		Log.debug(LogLevel.ACTIVE,"Connect", "createWillHandlers","");
 
 		try {
 			WillTopicReq willTopicReq = new WillTopicReq(client);
@@ -134,13 +136,13 @@ public class Connect extends Thread {
 			willMessageReq.join();
 		} catch (InterruptedException e) {
 			Log.error("Connect", "createWillHandlers", "Exception while creating the \"will handlers\"");
-			Log.debug(LogLevel.ACTIVATED,"Connect", "createWillHandlers", e.getMessage());
+			Log.debug(LogLevel.ACTIVE,"Connect", "createWillHandlers", e.getMessage());
 		}
 	}
 
 	private MQTT createMqttClient(final Boolean cleanSession, final Short duration) {
 
-		Log.debug(LogLevel.ACTIVATED,"Connect", "createMqttClient", "Client " + client.name() + ": session = " + cleanSession + " duration = " + duration);
+		Log.debug(LogLevel.ACTIVE,"Connect", "createMqttClient", "Client " + client.name() + ": session = " + cleanSession + " duration = " + duration);
 
 		MQTT mqtt = new MQTT();
 		try {
@@ -150,8 +152,8 @@ public class Connect extends Thread {
 			mqtt.setKeepAlive(duration);
 		} catch (URISyntaxException e) {
 			Log.error("Connect", "createMqttClient", "Impossible to create the MQTT client");
-			Log.debug(LogLevel.ACTIVATED,"Connect", "createMqttClient", e.getMessage());
-			Log.debug(LogLevel.ACTIVATED,"Connect", "createMqttClient", e.getReason());
+			Log.debug(LogLevel.ACTIVE,"Connect", "createMqttClient", e.getMessage());
+			Log.debug(LogLevel.ACTIVE,"Connect", "createMqttClient", e.getReason());
 			return null;
 		}
 

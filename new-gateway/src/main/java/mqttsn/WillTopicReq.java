@@ -37,7 +37,7 @@ public class WillTopicReq extends Thread {
 		}
 
 		if (client.willTopicReq()) {
-			Log.debug(LogLevel.ACTIVATED,"WillTopicReq", "willTopicReq","Resend Will Topic Req");
+			Log.debug(LogLevel.ACTIVE,"WillTopicReq", "willTopicReq","Resend Will Topic Req");
 			willTopicReq();
 		}
 	}

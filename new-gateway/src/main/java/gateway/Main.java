@@ -12,9 +12,6 @@ import java.util.HashMap;
  */
 public class Main {
 
-	public static final Boolean ERROR = true;
-	public static final LogLevel LEVEL = LogLevel.VERBOSE;
-
 	public static int GatewayId = 1;
 
 	// @todo DEBUG: use the ClientManager instead

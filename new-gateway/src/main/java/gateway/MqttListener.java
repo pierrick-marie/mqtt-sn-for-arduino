@@ -3,15 +3,9 @@ package gateway;
 import utils.Client;
 import utils.Log;
 import utils.LogLevel;
-import utils.Utils;
 import org.fusesource.hawtbuf.Buffer;
 import org.fusesource.hawtbuf.UTF8Buffer;
 import org.fusesource.mqtt.client.Listener;
-
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
 
 /**
  * Created by arnaudoglaza on 03/07/2017.
@@ -36,7 +30,7 @@ public class MqttListener implements Listener {
 	@Override
 	public void onPublish(UTF8Buffer topic, Buffer body, Runnable ack) {
 
-		Log.debug(LogLevel.ACTIVATED,"MqttListener", "onPublish", client + " Buffering Message");
+		Log.debug(LogLevel.ACTIVE,"MqttListener", "onPublish", client + " Buffering Message");
 
 		Message msg = new Message(topic.utf8().toString(), body.utf8().toString());
 		client.messages.add(msg);

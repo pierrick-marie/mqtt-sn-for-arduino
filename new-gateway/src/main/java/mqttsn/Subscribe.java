@@ -3,7 +3,6 @@ package mqttsn;
 import gateway.Main;
 import gateway.serial.SerialPortWriter;
 import org.fusesource.mqtt.client.Callback;
-import org.fusesource.mqtt.client.CallbackConnection;
 import org.fusesource.mqtt.client.Topic;
 import utils.Client;
 import utils.Log;
@@ -11,9 +10,6 @@ import utils.LogLevel;
 import utils.Utils;
 
 import java.nio.charset.StandardCharsets;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 /**
  * Created by arnaudoglaza on 07/07/2017.
@@ -30,7 +26,7 @@ public class Subscribe extends Thread {
 
 	public void subscribe() {
 
-		Log.output(client, "Subscribe");
+		Log.input(client, "Subscribe");
 
 		byte flags = msg[0];
 		boolean DUP = (flags & 0b10000000) == 1;
@@ -46,24 +42,39 @@ public class Subscribe extends Thread {
 		int topicID;
 
 		if (Main.TopicName.containsKey(topicName)) {
-			topicID = Main.TopicName.get(topicName);
 
+			topicID = Main.TopicName.get(topicName);
 			Topic[] topics = {new Topic(topicName, Utils.getQoS(qos))};
 			final int finalTopicID = topicID;
+
+			Log.debug(LogLevel.VERBOSE,"Subscribe", "subscribe", "Topic " + topicName + " is registered with final id: " + finalTopicID);
 
 			client.connection().subscribe(topics, new Callback<byte[]>() {
 				@Override
 				public void onSuccess(byte[] value) {
+					/**
+					 * TODO DEBUG: this method is not called!
+					 * This method should be called by the MQTT server after a subscribe to a topic
+					 * It supose the topic is registered on the MQTT server
+					 * TODO: check the connection to the MQTT server !
+					 **/
+					Log.debug(LogLevel.ACTIVE,"Subscribe", "client.connection().subscribe.onSuccess", "clear messages");
 					client.messages.clear();
-					suback(value, msgID, finalTopicID);
 				}
 
 				@Override
 				public void onFailure(Throwable e) {
-					Log.error("Subscribe", "subscribe", "Error on subscribe");
-					Log.debug(LogLevel.ACTIVATED,"Subscribe", "subscribe", e.getMessage());
+					Log.error("Subscribe", "client.connection().subscribe.onFalure", "Error on subscribe");
+					Log.debug(LogLevel.ACTIVE,"Subscribe", "subscribe", e.getMessage());
 				}
 			});
+
+			/**
+			 * TODO DEBUG: put this code into the onSuccess method in the callback object
+			 * @SEE the connection to the MQTT server !
+			 **/
+			final byte[] value = {0};
+			suback(value, msgID, finalTopicID);
 
 		} else {
 			Log.error("Subscribe", "subscribe", "Topic NOT registered");
@@ -72,7 +83,7 @@ public class Subscribe extends Thread {
 
 	private void suback(final byte[] qoses, final byte[] msgID, final int topicID) {
 
-		Log.input(client, "Suback");
+		Log.output(client, "Suback");
 
 		byte[] ret = new byte[8];
 		ret[0] = (byte) 0x08;
