@@ -1,8 +1,7 @@
 package gateway;
 
 import gateway.serial.SerialPortReader;
-import utils.Log;
-import utils.LogLevel;
+import utils.log.Log;
 
 import java.util.ArrayList;
 import java.util.HashMap;

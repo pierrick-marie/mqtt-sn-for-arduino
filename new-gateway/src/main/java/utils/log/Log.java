@@ -1,8 +1,7 @@
-package utils;
+package utils.log;
 
-import gateway.Main;
+import utils.Client;
 
-import java.lang.reflect.Method;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -44,6 +43,16 @@ public class Log {
 			yellow(methodeName + "(): ");
 			yellow(message + "\n");
 		}
+	}
+
+	public static void acticeDebug(final String message) {
+		bYellow(" # [ " + LogLevel.ACTIVE.name() + " ] ");
+		yellow(message + "\n");
+	}
+
+	public static void veboseDebug(final String message) {
+		bYellow(" # [ " + LogLevel.VERBOSE.name() + " ] ");
+		yellow(message + "\n");
 	}
 
 	public static void error(final String className, final String methodeName, final String message) {

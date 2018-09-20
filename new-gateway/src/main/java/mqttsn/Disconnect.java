@@ -4,8 +4,8 @@ import gateway.Threading;
 import gateway.TimeOut;
 import gateway.serial.SerialPortWriter;
 import utils.Client;
-import utils.Log;
-import utils.LogLevel;
+import utils.log.Log;
+import utils.log.LogLevel;
 
 /**
  * Created by arnaudoglaza on 07/07/2017.

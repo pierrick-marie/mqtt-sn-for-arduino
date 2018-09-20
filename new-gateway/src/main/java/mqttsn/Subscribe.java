@@ -5,8 +5,8 @@ import gateway.serial.SerialPortWriter;
 import org.fusesource.mqtt.client.Callback;
 import org.fusesource.mqtt.client.Topic;
 import utils.Client;
-import utils.Log;
-import utils.LogLevel;
+import utils.log.Log;
+import utils.log.LogLevel;
 import utils.Utils;
 
 import java.nio.charset.StandardCharsets;

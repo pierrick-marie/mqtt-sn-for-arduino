@@ -1,15 +1,10 @@
 package mqttsn;
 
-import gateway.Main;
-import org.fusesource.mqtt.client.MQTT;
 import utils.Client;
-import utils.Log;
+import utils.log.Log;
 import utils.Utils;
 
 import java.nio.charset.StandardCharsets;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 /**
  * Created by arnaudoglaza on 07/07/2017.

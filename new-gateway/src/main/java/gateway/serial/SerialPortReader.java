@@ -3,8 +3,8 @@ package gateway.serial;
 import jssc.SerialPortEvent;
 import jssc.SerialPortEventListener;
 import jssc.SerialPortException;
-import utils.Log;
-import utils.LogLevel;
+import utils.log.Log;
+import utils.log.LogLevel;
 
 import java.net.URISyntaxException;
 

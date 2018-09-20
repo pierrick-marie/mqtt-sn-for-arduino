@@ -2,6 +2,8 @@ package gateway;
 
 import gateway.serial.SerialPortWriter;
 import utils.*;
+import utils.log.Log;
+import utils.log.LogLevel;
 
 /**
  * Created by arnaudoglaza on 04/07/2017.

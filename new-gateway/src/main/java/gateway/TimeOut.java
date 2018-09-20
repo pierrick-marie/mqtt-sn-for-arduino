@@ -2,6 +2,8 @@ package gateway;
 
 import utils.*;
 import org.fusesource.mqtt.client.Callback;
+import utils.log.Log;
+import utils.log.LogLevel;
 
 import java.beans.ExceptionListener;
 

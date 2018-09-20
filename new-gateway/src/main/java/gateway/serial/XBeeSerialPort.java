@@ -3,8 +3,8 @@ package gateway.serial;
 import gateway.Main;
 import jssc.SerialPort;
 import jssc.SerialPortException;
-import utils.Log;
-import utils.LogLevel;
+import utils.log.Log;
+import utils.log.LogLevel;
 
 /**
  * Created by arnaudoglaza on 03/07/2017.

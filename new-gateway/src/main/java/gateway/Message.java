@@ -1,6 +1,6 @@
 package gateway;
 
-import utils.Log;
+import utils.log.Log;
 
 /**
  * Created by arnaudoglaza on 04/07/2017.

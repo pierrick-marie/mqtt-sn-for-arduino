@@ -1,8 +1,8 @@
 package gateway;
 
 import utils.Client;
-import utils.Log;
-import utils.LogLevel;
+import utils.log.Log;
+import utils.log.LogLevel;
 import org.fusesource.hawtbuf.Buffer;
 import org.fusesource.hawtbuf.UTF8Buffer;
 import org.fusesource.mqtt.client.Listener;
@@ -20,11 +20,12 @@ public class MqttListener implements Listener {
 
 	@Override
 	public void onConnected() {
+		Log.debug(LogLevel.ACTIVE,"MqttListener", "connected", client.toString());
 	}
 
 	@Override
 	public void onDisconnected() {
-		//System.out.println("onDisconnected");
+		Log.debug(LogLevel.ACTIVE,"MqttListener", "disconnected", client.toString());
 	}
 
 	@Override

@@ -1,5 +1,8 @@
 package utils;
 
+import utils.log.Log;
+import utils.log.LogLevel;
+
 public class Time {
 
 	public  static void sleep(final Long millis, final String errorMessage) {

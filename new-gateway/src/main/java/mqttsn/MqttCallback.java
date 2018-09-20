@@ -3,8 +3,8 @@ package mqttsn;
 import gateway.serial.SerialPortWriter;
 import org.fusesource.mqtt.client.Callback;
 import utils.Client;
-import utils.Log;
-import utils.LogLevel;
+import utils.log.Log;
+import utils.log.LogLevel;
 
 public class MqttCallback implements Callback<Void> {
 
@@ -18,13 +18,12 @@ public class MqttCallback implements Callback<Void> {
 
 	@Override
 	public void onSuccess(Void value) {
-		Log.print("Success on connect callback");
+		Log.debug( LogLevel.ACTIVE, "MqttCallback", "onSuccess", "Success on connect callback, value: " + value);
 		connack();
 	}
 
 	@Override
 	public void onFailure(Throwable e) {
-		Log.print("Failure on connect callback");
 		Log.debug(LogLevel.ACTIVE,"MqttCallback", "onFailure", e.getMessage());
 	}
 

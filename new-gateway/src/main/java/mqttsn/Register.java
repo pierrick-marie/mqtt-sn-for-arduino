@@ -3,8 +3,8 @@ package mqttsn;
 import gateway.Main;
 import gateway.serial.SerialPortWriter;
 import utils.Client;
-import utils.Log;
-import utils.LogLevel;
+import utils.log.Log;
+import utils.log.LogLevel;
 
 import java.nio.charset.StandardCharsets;
 

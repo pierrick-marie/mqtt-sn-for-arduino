@@ -1,6 +1,6 @@
 package utils.address;
 
-import utils.Log;
+import utils.log.Log;
 
 public class Address64 extends Address {
 

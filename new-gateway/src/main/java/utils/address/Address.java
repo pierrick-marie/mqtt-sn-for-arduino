@@ -1,7 +1,5 @@
 package utils.address;
 
-import utils.Log;
-
 public abstract class Address {
 
 	public final byte address[];
