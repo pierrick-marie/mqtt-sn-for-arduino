@@ -45,7 +45,7 @@ public class Log {
 		}
 	}
 
-	public static void acticeDebug(final String message) {
+	public static void activeDebug(final String message) {
 		bYellow(" # [ " + LogLevel.ACTIVE.name() + " ] ");
 		yellow(message + "\n");
 	}

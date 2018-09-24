@@ -18,8 +18,6 @@ public class Main {
 	public final static ArrayList<Integer> MessageIdAck = new ArrayList<>();
 
 	public static final String SERIAL_PORT = "/dev/ttyUSB0";
-	public static final String HOST = "141.115.64.26";
-	public static final Integer PORT = 1883;
 
 	public static int MessageId = 0;
 

@@ -7,6 +7,7 @@ import org.fusesource.mqtt.client.MQTT;
 import utils.*;
 import utils.log.Log;
 import utils.log.LogLevel;
+import utils.mqttclient.MqttClient;
 
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
@@ -148,7 +149,8 @@ public class Connect extends Thread {
 
 		MQTT mqtt = new MQTT();
 		try {
-			mqtt.setHost(Main.HOST, Main.PORT);
+			// @TODO: DEBUG !
+			mqtt.setHost(MqttClient.HOST, MqttClient.PORT);
 			mqtt.setClientId(client.name());
 			mqtt.setCleanSession(cleanSession);
 			mqtt.setKeepAlive(duration);
