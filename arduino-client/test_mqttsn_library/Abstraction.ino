@@ -50,6 +50,7 @@ int sn_init(){
   */
 }
 
+/*
 int sn_connect(const char* module_name){
   mqttsn.connect(FLAG, KEEP_ALIVE, module_name);
   while(mqttsn.wait_for_response()){
@@ -58,6 +59,7 @@ int sn_connect(const char* module_name){
   delay(1000);
   return connack_return_code;
 }
+*/
 
 bool is_topic_registered(const char* topic_name){
   /*
@@ -111,11 +113,14 @@ int sn_publish(String message, const char* topic_name){
   return 0;
 }
 
+/*
 void sn_disconnect(){
   mqttsn.disconnect(0);
   delay(1000);
 }
+*/
 
+/*
 String sn_get_message_from_subscribed_topics(){
   message = "";
   mqttsn.pingreq(MODULE_NAME);
@@ -125,86 +130,111 @@ String sn_get_message_from_subscribed_topics(){
   delay(1000);
   return message;
 }
+*/
 
+/*
 void debug(String message){
   if(DEBUG){
     Serial.print(message);
   }
 }
+*/
 
+/*
 void debugln(String message){
   if(DEBUG){
     Serial.println(message);
   }
 }
+*/
 
+/*
 void MQTTSN_connack_handler(const msg_connack* msg){
   debug("Entering connack ");
   debugln(mqttsn.stringFromReturnCode(msg->return_code));
   connack_return_code = msg->return_code;
 }
+*/
 
+/*
 void MQTTSN_regack_handler(const msg_regack* msg){ 
   debug("Entering regack ");
   debugln(mqttsn.stringFromReturnCode(msg->return_code));
   regack_return_code = msg->return_code;
   if(msg->return_code == ACCEPTED){
-    /*
-     * @DEBUG
-     *
+    
     my_topic_dictionnary[nb_topic_registered].topic_id = msg->topic_id;
     nb_topic_registered++;
-    */
+    
   }
 }
+*/
 
+/*
 void MQTTSN_suback_handler(const msg_suback* msg){
   debug("Entering suback ");
   debugln(mqttsn.stringFromReturnCode(msg->return_code));
   suback_return_code = msg->return_code;
 }
+*/
 
+
+/*
 void MQTTSN_puback_handler(const msg_puback* msg){ 
   debug("Entering puback ");
   debugln(mqttsn.stringFromReturnCode(msg->return_code));
   puback_return_code   = msg->return_code;
 }
+*/
 
+
+/*
 void MQTTSN_disconnect_handler(const msg_disconnect* msg){
   //handler gérant une déconnection
 }
+*/
 
+/*
 void MQTTSN_publish_handler(const msg_publish* msg){ 
   //handler gérant un message reçu
   message = msg->data;
 }
+*/
 
+
+/*
 void MQTTSN_pingresp_handler(){ 
   debugln("Entering pingresp");
 }
+*/
 
 
+/*
 void MQTTSN_gwinfo_handler(const msg_gwinfo* msg){ 
-  /*
-   * @DEBUG
-   *
+  
   if(msg->gw_id == 1) {
     init_ok = true;
   } else {
     init_ok = false;
   }
-  */
+  
 }
+*/
 
-
+/*
 void MQTTSN_reregister_handler(msg_reregister const*){
   //RESERVERD
 }
+*/
 
+/*
 void MQTTSN_willtopicreq_handler(const message_header* msg){ 
   //handler permettant la création d'un nom de topic pour le testament
 }
+*/
 
+/*
 void MQTTSN_willmsgreq_handler(const message_header* msg){ 
   //handler permettant la création d'un message testament
 }
+*/

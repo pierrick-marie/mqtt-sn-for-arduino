@@ -36,9 +36,27 @@ void setup() {
 
   if(mqttsn.init() == ACCEPTED){
     Serial.println("\nINIT OK");
+    
     if(XBee.isListening()) {
+      
       if(mqttsn.connect(MODULE_NAME) == ACCEPTED){
         Serial.println("\nCONNECT OK");
+
+         if(-1 == mqttsn.findTopicId(TOPIC_PUB_0)) {
+          Serial.println("\nNOT REGISTERED");
+          
+          if(ACCEPTED == mqttsn.registerByName(TOPIC_PUB_0)) {
+            Serial.println("\nREGISTERED");
+          }
+          Serial.println(mqttsn.findTopicId(TOPIC_PUB_0));
+        }
+  
+        if(mqttsn.subscribe(TOPIC_SUB) == ACCEPTED){
+          Serial.println("\nSn_subscribe Ok");
+        } else {
+          Serial.println("\nSn_subscribe NOT ok");
+        }
+        
       }
       else {
         Serial.println("\nCONNECT KO!");
@@ -48,19 +66,7 @@ void setup() {
     Serial.println("\nINIT KO!");
   }
 
-  if(-1 == mqttsn.findTopicId(TOPIC_PUB_0)) {
-    Serial.println("\nNOT REGISTERED");
-    if(ACCEPTED == mqttsn.registerByName(TOPIC_PUB_0)) {
-      Serial.println("\nREGISTERED");
-    }
-    Serial.println(mqttsn.findTopicId(TOPIC_PUB_0));
-  }
   
-  if(mqttsn.subscribe(TOPIC_SUB) == ACCEPTED){
-    Serial.println("\nSn_subscribe Ok");
-  } else {
-    Serial.println("\nSn_subscribe NOT ok");
-  }
   
 
 /*

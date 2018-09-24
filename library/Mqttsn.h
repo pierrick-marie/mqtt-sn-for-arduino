@@ -250,7 +250,7 @@ private:
 
 	void advertise_handler(const msg_advertise* msg);
 	void gatewayInfoHandler(const msg_gwinfo* msg);
-	void connack_handler(const msg_connack* msg);
+	void connackHandler(const msg_connack* msg);
 	void willtopicreq_handler(const message_header* msg);
 	void willmsgreq_handler(const message_header* msg);
 	void regAckHandler(const msg_regack* msg);
@@ -302,9 +302,6 @@ private:
 	// the status of the connection (first sent message)
 	bool initOk = false;
 
-	// the code received after a connect message
-	int connAckReturnCode = 0;
-
 	// the code received after a subscribe or register message
 	int regAckReturnCode = 0;
 
@@ -320,7 +317,7 @@ private:
 	bool waitingForSubAck;
 	bool waitingForPubAck;
 	bool waitingForPingResp;
-	bool connected;
+	short connected;
 	int messageId;
 
 	uint8_t messageBuffer[MAX_BUFFER_SIZE];

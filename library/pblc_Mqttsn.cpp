@@ -119,7 +119,7 @@ void Mqttsn::parseStream(uint8_t* buf, uint16_t len) {
 	memset(responseBuffer, 0, MAX_BUFFER_SIZE);
 	memcpy(responseBuffer, (const void*)buf, len);
 
-	// logs.debug(ACTIVE, "parseStream", "Stream is ready -> dispatch");
+	// logs.debug( "parseStream", "Stream is ready -> dispatch");
 
 	// waitingForResponse is set to false to allow another request
 	waitingForResponse = false;
@@ -129,7 +129,7 @@ void Mqttsn::parseStream(uint8_t* buf, uint16_t len) {
 
 void Mqttsn::gatewayInfoHandler(const msg_gwinfo* message) {
 
-	// logs.debug(ACTIVE, "gatewayInfoHandler");
+	// logs.debug( "gatewayInfoHandler");
 
 	if(message->gw_id == 1) {
 		initOk = true;
@@ -139,13 +139,16 @@ void Mqttsn::gatewayInfoHandler(const msg_gwinfo* message) {
 }
 
 bool Mqttsn::isConnected() {
-	return connected;
+
+	return connected == ACCEPTED;
 }
 
 // extern void Mqttsn_connack_handler(const msg_connack* msg);
-void Mqttsn::connack_handler(const msg_connack* msg) {
-	connected = true;
-	// Mqttsn_connack_handler(msg);
+void Mqttsn::connackHandler(const msg_connack* msg) {
+
+	// logs.debug("connackHandler", "return code is: ", stringFromReturnCode(msg->return_code));
+
+	connected = msg->return_code;
 }
 
 /**
@@ -415,26 +418,26 @@ int Mqttsn::init() {
 	int nb_try = 0;
 	int radius = 0;
 
-	// logs.debug(ACTIVE, "init", "searching gateway");
+	// logs.debug( "init", "searching gateway");
 
 	searchGateway(radius);
 
 	while( !checkSerial() && nb_try < MAX_TRY) {
-		// logs.debug(ACTIVE, "init", "the gateway did not respond, iteration: ", nb_try);
+		// logs.debug( "init", "the gateway did not respond, iteration: ", nb_try);
 		nb_try++;
-		// delay(1000);
+		delay(5000);
 		searchGateway(radius);
 	}
 
 	if( nb_try == MAX_TRY) {
-		// logs.debug(ACTIVE, "init", "REJECTED");
+		// logs.debug( "init", "REJECTED");
 		return REJECTED_NOT_SUPPORTED;
 	}
 
-	// logs.debug(ACTIVE, "init", "waiting for a response");
+	// logs.debug( "init", "waiting for a response");
 	parseData();
 
-	// logs.debug(ACTIVE, "init", "checking the response from the gateway");
+	// logs.debug( "init", "checking the response from the gateway");
 	if(initOk) {
 		return ACCEPTED;
 	} else {
@@ -446,18 +449,18 @@ int Mqttsn::init() {
 
 int Mqttsn::connect(const char* moduleName) {
 
-	// logs.debug(ACTIVE, "connect", "send a connect message");
+	// logs.debug( "connect", "send a connect message");
 	connect(FLAG, KEEP_ALIVE, moduleName);
 
 	if( !multiCheckSerial(MAX_TRY) ) {
-		// logs.debug(ACTIVE, "connect", "check serial rejected");
+		// logs.debug( "connect", "check serial rejected");
 		return REJECTED_NOT_SUPPORTED;
 	}
 
 	parseData();
 
-	// logs.debug(ACTIVE, "connect", "response from the gateway:", connAckReturnCode);
-	return connAckReturnCode;
+	// logs.debug( "connect", "response from the gateway:", connected);
+	return connected;
 }
 
 /**
@@ -531,8 +534,8 @@ short Mqttsn::findTopicId(const char* topic_name) {
 
 	for (short i = 0; i < nbRegisteredTopic; i++) {
 		if (topicTable[i].id != DEFAULT_TOPIC_ID && strcmp(topicTable[i].name, topic_name) == 0) {
-			// logs.debug(ACTIVE, "findTopicid", "id = ", (int)topicTable[i].id);
-			// logs.debug(ACTIVE, "findTopicid", "name = ", topicTable[i].name);
+			// logs.debug( "findTopicid", "id = ", (int)topicTable[i].id);
+			// logs.debug( "findTopicid", "name = ", topicTable[i].name);
 			return topicTable[i].id;
 		}
 	}
@@ -542,28 +545,28 @@ short Mqttsn::findTopicId(const char* topic_name) {
 
 int Mqttsn::subscribe(const char* name) {
 
-	logs.debug(ACTIVE, "subscribe", "searching topic id");
+	logs.debug("subscribe", "searching topic id");
 
 	if(-1 == findTopicId(name)){
-		logs.debug(ACTIVE, "subscribe", "topic is not already registered -> registerByName()");
+		logs.debug( "subscribe", "topic is not already registered -> registerByName()");
 		if(registerByName(name) != ACCEPTED){
 			return REJECTED_NOT_SUPPORTED;
 		}
 	}
 
-	logs.debug(ACTIVE, "subscribe", "subscribing topic");
+	logs.debug("subscribe", "subscribing topic");
 
 	subscribeByName(FLAG, name);
 
 	if( !multiCheckSerial(MAX_TRY) ) {
-		logs.debug(ACTIVE, "subscribe", "check serial rejected");
+		logs.debug("subscribe", "check serial rejected");
 		return REJECTED_NOT_SUPPORTED;
 	}
 
-	logs.debug(ACTIVE, "subscribe", "parsing response 'subscribe topic'");
+	logs.debug("subscribe", "parsing response 'subscribe topic'");
 	parseData();
 
-	logs.debug(ACTIVE, "subscribe", "response from the gateway - ", subAckReturnCode);
+	logs.debug("subscribe", "response from the gateway - ", subAckReturnCode);
 	return subAckReturnCode;
 }
 
@@ -572,18 +575,18 @@ int Mqttsn::registerByName(const char* name) {
 	// waitingForResponse is set to false in function @parseStream.
 	// As a consequence, in nominal case, it should be equals to false.
 	if (waitingForResponse) {
-		// logs.debug(ACTIVE, "registerTopic", "waitingForResponse is true");
+		// logs.debug( "registerTopic", "waitingForResponse is true");
 		return -2;
 	}
 
 	if(nbRegisteredTopic >= MAX_TOPICS) {
-		// logs.debug(ACTIVE, "registerTopic", "nbRegisteredTopic > MAX_TOPICS");
+		// logs.debug( "registerTopic", "nbRegisteredTopic > MAX_TOPICS");
 		return -2;
 	}
 
 	int topic_id = findTopicId(name);
 	if(topic_id != -1) {
-		// logs.debug(ACTIVE, "registerTopic", "name is already registered");
+		// logs.debug( "registerTopic", "name is already registered");
 		return topic_id;
 	}
 
@@ -597,7 +600,7 @@ int Mqttsn::registerByName(const char* name) {
 
 	messageId++;
 
-	// logs.debug(ACTIVE, "registerByName", "Topic registered - ", name);
+	// logs.debug( "registerByName", "Topic registered - ", name);
 
 	msg_register* msg = reinterpret_cast<msg_register*>(messageBuffer);
 
@@ -607,18 +610,18 @@ int Mqttsn::registerByName(const char* name) {
 	msg->message_id = bitSwap(messageId);
 	strcpy(msg->topic_name, name);
 
-	// logs.debug(ACTIVE, "registerByName", "sending message 'topic registered'");
+	// logs.debug( "registerByName", "sending message 'topic registered'");
 	sendMessage();
 
 	if( !multiCheckSerial(MAX_TRY) ) {
-		// logs.debug(ACTIVE, "registerByName", "check serial rejected");
+		// logs.debug( "registerByName", "check serial rejected");
 		return REJECTED_NOT_SUPPORTED;
 	}
 
-	// logs.debug(ACTIVE, "registerByName", "parsing response 'topic registered'");
+	// logs.debug( "registerByName", "parsing response 'topic registered'");
 	parseData();
 
-	// logs.debug(ACTIVE, "registerByName", "response from the gateway - ", regAckReturnCode);
+	// logs.debug( "registerByName", "response from the gateway - ", regAckReturnCode);
 	return regAckReturnCode;
 }
 
