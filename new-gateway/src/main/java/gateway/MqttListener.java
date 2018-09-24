@@ -1,6 +1,6 @@
 package gateway;
 
-import utils.Client;
+import utils.client.Client;
 import utils.log.Log;
 import utils.log.LogLevel;
 import org.fusesource.hawtbuf.Buffer;

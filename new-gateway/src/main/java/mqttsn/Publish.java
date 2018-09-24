@@ -3,7 +3,7 @@ package mqttsn;
 import gateway.Main;
 import gateway.serial.SerialPortWriter;
 import org.fusesource.mqtt.client.Callback;
-import utils.Client;
+import utils.client.Client;
 import utils.log.Log;
 import utils.log.LogLevel;
 import utils.Utils;
@@ -47,7 +47,13 @@ public class Publish extends Thread {
 
 			String topicName = getKeyByValue(Main.TopicName, topicID);
 
-			if (null != client.connection()) {
+			// @TODO: DEBUG
+			// if (null != client.connection()) {
+			if (true) {
+				/**
+				 *
+				 * @TODO: DEBUG
+				 *
 				client.connection().publish(topicName, data, Utils.getQoS(qos), retain, new Callback<Void>() {
 					@Override
 					public void onSuccess(Void value) {
@@ -60,6 +66,7 @@ public class Publish extends Thread {
 						Log.debug(LogLevel.ACTIVE,"Publish", "publish", e.getMessage());
 					}
 				});
+				 **/
 			} else {
 				puback(topicID, msgID, 0x03);
 			}

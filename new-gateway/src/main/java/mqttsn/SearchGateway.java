@@ -2,7 +2,7 @@ package mqttsn;
 
 import gateway.Main;
 import gateway.serial.SerialPortWriter;
-import utils.Client;
+import utils.client.Client;
 import utils.log.Log;
 
 /**

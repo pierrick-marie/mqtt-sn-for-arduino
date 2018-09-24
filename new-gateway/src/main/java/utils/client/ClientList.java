@@ -1,4 +1,4 @@
-package utils;
+package utils.client;
 
 import utils.address.Address;
 

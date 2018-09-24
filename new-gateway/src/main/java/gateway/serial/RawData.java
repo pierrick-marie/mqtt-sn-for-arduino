@@ -1,7 +1,7 @@
 package gateway.serial;
 
 import mqttsn.*;
-import utils.Client;
+import utils.client.Client;
 import utils.address.Address16;
 import utils.address.Address64;
 

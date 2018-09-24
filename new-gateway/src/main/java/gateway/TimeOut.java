@@ -2,6 +2,7 @@ package gateway;
 
 import utils.*;
 import org.fusesource.mqtt.client.Callback;
+import utils.client.Client;
 import utils.log.Log;
 import utils.log.LogLevel;
 
@@ -37,6 +38,10 @@ public class TimeOut implements Runnable, ExceptionListener {
 
 		client.setState(State.LOST);
 
+		/**
+		 *
+		 * @TODO: DEBUG
+		 *
 		client.connection().disconnect(new Callback<Void>() {
 			@Override
 			public void onSuccess(Void value) {
@@ -50,6 +55,7 @@ public class TimeOut implements Runnable, ExceptionListener {
 				Log.error("TimeOut", "clientTimeOut", value.getMessage());
 			}
 		});
+		*/
 	}
 
 	@Override

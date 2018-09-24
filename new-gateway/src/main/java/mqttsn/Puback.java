@@ -1,7 +1,7 @@
 package mqttsn;
 
 import gateway.Main;
-import utils.Client;
+import utils.client.Client;
 import utils.log.Log;
 
 /**

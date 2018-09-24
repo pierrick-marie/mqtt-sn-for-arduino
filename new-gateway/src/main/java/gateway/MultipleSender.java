@@ -1,7 +1,7 @@
 package gateway;
 
 import gateway.serial.SerialPortWriter;
-import utils.*;
+import utils.client.Client;
 import utils.log.Log;
 import utils.log.LogLevel;
 

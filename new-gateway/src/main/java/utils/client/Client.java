@@ -1,12 +1,14 @@
-package utils;
+package utils.client;
 
 import gateway.Message;
 import org.fusesource.mqtt.client.CallbackConnection;
 import org.fusesource.mqtt.client.MQTT;
+import utils.State;
 import utils.address.Address16;
 import utils.address.Address64;
 import utils.log.Log;
 import utils.log.LogLevel;
+import utils.mqttclient.MqttClient;
 
 import java.util.ArrayList;
 
@@ -15,12 +17,12 @@ public class Client {
 	private String name = "";
 	private Integer duration = 0;
 	private State state = State.DISCONNECTED;
-	private MQTT mqttClient = null;
+	private MqttClient mqttClient = null;
 	private Boolean willTopicReq = false;
 	private Boolean willTopicAck = false;
 	private Boolean willMessageAck = false;
 	private Boolean willMessageReq = false;
-	private CallbackConnection connection = null;
+	// private CallbackConnection connection = null;
 
 	public Address64 address64 = null;
 	public Address16 address16 = null;
@@ -33,12 +35,14 @@ public class Client {
 		state = State.FIRSTCONNECT;
 	}
 
+	/*
 	public CallbackConnection connection() {
 		return connection;
 	}
+	*/
 
+	/*
 	public Client setConnection(final CallbackConnection connection) {
-
 		if (null == connection) {
 			Log.error("Client", "setConnection", "connection is null");
 		}
@@ -50,6 +54,7 @@ public class Client {
 
 		return this;
 	}
+	*/
 
 	public String name() {
 		return name;
@@ -69,11 +74,11 @@ public class Client {
 		return this;
 	}
 
-	public MQTT mqttClient() {
+	public MqttClient mqttClient() {
 		return mqttClient;
 	}
 
-	public Client setMqttClient(final MQTT mqttClient) {
+	public Client setMqttClient(final MqttClient mqttClient) {
 
 		if (null == mqttClient) {
 			Log.error("Client", "setMqttClient", "mqttClient is null");
@@ -216,7 +221,7 @@ public class Client {
 
 		name = savedClient.name;
 		mqttClient = savedClient.mqttClient;
-		connection = savedClient.connection;
+		// connection = savedClient.connection;
 		state = savedClient.state;
 		duration = savedClient.duration;
 		willTopicReq = savedClient.willTopicReq;

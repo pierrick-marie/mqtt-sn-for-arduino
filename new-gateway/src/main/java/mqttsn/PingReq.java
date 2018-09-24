@@ -2,6 +2,7 @@ package mqttsn;
 
 import gateway.MultipleSender;
 import utils.*;
+import utils.client.Client;
 import utils.log.Log;
 import utils.log.LogLevel;
 

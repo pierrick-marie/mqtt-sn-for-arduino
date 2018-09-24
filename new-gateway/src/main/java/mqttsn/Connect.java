@@ -1,10 +1,10 @@
 package mqttsn;
 
-import gateway.Main;
 import gateway.MqttListener;
 import org.fusesource.mqtt.client.CallbackConnection;
 import org.fusesource.mqtt.client.MQTT;
 import utils.*;
+import utils.client.Client;
 import utils.log.Log;
 import utils.log.LogLevel;
 import utils.mqttclient.MqttClient;
@@ -50,10 +50,7 @@ public class Connect extends Thread {
 		}
 
 		Log.input(client, "connect");
-		MqttCallback validCallBack = new MqttCallback(client, true);
-
 		Log.debug(LogLevel.ACTIVE, "Connect", "connect", client + " is known and its status is " + client.state());
-
 
 		if (client.state().equals(utils.State.ASLEEP)) {
 			Log.debug(LogLevel.ACTIVE, "Connect", "connect", "device " + client + " comes back from sleep");
@@ -61,8 +58,6 @@ public class Connect extends Thread {
 			client.setState(utils.State.ACTIVE);
 
 			Time.sleep((long) 10, "Connect.connect(): An error occurs when trying to sleep the current thread");
-
-			validCallBack.connack();
 
 		} else if (client.state().equals(utils.State.LOST)) {
 
@@ -72,17 +67,27 @@ public class Connect extends Thread {
 			if (null == mqtt) {
 				Log.error("Connect", "connect", "mqtt client is null");
 				mqtt = createMqttClient(cleanSession, duration);
+
+				/**
+				 *
+				 * @TODO: DEBUG
+				 *
 				client.setMqttClient(mqtt);
+				 **/
 			}
 
 			CallbackConnection connection = mqtt.callbackConnection();
 			MqttListener listener = new MqttListener(client);
 			connection.listener(listener);
 
+			/**
+			 *
+			 * @TODO: DEBUG
+			 *
 			MqttCallback invalidCallBack = new MqttCallback(client, false);
 			connection.connect(invalidCallBack);
-
 			client.setConnection(connection);
+			 **/
 
 			if (will) {
 				createWillHandlers();
@@ -94,23 +99,39 @@ public class Connect extends Thread {
 			client.setState(utils.State.ACTIVE);
 
 			MQTT mqtt = createMqttClient(cleanSession, duration);
+
+			/**
+			 *
+			 * @TODO: DEBUG
+			 *
 			client.setMqttClient(mqtt);
+			 **/
 
 			CallbackConnection connection = mqtt.callbackConnection();
 			MqttListener listener = new MqttListener(client);
 			connection.listener(listener);
 
+			/**
+			 *
+			 * @TODO: DEBUG
+			 *
 			connection.connect(validCallBack);
 			validCallBack.connack();
-
 			client.setConnection(connection);
+			 **/
 
 			if (will) {
 				createWillHandlers();
 			}
-		} else {
+		}
+		/**
+		 *
+		 * @TODO: DEBUG
+		 *
+		else {
 			validCallBack.connack();
 		}
+		 **/
 	}
 
 	private String getClientName() {

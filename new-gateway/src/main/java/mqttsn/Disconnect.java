@@ -3,7 +3,7 @@ package mqttsn;
 import gateway.Threading;
 import gateway.TimeOut;
 import gateway.serial.SerialPortWriter;
-import utils.Client;
+import utils.client.Client;
 import utils.log.Log;
 import utils.log.LogLevel;
 

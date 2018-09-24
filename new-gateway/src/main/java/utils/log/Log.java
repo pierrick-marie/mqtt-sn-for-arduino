@@ -1,6 +1,6 @@
 package utils.log;
 
-import utils.Client;
+import utils.client.Client;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;

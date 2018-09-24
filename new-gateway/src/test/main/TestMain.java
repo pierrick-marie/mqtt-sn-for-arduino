@@ -30,13 +30,25 @@ public class TestMain {
 		Log.activeDebug("connected to broker !!! ");
 
 		// Subscribe to  fidelityAds topic
-		Topic[] topics = { new Topic("FIDELITY_ADS_TOPIC", QoS.AT_LEAST_ONCE)};
+		Topic[] topics = { new Topic("MON_PETIT_CHAT", QoS.AT_LEAST_ONCE)};
 		try {
 			connection.subscribe(topics);
-			Log.activeDebug("subscribe");
+			Log.activeDebug("subscribe topic: " + topics[0].toString());
+
+			Message message = connection.receive();
+			System.out.println(message.getTopic());
+			byte[] payload = message.getPayload();
+			// process the message then:
+			message.ack();
+
+			Log.activeDebug("A message have been received: " + new String(payload));
+
 		} catch (Exception e) {
 			Log.activeDebug("Exception: " + e.getMessage());
 		}
+
+		/*
+
 		// Publish Ads
 		String ads1 = "Discount on transfert fees up to -50% with coupon code JBOSSDOCTOR.  www.beosbank.com";
 		long index=0;
@@ -56,5 +68,7 @@ public class TestMain {
 			index++;
 			Log.activeDebug("end of loop");
 		}
+
+		*/
 	}
 }

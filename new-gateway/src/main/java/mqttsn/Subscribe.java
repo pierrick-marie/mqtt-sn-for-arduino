@@ -4,7 +4,7 @@ import gateway.Main;
 import gateway.serial.SerialPortWriter;
 import org.fusesource.mqtt.client.Callback;
 import org.fusesource.mqtt.client.Topic;
-import utils.Client;
+import utils.client.Client;
 import utils.log.Log;
 import utils.log.LogLevel;
 import utils.Utils;
@@ -49,16 +49,15 @@ public class Subscribe extends Thread {
 
 			Log.debug(LogLevel.VERBOSE,"Subscribe", "subscribe", "Topic " + topicName + " is registered with final id: " + finalTopicID);
 
+			/**
+			 *
+			 * @TODO: DEBUG
+			 *
 			client.connection().subscribe(topics, new Callback<byte[]>() {
 				@Override
 				public void onSuccess(byte[] value) {
-					/**
-					 * TODO DEBUG: this method is not called!
-					 * This method should be called by the MQTT server after a subscribe to a topic
-					 * It supose the topic is registered on the MQTT server
-					 * TODO: check the connection to the MQTT server !
-					 **/
 					Log.debug(LogLevel.ACTIVE,"Subscribe", "client.connection().subscribe.onSuccess", "clear messages");
+					suback(value, msgID, finalTopicID);
 					client.messages.clear();
 				}
 
@@ -68,13 +67,8 @@ public class Subscribe extends Thread {
 					Log.debug(LogLevel.ACTIVE,"Subscribe", "subscribe", e.getMessage());
 				}
 			});
-
-			/**
-			 * TODO DEBUG: put this code into the onSuccess method in the callback object
-			 * @SEE the connection to the MQTT server !
 			 **/
-			final byte[] value = {0};
-			suback(value, msgID, finalTopicID);
+
 
 		} else {
 			Log.error("Subscribe", "subscribe", "Topic NOT registered");

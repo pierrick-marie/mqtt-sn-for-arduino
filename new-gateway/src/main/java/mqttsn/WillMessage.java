@@ -1,6 +1,6 @@
 package mqttsn;
 
-import utils.Client;
+import utils.client.Client;
 import utils.log.Log;
 
 import java.nio.charset.StandardCharsets;
