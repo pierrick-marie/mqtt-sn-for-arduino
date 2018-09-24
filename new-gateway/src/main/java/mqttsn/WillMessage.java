@@ -14,13 +14,14 @@ public class WillMessage extends Thread {
 	private byte[] msg;
 
 	public WillMessage(final Client client, final byte[] msg) {
+
+		Log.input(client, "Will message");
+
 		this.client = client;
 		this.msg = msg;
 	}
 
 	public void willmessage() {
-
-		Log.output(client, "Will message");
 
 		client.setWillMessageAck(false);
 

@@ -7,6 +7,7 @@ import utils.log.Log;
 import utils.log.LogLevel;
 
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Created by arnaudoglaza on 07/07/2017.
@@ -17,6 +18,9 @@ public class Register extends Thread {
 	private final byte[] message;
 
 	public Register(final Client client, final byte[] msg) {
+
+		Log.input(client, "register");
+
 		this.client = client;
 		this.message = msg;
 	}
@@ -27,14 +31,18 @@ public class Register extends Thread {
 	 */
 	private void register() {
 
-		Log.input(client, "register");
-
 		byte[] messageId = new byte[2];
 		messageId[0] = message[2];
 		messageId[1] = message[3];
 		byte[] name = new byte[message.length - 4];
 		String topicName;
 		int i, topicId = -1;
+
+		if (!client.mqttClient().isConnected()) {
+			Log.error("Register", "register", client + "is not connected");
+			regack(messageId, topicId, false);
+			return;
+		}
 
 		for (i = 0; i < name.length; i++) {
 			name[i] = message[4 + i];
@@ -43,19 +51,20 @@ public class Register extends Thread {
 		topicName = new String(name, StandardCharsets.UTF_8);
 
 		if (Main.TopicName.containsKey(topicName)) {
+			Log.debug(LogLevel.ACTIVE, "Register", "register", "topic " + topicName + " (id:" + topicId + ") is contained");
 			topicId = Main.TopicName.get(topicName);
 
-			Log.debug(LogLevel.ACTIVE,"Register", "register","topic " + topicName + " (id:" + topicId + ") is contained");
 		} else {
+			Log.debug(LogLevel.ACTIVE, "Register", "register", "topic " + topicName + " (id:" + topicId + ") is NOT contained -> saving the topic");
 			topicId = Main.TopicName.size();
-			Log.debug(LogLevel.ACTIVE,"Register", "register","topic " + topicName + " (id:" + topicId + ") is NOT contained -> saving the topic");
 			Main.TopicName.put(topicName, topicId);
 		}
 		if (topicId != -1) {
-			Log.debug(LogLevel.ACTIVE, "Register", "register", "sending regack message");
-			regack(messageId, topicId);
+			Log.debug(LogLevel.ACTIVE, "Register", "register", "sending regack message: OK");
+			regack(messageId, topicId, true);
 		} else {
-			Log.error("Register", "register","TopicName:" + topicName);
+			Log.debug(LogLevel.ACTIVE, "Register", "register", "topicId = -1 -> sending regack message: KO");
+			regack(messageId, topicId, false);
 		}
 	}
 
@@ -65,9 +74,9 @@ public class Register extends Thread {
 	 * @param messageId
 	 * @param topicId
 	 */
-	private void regack(final byte[] messageId, final int topicId) {
+	private void regack(final byte[] messageId, final int topicId, final boolean ok) {
 
-		Log.output(client, "regack");
+		Log.output(client, "reg ack");
 
 		// the message to send
 		byte[] message = new byte[7];
@@ -83,7 +92,12 @@ public class Register extends Thread {
 		}
 		message[4] = messageId[0];
 		message[5] = messageId[1];
-		message[6] = (byte) 0x00;
+
+		if (ok) {
+			message[6] = (byte) 0x00;
+		} else {
+			message[6] = (byte) 0x02;
+		}
 
 		SerialPortWriter.write(client, message);
 	}

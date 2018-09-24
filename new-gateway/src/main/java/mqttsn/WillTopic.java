@@ -15,13 +15,14 @@ public class WillTopic extends Thread {
 	private byte[] msg;
 
 	public WillTopic(final Client client, final byte[] msg) {
+
+		Log.input(client, "Will topic");
+
 		this.client = client;
 		this.msg = msg;
 	}
 
 	public void willtopic() {
-
-		Log.output(client, "Will topic");
 
 		client.setWillTopicAck(false);
 

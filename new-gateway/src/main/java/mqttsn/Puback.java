@@ -13,13 +13,14 @@ public class Puback extends Thread {
 	final byte[] msg;
 
 	public Puback(final Client client, final byte[] msg) {
+
+		Log.input(client, "pub ack");
+
 		this.client = client;
 		this.msg = msg;
 	}
 
 	private void puback() {
-
-		Log.output(client, "PubAck Client");
 
 		if (msg[4] == (byte) 0x00) {
 			int msgID = (msg[3] << 8) + (msg[2] & 0xFF);

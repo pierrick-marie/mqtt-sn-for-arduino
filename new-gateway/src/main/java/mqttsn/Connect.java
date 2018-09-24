@@ -1,6 +1,8 @@
 package mqttsn;
 
 import gateway.MqttListener;
+import gateway.serial.SerialPortWriter;
+import org.fusesource.mqtt.client.BlockingConnection;
 import org.fusesource.mqtt.client.CallbackConnection;
 import org.fusesource.mqtt.client.MQTT;
 import utils.*;
@@ -25,6 +27,9 @@ public class Connect extends Thread {
 	private final byte[] message;
 
 	public Connect(final Client client, final byte[] message) {
+
+		Log.input(client, "connect");
+
 		this.client = client;
 		this.message = message;
 	}
@@ -36,102 +41,76 @@ public class Connect extends Thread {
 	/**
 	 * Method called after receiving a connect message.
 	 **/
-	public void connect()  {
+	public void connect() {
 
 		byte flags = message[0];
 		short duration = (short) (message[2] * 16 + message[3]);
 		boolean will = (flags >> 3) == 1;
 		boolean cleanSession = (flags >> 2) == 1;
 
-		if(client.name().equals("")) {
+		if (client.name().equals("")) {
 			String name = getClientName();
-			Log.debug(LogLevel.ACTIVE,"Connect", "getClientName","setup the client's name with " + name);
+			Log.debug(LogLevel.ACTIVE, "Connect", "getClientName", "setup the client's name with " + name);
 			client.setName(name);
 		}
 
-		Log.input(client, "connect");
-		Log.debug(LogLevel.ACTIVE, "Connect", "connect", client + " is known and its status is " + client.state());
+		Log.debug(LogLevel.ACTIVE, "Connect", "connect", client + " status is " + client.state());
 
 		if (client.state().equals(utils.State.ASLEEP)) {
 			Log.debug(LogLevel.ACTIVE, "Connect", "connect", "device " + client + " comes back from sleep");
 
 			client.setState(utils.State.ACTIVE);
 
-			Time.sleep((long) 10, "Connect.connect(): An error occurs when trying to sleep the current thread");
-
-		} else if (client.state().equals(utils.State.LOST)) {
+		} else if (client.state().equals(utils.State.LOST) || client.state().equals(utils.State.FIRSTCONNECT)) {
 
 			client.setState(utils.State.ACTIVE);
-
-			MQTT mqtt = client.mqttClient();
-			if (null == mqtt) {
-				Log.error("Connect", "connect", "mqtt client is null");
-				mqtt = createMqttClient(cleanSession, duration);
-
-				/**
-				 *
-				 * @TODO: DEBUG
-				 *
-				client.setMqttClient(mqtt);
-				 **/
-			}
-
-			CallbackConnection connection = mqtt.callbackConnection();
-			MqttListener listener = new MqttListener(client);
-			connection.listener(listener);
-
-			/**
-			 *
-			 * @TODO: DEBUG
-			 *
-			MqttCallback invalidCallBack = new MqttCallback(client, false);
-			connection.connect(invalidCallBack);
-			client.setConnection(connection);
-			 **/
 
 			if (will) {
 				createWillHandlers();
 			}
 
-		} else if (client.state().equals(utils.State.FIRSTCONNECT)) {
-			Log.debug(LogLevel.ACTIVE, "Connect", "connect", "First connection for client " + client);
-
-			client.setState(utils.State.ACTIVE);
-
-			MQTT mqtt = createMqttClient(cleanSession, duration);
-
-			/**
-			 *
-			 * @TODO: DEBUG
-			 *
-			client.setMqttClient(mqtt);
-			 **/
-
-			CallbackConnection connection = mqtt.callbackConnection();
-			MqttListener listener = new MqttListener(client);
-			connection.listener(listener);
-
-			/**
-			 *
-			 * @TODO: DEBUG
-			 *
-			connection.connect(validCallBack);
-			validCallBack.connack();
-			client.setConnection(connection);
-			 **/
-
-			if (will) {
-				createWillHandlers();
-			}
+			connack( connectToTheBroker(cleanSession, duration) );
 		}
-		/**
-		 *
-		 * @TODO: DEBUG
-		 *
-		else {
-			validCallBack.connack();
+	}
+
+	private Boolean connectToTheBroker(final Boolean cleanSession, final Short duration) {
+
+		Log.debug(LogLevel.ACTIVE, "SearchGateway", "connectToTheBroker", "connecting to the mqtt broker");
+
+		MqttClient mqtt = new MqttClient();
+		mqtt.setClientId(client.name());
+		mqtt.setCleanSession(cleanSession);
+		mqtt.setKeepAlive(duration);
+
+		try {
+			mqtt.connect();
+		} catch (Exception e) {
+			Log.debug(LogLevel.ACTIVE, "SearchGateway", "connectToTheBroker", "mqtt client not connected");
+			Log.activeDebug(e.getMessage());
+
+			return false;
 		}
-		 **/
+		Log.debug(LogLevel.ACTIVE, "SearchGateway", "connectToTheBroker", "connected");
+
+		client.setMqttClient(mqtt);
+		return true;
+	}
+
+	private void connack(final Boolean isConnected) {
+
+		Log.output(client, "connack: " + isConnected);
+
+		byte[] serialMesasge = new byte[3];
+		serialMesasge[0] = (byte) 0x03;
+		serialMesasge[1] = (byte) 0x05;
+
+		if (isConnected) {
+			serialMesasge[2] = (byte) 0x00;
+		} else {
+			serialMesasge[2] = (byte) 0x03;
+		}
+
+		SerialPortWriter.write(client, serialMesasge);
 	}
 
 	private String getClientName() {
@@ -147,9 +126,13 @@ public class Connect extends Thread {
 		return clientName;
 	}
 
+	/**
+	 * TODO: DEBUG
+	 * Find the usage of this method.
+	 */
 	private void createWillHandlers() {
 
-		Log.debug(LogLevel.ACTIVE,"Connect", "createWillHandlers","");
+		Log.debug(LogLevel.ACTIVE, "Connect", "createWillHandlers", "");
 
 		try {
 			WillTopicReq willTopicReq = new WillTopicReq(client);
@@ -160,28 +143,7 @@ public class Connect extends Thread {
 			willMessageReq.join();
 		} catch (InterruptedException e) {
 			Log.error("Connect", "createWillHandlers", "Exception while creating the \"will handlers\"");
-			Log.debug(LogLevel.ACTIVE,"Connect", "createWillHandlers", e.getMessage());
+			Log.debug(LogLevel.ACTIVE, "Connect", "createWillHandlers", e.getMessage());
 		}
-	}
-
-	private MQTT createMqttClient(final Boolean cleanSession, final Short duration) {
-
-		Log.debug(LogLevel.ACTIVE,"Connect", "createMqttClient", "Client " + client.name() + ": session = " + cleanSession + " duration = " + duration);
-
-		MQTT mqtt = new MQTT();
-		try {
-			// @TODO: DEBUG !
-			mqtt.setHost(MqttClient.HOST, MqttClient.PORT);
-			mqtt.setClientId(client.name());
-			mqtt.setCleanSession(cleanSession);
-			mqtt.setKeepAlive(duration);
-		} catch (URISyntaxException e) {
-			Log.error("Connect", "createMqttClient", "Impossible to create the MQTT client");
-			Log.debug(LogLevel.ACTIVE,"Connect", "createMqttClient", e.getMessage());
-			Log.debug(LogLevel.ACTIVE,"Connect", "createMqttClient", e.getReason());
-			return null;
-		}
-
-		return mqtt;
 	}
 }

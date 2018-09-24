@@ -2,6 +2,8 @@ package utils.mqttclient;
 
 import org.fusesource.mqtt.client.BlockingConnection;
 import org.fusesource.mqtt.client.MQTT;
+import org.fusesource.mqtt.client.QoS;
+import org.fusesource.mqtt.client.Topic;
 import utils.Time;
 import utils.log.Log;
 import utils.log.LogLevel;
@@ -14,57 +16,84 @@ public class MqttClient extends MQTT {
 	public static final String HOST = "localhost";
 	public static final Integer PORT = 1883;
 
-	private final long TIME_TO_WAIT = 1000; // 1 seconds
+	private final long TIME_TO_WAIT = 500; // 0.5 seconds
+	public final short NB_TRY = 5;
 
-	private BlockingConnection connection = null;
+	private final BlockingConnection connection;
 
-	class ThreadConnection extends Thread {
+	class ThreadConnect extends Thread {
 
 		public Boolean isConnected;
-		private BlockingConnection connection;
 
-		public ThreadConnection(final BlockingConnection connection) {
+		public ThreadConnect() {
 			isConnected = false;
-			this.connection = connection;
 		}
 
 		public void run() {
 			try {
-				Log.debug(LogLevel.VERBOSE, "Inner class: ThreadConnection", "run", "starting a new connection to the mqtt broker");
+				Log.debug(LogLevel.VERBOSE, "Inner class: ThreadConnect", "run", "starting a new connection to the mqtt broker");
 				connection.connect();
 				isConnected = true;
-				Log.debug(LogLevel.VERBOSE, "Inner class: ThreadConnection", "run", "connection to the mqtt broker activated");
+				Log.debug(LogLevel.VERBOSE, "Inner class: ThreadConnect", "run", "connection to the mqtt broker activated");
 			} catch (Exception e) {
-				Log.error("Inner class: ThreadConnection", "run", "connection to the mqtt broker impossible");
-				Log.debug(LogLevel.VERBOSE,"Inner class: ThreadConnection", "run", e.getMessage());
+				Log.error("Inner class: ThreadConnect", "run", "connection to the mqtt broker impossible");
+				Log.debug(LogLevel.VERBOSE,"Inner class: ThreadConnect", "run", e.getMessage());
 			}
 		}
 
 		public synchronized void stopConnection() {
-			Log.debug(LogLevel.VERBOSE, "MqttClient", "stopConnection", "stopping the current thread");
+			Log.debug(LogLevel.VERBOSE, "Inner class: ThreadConnect", "stopConnection", "stopping the current thread");
 			Thread.currentThread().interrupt();
 		}
 	}
 
-	public  MqttClient() {
+	class ThreadSubscribe extends Thread {
+
+		public Boolean isSubscribed;
+		private String topicName;
+
+		public ThreadSubscribe(final String topicName) {
+			isSubscribed = false;
+			this.topicName = topicName;
+		}
+
+		public void run() {
+			try {
+				Log.debug(LogLevel.VERBOSE, "Inner class: ThreadSubscribe", "run", "start to subscribe the topic: " + topicName);
+				connection.subscribe(new Topic[]{new Topic(topicName, QoS.AT_LEAST_ONCE)});
+				isSubscribed = true;
+				Log.debug(LogLevel.VERBOSE, "Inner class: ThreadSubscribe", "run", "subscription ok");
+			} catch (Exception e) {
+				Log.error("Inner class: ThreadConnect", "run", "subscription NOT ok");
+				Log.debug(LogLevel.VERBOSE,"Inner class: ThreadConnect", "run", e.getMessage());
+			}
+		}
+
+		public synchronized void stopSubscribe() {
+			Log.debug(LogLevel.VERBOSE, "Inner class: ThreadConnect", "stopSubscribe", "stopping the current thread");
+			Thread.currentThread().interrupt();
+		}
+	}
+
+	public MqttClient() {
 		try {
 			setHost(HOST, PORT);
 		} catch (URISyntaxException e) {
 			Log.error("MqttClient", "constructor", "Impossible to set host: " + HOST + ":" + PORT);
 			Log.debug(LogLevel.VERBOSE, "MqttClient", "constructor", e.getMessage());
 		}
+		connection = this.blockingConnection();
 	}
 
-	public BlockingConnection connect(final long timeToWait) throws TimeoutException {
+	public void connect() throws TimeoutException {
 
-		Log.debug(LogLevel.VERBOSE,"MqttClient", "connect","try to connect to the mqtt broker");
+		Log.debug(LogLevel.ACTIVE,"MqttClient", "connect","try to connect to the mqtt broker");
 
-		connection = this.blockingConnection();
-		ThreadConnection threadConnection = new ThreadConnection(connection);
+		ThreadConnect threadConnection = new ThreadConnect();
 		threadConnection.start();
 		long time = System.currentTimeMillis();
 
-		while(time + timeToWait > System.currentTimeMillis() && false == threadConnection.isConnected) {
+		while(time + NB_TRY * TIME_TO_WAIT > System.currentTimeMillis() && false == threadConnection.isConnected) {
 			Time.sleep(TIME_TO_WAIT, "time out connection");
 		}
 
@@ -74,14 +103,33 @@ public class MqttClient extends MQTT {
 			TimeoutException e = new TimeoutException("impossible to reach the mqtt server");
 			throw e;
 		} else {
-			Log.debug(LogLevel.VERBOSE,"MqttClient", "connect","connected to the mqtt broker");
+			Log.debug(LogLevel.ACTIVE,"MqttClient", "connect","connected to the mqtt broker");
 		}
-
-		return connection;
 	}
 
-	public BlockingConnection connection() {
-		Log.debug(LogLevel.VERBOSE,"MqttClient", "connection","get current blocking connection");
-		return connection;
+	public void subscribe(final String topicName) throws TimeoutException {
+
+		Log.debug(LogLevel.ACTIVE,"MqttClient", "subscribe","try to subscribe to the topic: " + topicName);
+
+		ThreadSubscribe threadSubscribe = new ThreadSubscribe(topicName);
+		threadSubscribe.start();
+		long time = System.currentTimeMillis();
+
+		while(time + NB_TRY * TIME_TO_WAIT > System.currentTimeMillis() && false == threadSubscribe.isSubscribed) {
+			Time.sleep(TIME_TO_WAIT, "time out connection");
+		}
+
+		if(!threadSubscribe.isSubscribed) {
+			Log.error("MqttClient", "subscribe", "time out - stop subscription to mqtt server");
+			threadSubscribe.stopSubscribe();
+			TimeoutException e = new TimeoutException("impossible to subscribe " + topicName + " to the mqtt server");
+			throw e;
+		} else {
+			Log.debug(LogLevel.ACTIVE,"MqttClient", "subscribe","subscription to the mqtt broker OK");
+		}
+	}
+
+	public Boolean isConnected() {
+		return connection.isConnected();
 	}
 }

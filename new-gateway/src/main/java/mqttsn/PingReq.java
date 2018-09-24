@@ -15,13 +15,14 @@ public class PingReq extends Thread {
 	final byte[] msg;
 
 	public PingReq(final Client client, final byte[] msg) {
+
+		Log.input(client, "ping request");
+
 		this.client = client;
 		this.msg = msg;
 	}
 
 	private void pingReq() {
-
-		Log.output(client, "Ping Request");
 
 		client.setState(utils.State.AWAKE);
 

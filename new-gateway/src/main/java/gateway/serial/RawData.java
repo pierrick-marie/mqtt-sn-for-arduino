@@ -61,68 +61,75 @@ enum RawData {
 		}
 
 		Client client = new Client(new Address64(address64), new Address16(address16));
-		if(!client.load()){
-			client.save();
-		}
 
 		switch (data_type) {
 			case 0x01:
-				//SEARCHGW
+				// SEARCHGW
 				SearchGateway searchGW = new SearchGateway(client, new Integer(payload[2]));
+				client.save();
 				searchGW.start();
 				break;
 
 			case 0x04:
-				//CONNECT
+				// CONNECT
 				Connect connect = new Connect(client, message);
+				client.load();
 				connect.start();
 				break;
 
 			case 0x07:
-				//WILLTOPIC
+				// WILLTOPIC
 				WillTopic willTopic = new WillTopic(client, message);
+				client.load();
 				willTopic.start();
 				break;
 
 			case 0x09:
-				//WILLMESSAGE
+				// WILLMESSAGE
 				WillMessage willMessage = new WillMessage(client, message);
+				client.load();
 				willMessage.start();
 				break;
 
 			case 0x0A:
-				//REGISTER
+				// REGISTER
 				Register register = new Register(client, message);
+				client.load();
 				register.start();
 				break;
 
 			case 0x12:
-				//SUBSCRIBE
+				// SUBSCRIBE
 				Subscribe subscribe = new Subscribe(client, message);
+				client.load();
 				subscribe.start();
 				break;
 
 			case 0x18:
-				//DISCONNECT
+				// DISCONNECT
 				Disconnect disconnect = new Disconnect(client, message);
+				client.load();
 				disconnect.start();
 				break;
 
 			case 0x0C:
-				//PUBLISH
+				// PUBLISH
 				Publish publish = new Publish(client, message);
+				client.load();
 				publish.start();
 				break;
 
 			case 0x0D:
-				//PUBACK
+				// PUBACK
 				Puback puback = new Puback(client, message);
+				client.load();
 				puback.start();
 				break;
 
 			case 0x16:
-				//PINGREQ
+				// PINGREQ
 				PingReq pingreq = new PingReq(client, message);
+				client.load();
 				pingreq.start();
 				break;
 		}

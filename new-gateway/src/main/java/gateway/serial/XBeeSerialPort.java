@@ -17,6 +17,8 @@ enum XBeeSerialPort {
 
 	XBeeSerialPort() {
 
+		Log.debug(LogLevel.VERBOSE, "XBeeSerialPort", "constructor", "connection to the XBee module");
+
 		serialPort = new jssc.SerialPort(Main.SERIAL_PORT);
 
 		try {

@@ -21,6 +21,8 @@ public class SerialPortReader implements SerialPortEventListener {
 
 	public void serialEvent(SerialPortEvent event) {
 
+		Log.debug(LogLevel.VERBOSE, "SerialPortReader", "serialEvent", "new event");
+
 		int inputBufferSize;
 		int totalInputSize = 0;
 
@@ -59,7 +61,6 @@ public class SerialPortReader implements SerialPortEventListener {
 
 		// for loop
 		int i;
-
 		while (indexOfByte != -1) {
 
 			byte[] temp = new byte[indexOfByte];

@@ -16,13 +16,14 @@ public class Disconnect extends Thread {
 	private final byte[] msg;
 
 	public Disconnect(final Client client, final byte[] msg) {
+
+		Log.input(client, "disconnect");
+
 		this.client = client;
 		this.msg = msg;
 	}
 
 	private void disconnect() {
-
-		Log.print(" -> " + client + " Disconnect");
 
 		if (msg.length == 4) {
 			int duration = (msg[0] << 8) + (msg[1] & 0xFF);

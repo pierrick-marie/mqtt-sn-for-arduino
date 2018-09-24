@@ -19,13 +19,14 @@ public class Publish extends Thread {
 	private final byte[] msg;
 
 	public Publish(final Client client, final byte[] msg) {
+
+		Log.output(client, "publish");
+
 		this.client = client;
 		this.msg = msg;
 	}
 
 	final void publish() {
-
-		Log.output(client, "Publish");
 
 		byte flags = msg[0];
 		boolean DUP = (flags & 0b10000000) == 1;

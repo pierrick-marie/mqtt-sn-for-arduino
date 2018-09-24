@@ -9,6 +9,8 @@ public class SerialPortWriter {
 
 	public static void write(final Client client, final byte[] payload) {
 
+		Log.debug(LogLevel.VERBOSE, "SerialPortWriter", "write", "sending a message");
+
 		byte[] res = new byte[18 + payload.length];
 		res[0] = 0x7E;
 

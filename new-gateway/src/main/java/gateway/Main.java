@@ -23,9 +23,9 @@ public class Main {
 
 	public static void main(String[] args) {
 
-		Log.print("Starting the gateway, waiting for connections...");
-
 		new SerialPortReader();
+
+		Log.print("Starting the gateway, waiting for connections...");
 	}
 }
 

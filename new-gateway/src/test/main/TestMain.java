@@ -4,6 +4,8 @@ import org.fusesource.mqtt.client.*;
 import utils.log.Log;
 import utils.mqttclient.MqttClient;
 
+import java.util.concurrent.TimeoutException;
+
 public class TestMain {
 
 	public static final long TIME_TO_WAIT = 10000; // 10 seconds
@@ -22,30 +24,41 @@ public class TestMain {
 
 		Log.activeDebug("new blocking connection");
 		try {
-			connection = mqtt.connect(TIME_TO_WAIT);
+			mqtt.connect();
 		} catch (Exception e) {
 			Log.activeDebug("not connected");
 			Log.activeDebug(e.getMessage());
 		}
 		Log.activeDebug("connected to broker !!! ");
 
-		// Subscribe to  fidelityAds topic
-		Topic[] topics = { new Topic("MON_PETIT_CHAT", QoS.AT_LEAST_ONCE)};
 		try {
-			connection.subscribe(topics);
-			Log.activeDebug("subscribe topic: " + topics[0].toString());
+			Log.activeDebug("subscribe topic: MON_PETIT_CHAT");
+			mqtt.subscribe("MON_PETIT_CHAT");
+			Log.activeDebug("subscription OK");
 
+		} catch (TimeoutException e) {
+			Log.activeDebug("Exception: " + e.getMessage());
+		}
+
+		try {
+			Log.activeDebug("subscribe topic: MON_CACA");
+			mqtt.subscribe("MON_CACA");
+			Log.activeDebug("subscription OK");
+
+		} catch (TimeoutException e) {
+			Log.activeDebug("Exception: " + e.getMessage());
+		}
+
+			/*
 			Message message = connection.receive();
 			System.out.println(message.getTopic());
 			byte[] payload = message.getPayload();
 			// process the message then:
 			message.ack();
-
 			Log.activeDebug("A message have been received: " + new String(payload));
+			*/
 
-		} catch (Exception e) {
-			Log.activeDebug("Exception: " + e.getMessage());
-		}
+
 
 		/*
 

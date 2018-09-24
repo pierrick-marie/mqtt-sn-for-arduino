@@ -237,7 +237,7 @@ public class Client {
 		if( "" == name ) {
 			return address64.toString();
 		} else {
-			return name;
+			return name + " (" + address64.toString() + ")";
 		}
 	}
 }
