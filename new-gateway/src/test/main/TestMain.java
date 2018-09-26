@@ -2,7 +2,7 @@ package main;
 
 import org.fusesource.mqtt.client.*;
 import utils.log.Log;
-import utils.mqttclient.MqttClient;
+import mqtt.MqttClient;
 
 import java.util.concurrent.TimeoutException;
 
@@ -49,14 +49,7 @@ public class TestMain {
 			Log.activeDebug("Exception: " + e.getMessage());
 		}
 
-			/*
-			Message message = connection.receive();
-			System.out.println(message.getTopic());
-			byte[] payload = message.getPayload();
-			// process the message then:
-			message.ack();
-			Log.activeDebug("A message have been received: " + new String(payload));
-			*/
+
 
 
 

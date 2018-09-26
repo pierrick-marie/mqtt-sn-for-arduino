@@ -1,4 +1,4 @@
-package mqttsn;
+package mqtt.sn;
 
 import utils.client.Client;
 import utils.log.Log;

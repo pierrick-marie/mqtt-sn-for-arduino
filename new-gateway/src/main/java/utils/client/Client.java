@@ -1,14 +1,12 @@
 package utils.client;
 
 import gateway.Message;
-import org.fusesource.mqtt.client.CallbackConnection;
-import org.fusesource.mqtt.client.MQTT;
 import utils.State;
 import utils.address.Address16;
 import utils.address.Address64;
 import utils.log.Log;
 import utils.log.LogLevel;
-import utils.mqttclient.MqttClient;
+import mqtt.MqttClient;
 
 import java.util.ArrayList;
 
@@ -22,7 +20,6 @@ public class Client {
 	private Boolean willTopicAck = false;
 	private Boolean willMessageAck = false;
 	private Boolean willMessageReq = false;
-	// private CallbackConnection connection = null;
 
 	public Address64 address64 = null;
 	public Address16 address16 = null;
@@ -34,27 +31,6 @@ public class Client {
 		this.address16 = address16;
 		state = State.FIRSTCONNECT;
 	}
-
-	/*
-	public CallbackConnection connection() {
-		return connection;
-	}
-	*/
-
-	/*
-	public Client setConnection(final CallbackConnection connection) {
-		if (null == connection) {
-			Log.error("Client", "setConnection", "connection is null");
-		}
-
-		this.connection = connection;
-
-		Log.debug(LogLevel.VERBOSE,"Client", "setConnect", "Register client's connection with " + connection);
-		save();
-
-		return this;
-	}
-	*/
 
 	public String name() {
 		return name;
@@ -201,27 +177,27 @@ public class Client {
 	}
 
 	public Boolean isSaved() {
-		return null != ClientsManager.Instance.search(address64);
+		return null != Clients.list.search(address64);
 	}
 
 	public Boolean save() {
 		Log.debug(LogLevel.ACTIVE,"Client","save", "saving the client " + this);
-		return null != ClientsManager.Instance.save(this);
+		return null != Clients.list.save(this);
 	}
 
 	public Boolean load() {
 
 		Log.debug(LogLevel.ACTIVE,"Client","load", "searching the client with address " + address64);
-		Client savedClient = ClientsManager.Instance.search(address64);
+		Client savedClient = Clients.list.search(address64);
 
 		if( null == savedClient ) {
 			Log.debug(LogLevel.ACTIVE,"Client","load", "client with address " + address64 + " is unknown");
 			return false;
 		}
 
+		Log.debug(LogLevel.ACTIVE,"Client","load", "loading the client's attributes");
 		name = savedClient.name;
 		mqttClient = savedClient.mqttClient;
-		// connection = savedClient.connection;
 		state = savedClient.state;
 		duration = savedClient.duration;
 		willTopicReq = savedClient.willTopicReq;

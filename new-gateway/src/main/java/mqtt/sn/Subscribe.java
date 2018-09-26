@@ -1,14 +1,11 @@
-package mqttsn;
+package mqtt.sn;
 
-import gateway.Main;
 import gateway.serial.SerialPortWriter;
-import org.fusesource.mqtt.client.Callback;
+import mqtt.Topics;
 import org.fusesource.mqtt.client.QoS;
-import org.fusesource.mqtt.client.Topic;
 import utils.client.Client;
 import utils.log.Log;
 import utils.log.LogLevel;
-import utils.Utils;
 
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeoutException;
@@ -39,9 +36,9 @@ public class Subscribe extends Thread {
 		messageId[0] = msg[1];
 		messageId[1] = msg[2];
 
-		if (!client.mqttClient().isConnected()) {
+		if (null == client.mqttClient() || !client.mqttClient().isConnected()) {
 			Log.error("Subscribre", "subscribe", client + "is not connected");
-			suback(new byte[]{(byte)QoS.AT_LEAST_ONCE.ordinal()}, messageId, 0, false);
+			suback(new byte[]{(byte)QoS.AT_LEAST_ONCE.ordinal()}, messageId, 0, Prtcl.REJECTED);
 			return;
 		}
 
@@ -52,16 +49,16 @@ public class Subscribe extends Thread {
 		String topicName = new String(name, StandardCharsets.UTF_8);
 		int topicId;
 
-		if (Main.TopicName.containsKey(topicName)) {
+		if (Topics.list.contains(topicName)) {
 
-			topicId = Main.TopicName.get(topicName);
+			topicId = Topics.list.get(topicName);
 
-			Log.debug(LogLevel.ACTIVE,"Subscribe", "subscribe", "Topic " + topicName + " is registered with final id: " + topicId);
+			Log.debug(LogLevel.ACTIVE,"Subscribe", "subscribe", "Topics " + topicName + " is registered with final id: " + topicId);
 
 			try {
 				client.mqttClient().subscribe(topicName);
 				Log.debug(LogLevel.ACTIVE,"Subscribe", "subscribe", "subcription ok -> sending sub ack message");
-				suback(new byte[]{(byte)QoS.AT_LEAST_ONCE.ordinal()}, messageId, 0, true);
+				suback(new byte[]{(byte)QoS.AT_LEAST_ONCE.ordinal()}, messageId, 0, Prtcl.ACCEPTED);
 				/**
 				 * TODO: handle the received messages!
 				 */
@@ -70,13 +67,13 @@ public class Subscribe extends Thread {
 				Log.debug(LogLevel.VERBOSE, "Subscribre", "subscribe", e.getMessage());
 			}
 		} else {
-			Log.error("Subscribe", "subscribe", "Topic NOT registered");
-			suback(new byte[]{(byte)QoS.AT_LEAST_ONCE.ordinal()}, messageId, 0, false);
+			Log.error("Subscribe", "subscribe", "Topics NOT registered");
+			suback(new byte[]{(byte)QoS.AT_LEAST_ONCE.ordinal()}, messageId, 0, Prtcl.REJECTED);
 			return;
 		}
 	}
 
-	private void suback(final byte[] qoses, final byte[] msgID, final int topicID, final boolean ok) {
+	private void suback(final byte[] qoses, final byte[] msgID, final int topicID, final byte returnCode) {
 
 		Log.output(client, "sub ack");
 
@@ -93,11 +90,7 @@ public class Subscribe extends Thread {
 		}
 		ret[5] = msgID[0];
 		ret[6] = msgID[1];
-		if (ok) {
-			ret[7] = (byte) 0x00;
-		} else {
-			ret[7] = (byte) 0x02;
-		}
+		ret[7] = returnCode;
 
 		SerialPortWriter.write(client, ret);
 	}

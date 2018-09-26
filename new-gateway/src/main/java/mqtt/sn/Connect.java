@@ -1,17 +1,11 @@
-package mqttsn;
+package mqtt.sn;
 
-import gateway.MqttListener;
 import gateway.serial.SerialPortWriter;
-import org.fusesource.mqtt.client.BlockingConnection;
-import org.fusesource.mqtt.client.CallbackConnection;
-import org.fusesource.mqtt.client.MQTT;
-import utils.*;
 import utils.client.Client;
 import utils.log.Log;
 import utils.log.LogLevel;
-import utils.mqttclient.MqttClient;
+import mqtt.MqttClient;
 
-import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -69,7 +63,11 @@ public class Connect extends Thread {
 				createWillHandlers();
 			}
 
-			connack( connectToTheBroker(cleanSession, duration) );
+			if( connectToTheBroker(cleanSession, duration) ) {
+				connack(Prtcl.ACCEPTED);
+			} else {
+				connack(Prtcl.REJECTED);
+			}
 		}
 	}
 
@@ -96,19 +94,14 @@ public class Connect extends Thread {
 		return true;
 	}
 
-	private void connack(final Boolean isConnected) {
+	private void connack(final byte isConnected) {
 
 		Log.output(client, "connack: " + isConnected);
 
 		byte[] serialMesasge = new byte[3];
 		serialMesasge[0] = (byte) 0x03;
 		serialMesasge[1] = (byte) 0x05;
-
-		if (isConnected) {
-			serialMesasge[2] = (byte) 0x00;
-		} else {
-			serialMesasge[2] = (byte) 0x03;
-		}
+		serialMesasge[2] = isConnected;
 
 		SerialPortWriter.write(client, serialMesasge);
 	}

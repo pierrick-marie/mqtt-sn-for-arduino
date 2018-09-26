@@ -1,8 +1,8 @@
-package mqttsn;
+package mqtt.sn;
 
+import org.fusesource.mqtt.client.QoS;
 import utils.client.Client;
 import utils.log.Log;
-import utils.Utils;
 
 import java.nio.charset.StandardCharsets;
 
@@ -45,9 +45,24 @@ public class WillTopic extends Thread {
 			String willtopic = new String(data, StandardCharsets.UTF_8);
 
 			client.mqttClient().setWillTopic(willtopic);
-			client.mqttClient().setWillQos(Utils.getQoS(will_QOS));
+			client.mqttClient().setWillQos(getQoS(will_QOS));
 			client.mqttClient().setWillRetain(will_retain);
 		}
+	}
+
+	private QoS getQoS(final int qos) {
+
+		switch(qos) {
+			case 0:
+				return QoS.AT_MOST_ONCE;
+			case 1:
+				return QoS.AT_LEAST_ONCE;
+			case 2:
+				return QoS.EXACTLY_ONCE;
+			default:
+				return QoS.AT_LEAST_ONCE;
+		}
+
 	}
 
 	public void run() {

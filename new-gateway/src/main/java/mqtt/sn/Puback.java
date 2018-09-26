@@ -1,4 +1,4 @@
-package mqttsn;
+package mqtt.sn;
 
 import gateway.Main;
 import utils.client.Client;

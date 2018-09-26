@@ -1,6 +1,7 @@
 package gateway;
 
 import gateway.serial.SerialPortWriter;
+import mqtt.Topics;
 import utils.*;
 import utils.client.Client;
 import utils.log.Log;
@@ -35,8 +36,8 @@ public class Sender extends Thread {
 
 		Log.debug(LogLevel.ACTIVE,"Sender", "sendMessage", "topic = " + message.topic());
 
-		serialMessage[3] = Utils.getTopicId(message.topic())[0];
-		serialMessage[4] = Utils.getTopicId(message.topic())[1];
+		serialMessage[3] = getTopicId(message.topic())[0];
+		serialMessage[4] = getTopicId(message.topic())[1];
 
 		if (Main.MessageId > 255) {
 			serialMessage[5] = (byte) (Main.MessageId / 256);
@@ -64,6 +65,26 @@ public class Sender extends Thread {
 			Log.debug(LogLevel.ACTIVE,"Sender", "sendMessage", "Resend the message");
 			sendMessage();
 		}
+	}
+
+	private byte[] getTopicId(final String name) {
+
+		byte[] ret = new byte[2];
+		int id = Topics.list.get(name);
+
+		if (id != -1) {
+			if (id > 255) {
+				ret[0] = (byte) (id / 255);
+				ret[1] = (byte) (id % 255);
+			} else {
+				ret[0] = (byte) 0x00;
+				ret[1] = (byte) id;
+			}
+		} else {
+			return null;
+		}
+
+		return ret;
 	}
 
 	public void run() {

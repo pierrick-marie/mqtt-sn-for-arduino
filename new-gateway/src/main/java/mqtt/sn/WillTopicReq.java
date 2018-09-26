@@ -1,4 +1,4 @@
-package mqttsn;
+package mqtt.sn;
 
 import gateway.serial.SerialPortWriter;
 import utils.client.Client;
@@ -20,7 +20,7 @@ public class WillTopicReq extends Thread {
 
 	private void willTopicReq() {
 
-		Log.input(client, "Will Topic Req");
+		Log.input(client, "Will Topics Req");
 
 		byte[] ret = new byte[2];
 		ret[0] = (byte) 0x02;
@@ -37,7 +37,7 @@ public class WillTopicReq extends Thread {
 		}
 
 		if (client.willTopicReq()) {
-			Log.debug(LogLevel.ACTIVE,"WillTopicReq", "willTopicReq","Resend Will Topic Req");
+			Log.debug(LogLevel.ACTIVE,"WillTopicReq", "willTopicReq","Resend Will Topics Req");
 			willTopicReq();
 		}
 	}

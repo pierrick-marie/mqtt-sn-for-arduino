@@ -1,12 +1,9 @@
-package mqttsn;
+package mqtt.sn;
 
 import gateway.Main;
 import gateway.serial.SerialPortWriter;
-import org.fusesource.mqtt.client.BlockingConnection;
 import utils.client.Client;
 import utils.log.Log;
-import utils.log.LogLevel;
-import utils.mqttclient.MqttClient;
 
 /**
  * Created by arnaudoglaza on 07/07/2017.

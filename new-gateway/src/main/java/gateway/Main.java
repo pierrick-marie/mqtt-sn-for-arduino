@@ -14,7 +14,6 @@ public class Main {
 	public static int GatewayId = 1;
 
 	// @todo DEBUG: use the ClientManager instead
-	public final static HashMap<String, Integer> TopicName = new HashMap<>();
 	public final static ArrayList<Integer> MessageIdAck = new ArrayList<>();
 
 	public static final String SERIAL_PORT = "/dev/ttyUSB0";

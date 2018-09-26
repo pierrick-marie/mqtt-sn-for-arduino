@@ -1,23 +1,26 @@
 package utils.client;
 
+import utils.address.Address;
 import utils.address.Address64;
 import utils.log.Log;
 import utils.log.LogLevel;
 
-enum ClientsManager {
+import java.util.HashMap;
 
-	Instance;
+enum Clients {
 
-	private volatile ClientList clients = new ClientList();
+	list;
+
+	private final HashMap<Address, Client> clients = new HashMap<>();
 
 	synchronized Client search(final Address64 address) {
 
 		Client client = clients.get(address);
 
 		if (null == client) {
-			Log.debug(LogLevel.VERBOSE,"ClientsManager", "search", "client with address " + address + " is NOT registered");
+			Log.debug(LogLevel.VERBOSE,"Clients", "search", "client with address " + address + " is NOT registered");
 		} else {
-			Log.debug(LogLevel.VERBOSE,"ClientsManager", "search", "client " + client + " is already registered");
+			Log.debug(LogLevel.VERBOSE,"Clients", "search", "client " + client + " is already registered");
 		}
 
 		return client;

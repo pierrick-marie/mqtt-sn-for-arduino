@@ -1,4 +1,4 @@
-package mqttsn;
+package mqtt.sn;
 
 import gateway.serial.SerialPortWriter;
 import utils.client.Client;

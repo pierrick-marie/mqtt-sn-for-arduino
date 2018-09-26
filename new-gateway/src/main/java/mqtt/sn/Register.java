@@ -1,13 +1,12 @@
-package mqttsn;
+package mqtt.sn;
 
-import gateway.Main;
 import gateway.serial.SerialPortWriter;
+import mqtt.Topics;
 import utils.client.Client;
 import utils.log.Log;
 import utils.log.LogLevel;
 
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.TimeoutException;
 
 /**
  * Created by arnaudoglaza on 07/07/2017.
@@ -38,9 +37,9 @@ public class Register extends Thread {
 		String topicName;
 		int i, topicId = -1;
 
-		if (!client.mqttClient().isConnected()) {
+		if (null == client.mqttClient() || !client.mqttClient().isConnected()) {
 			Log.error("Register", "register", client + "is not connected");
-			regack(messageId, topicId, false);
+			regack(topicId, messageId, Prtcl.REJECTED);
 			return;
 		}
 
@@ -50,21 +49,21 @@ public class Register extends Thread {
 
 		topicName = new String(name, StandardCharsets.UTF_8);
 
-		if (Main.TopicName.containsKey(topicName)) {
+		if (Topics.list.contains(topicName)) {
 			Log.debug(LogLevel.ACTIVE, "Register", "register", "topic " + topicName + " (id:" + topicId + ") is contained");
-			topicId = Main.TopicName.get(topicName);
+			topicId = Topics.list.get(topicName);
 
 		} else {
 			Log.debug(LogLevel.ACTIVE, "Register", "register", "topic " + topicName + " (id:" + topicId + ") is NOT contained -> saving the topic");
-			topicId = Main.TopicName.size();
-			Main.TopicName.put(topicName, topicId);
+			topicId = Topics.list.size();
+			Topics.list.put(topicName, topicId);
 		}
 		if (topicId != -1) {
 			Log.debug(LogLevel.ACTIVE, "Register", "register", "sending regack message: OK");
-			regack(messageId, topicId, true);
+			regack(topicId, messageId, Prtcl.ACCEPTED);
 		} else {
 			Log.debug(LogLevel.ACTIVE, "Register", "register", "topicId = -1 -> sending regack message: KO");
-			regack(messageId, topicId, false);
+			regack(topicId, messageId, Prtcl.REJECTED);
 		}
 	}
 
@@ -74,7 +73,7 @@ public class Register extends Thread {
 	 * @param messageId
 	 * @param topicId
 	 */
-	private void regack(final byte[] messageId, final int topicId, final boolean ok) {
+	private void regack(final int topicId, final byte[] messageId, final byte returnCode) {
 
 		Log.output(client, "reg ack");
 
@@ -92,12 +91,7 @@ public class Register extends Thread {
 		}
 		message[4] = messageId[0];
 		message[5] = messageId[1];
-
-		if (ok) {
-			message[6] = (byte) 0x00;
-		} else {
-			message[6] = (byte) 0x02;
-		}
+		message[6] = returnCode;
 
 		SerialPortWriter.write(client, message);
 	}

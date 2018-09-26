@@ -1,14 +1,9 @@
-package mqttsn;
+package mqtt.sn;
 
-import gateway.Main;
 import gateway.serial.SerialPortWriter;
-import org.fusesource.mqtt.client.Callback;
+import mqtt.Topics;
 import utils.client.Client;
 import utils.log.Log;
-import utils.log.LogLevel;
-import utils.Utils;
-
-import java.util.*;
 
 /**
  * Created by arnaudoglaza on 07/07/2017.
@@ -33,20 +28,26 @@ public class Publish extends Thread {
 		int qos = flags & 0b01100000 >> 5;
 		boolean retain = (flags & 0b00010000) == 1;
 		int topicIDType = flags & 0b00000011;
-		int topicID = (msg[2] << 8) + (msg[1] & 0xFF);
+		int topicId = (msg[2] << 8) + (msg[1] & 0xFF);
 
-		byte[] msgID = new byte[2];
-		msgID[0] = msg[3];
-		msgID[1] = msg[4];
+		byte[] messageId = new byte[2];
+		messageId[0] = msg[3];
+		messageId[1] = msg[4];
+
+		if (null == client.mqttClient() || !client.mqttClient().isConnected()) {
+			Log.error("Publish", "publish", client + "is not connected");
+			puback(topicId, messageId, Prtcl.REJECTED);
+			return;
+		}
 
 		byte[] data = new byte[msg.length - 5];
 		for (int i = 0; i < data.length; i++) {
 			data[i] = msg[5 + i];
 		}
 
-		if (Main.TopicName.containsValue(topicID)) {
+		if (Topics.list.contains(topicId)) {
 
-			String topicName = getKeyByValue(Main.TopicName, topicID);
+			String topicName = Topics.list.get(topicId);
 
 			// @TODO: DEBUG
 			// if (null != client.connection()) {
@@ -69,16 +70,16 @@ public class Publish extends Thread {
 				});
 				 **/
 			} else {
-				puback(topicID, msgID, 0x03);
+				puback(topicId, messageId, 0x03);
 			}
 		} else {
-			reregister(topicID, msgID);
+			reregister(topicId, messageId);
 		}
 	}
 
-	private void reregister(final int topicId, final byte[] msgID) {
+	private void reregister(final int topicId, final byte[] messageId) {
 
-		Log.input(client, "Re Register");
+		Log.output(client, "re register");
 
 		byte[] ret = new byte[7];
 		ret[0] = (byte) 0x07;
@@ -90,16 +91,16 @@ public class Publish extends Thread {
 			ret[2] = (byte) 0x00;
 			ret[3] = (byte) topicId;
 		}
-		ret[4] = msgID[0];
-		ret[5] = msgID[1];
-		ret[6] = (byte) 0x00;
+		ret[4] = messageId[0];
+		ret[5] = messageId[1];
+		ret[6] = Prtcl.ACCEPTED;
 
 		SerialPortWriter.write(client, ret);
 	}
 
-	private void puback(final int topicId, final byte[] msgID, final int returnCode) {
+	private void puback(final int topicId, final byte[] messageId, final int returnCode) {
 
-		Log.input(client, "Puback");
+		Log.input(client, "pub ack");
 
 		byte[] ret = new byte[7];
 		ret[0] = (byte) 0x07;
@@ -111,8 +112,8 @@ public class Publish extends Thread {
 			ret[2] = (byte) 0x00;
 			ret[3] = (byte) topicId;
 		}
-		ret[4] = msgID[0];
-		ret[5] = msgID[1];
+		ret[4] = messageId[0];
+		ret[5] = messageId[1];
 		ret[6] = (byte) returnCode;
 
 		SerialPortWriter.write(client, ret);
@@ -121,19 +122,4 @@ public class Publish extends Thread {
 	public void run() {
 		publish();
 	}
-
-	private String getKeyByValue(Map<String, Integer> map, int value) {
-
-		String key = "";
-
-		for (Map.Entry<String, Integer> entry : map.entrySet()) {
-			if (Objects.equals(value, entry.getValue())) {
-				key = entry.getKey();
-			}
-		}
-
-		return key;
-	}
-
-
 }
