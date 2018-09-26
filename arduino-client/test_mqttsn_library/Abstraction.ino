@@ -222,12 +222,6 @@ void MQTTSN_gwinfo_handler(const msg_gwinfo* msg){
 */
 
 /*
-void MQTTSN_reregister_handler(msg_reregister const*){
-  //RESERVERD
-}
-*/
-
-/*
 void MQTTSN_willtopicreq_handler(const message_header* msg){ 
   //handler permettant la création d'un nom de topic pour le testament
 }

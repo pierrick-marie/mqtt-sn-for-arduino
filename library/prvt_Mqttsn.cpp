@@ -29,22 +29,12 @@ THE SOFTWARE.
 /**
  *
  * ****************************
- * ############################
- * ####################
- * #############
- * ######
- * ##
- * ****************************
+  * ****************************
  *
  * PRIVATE FUNCTIONS
  *
  * ****************************
- * ##
- * ######
- * #############
- * ####################
- * ############################
- * ****************************
+  * ****************************
  *
  **/
 
@@ -133,8 +123,9 @@ uint16_t Mqttsn::bitSwap(const uint16_t value) {
  **/
 void Mqttsn::dispatch() {
 
-
+	waitingForResponse = false;
 	message_header* response_message = (message_header*)responseBuffer;
+
 	switch (response_message->type) {
 	case ADVERTISE:
 		// logs.debug("dispatch", "ADVERTISE");
@@ -173,7 +164,7 @@ void Mqttsn::dispatch() {
 
 	case REREGISTER:
 		// logs.debug("dispatch", "RE-REGISTER");
-		reregister_handler((msg_reregister*)responseBuffer);
+		reRegisterHandler((msg_reregister*)responseBuffer);
 		break;
 
 	case PUBLISH:
@@ -183,7 +174,7 @@ void Mqttsn::dispatch() {
 
 	case PUBACK:
 		// logs.debug("dispatch", "PUBACK");
-		puback_handler((msg_puback*)responseBuffer);
+		pubAckHandler((msg_puback*)responseBuffer);
 		break;
 
 	case SUBACK:
@@ -227,44 +218,8 @@ void Mqttsn::dispatch() {
 	}
 }
 
-void Mqttsn::sendMessage() {
-
-	// logs.debug("sendMessage", "sending the message");
-
-	message_header* hdr = reinterpret_cast<message_header*>(messageBuffer);
-
-#ifdef USE_SERIAL
-	// Sending the message stored into @messageBuffer through @MB_serial_send function
-	// extern void MB_serial_send(uint8_t* messageBuffer, int length);
-	serialSend(messageBuffer, hdr->length);
-#endif
-
-	/**
-	* @todo BEGIN: DEBUG
-	**/
-	if (!waitingForResponse) {
-		responseTimer = millis();
-		responseRetries = N_RETRY;
-	}
-	if (!waitingForSubAck) {
-		subAckTimer = millis();
-		subAckRetries = N_RETRY;
-	}
-	if (!waitingForPubAck) {
-		pubAckTimer = millis();
-		pubAckRetries = N_RETRY;
-	}
-	/*
-    if (!waiting_for_pingresp) {
-	  _pingresp_timer = millis();
-	  _pingresp_retries = N_RETRY;
-    }
-     */
-	/**
-	* @todo END: DEBUG
-	**/
-
-	// logs.debug("sendMessage", "Message is sent");
+void Mqttsn::pubAckHandler(const msg_puback* msg) {
+	pubAckReturnCode = msg->return_code;
 }
 
 void Mqttsn::advertise_handler(const msg_advertise* msg) {
@@ -286,7 +241,7 @@ bool Mqttsn::multiCheckSerial(const int nb_max_try) {
 
 void Mqttsn::searchGateway(const uint8_t radius) {
 
-	// logs.debug("searchGateway", "preparing the message");
+	// logs.debug("searchGateway", "");
 
 	msg_searchgw* msg = reinterpret_cast<msg_searchgw*>(messageBuffer);
 
@@ -294,44 +249,36 @@ void Mqttsn::searchGateway(const uint8_t radius) {
 	msg->type = SEARCHGW;
 	msg->radius = radius;
 
+	waitingForResponse = false;
 	sendMessage();
-
-	// Waiting a response, set to false in @Mqttsn_parse_stream()
-	waitingForResponse = true;
 }
 
+void Mqttsn::sendMessage() {
 
+	if(waitingForResponse) {
+		logs.debug("sendMessage", "the module is already waiting for a response");
+		return;
+	}
 
+#ifdef USE_SERIAL
+	// logs.debug("sendMessage", "");
 
+	// Sending the message stored into @messageBuffer through @MB_serial_send function
+	// extern void MB_serial_send(uint8_t* messageBuffer, int length);
+	waitingForResponse = true;
+	message_header* header = reinterpret_cast<message_header*>(messageBuffer);
 
+	int length = createFrame(messageBuffer, header->length, gatewayAddress, frameBufferOut, sizeof(frameBufferOut), false);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	if (length > 0) {
+		xBee->write(frameBufferOut, length);
+		xBee->flush();
+		// logs.debug("sendMessage", "message sent");
+	} else {
+		// logs.debug("sendMessage", "message not sent");
+	}
+#endif
+}
 
 bool Mqttsn::waitData() {
 
@@ -446,8 +393,22 @@ int Mqttsn::createFrame(const uint8_t* data, const int data_lenght, const uint8_
 	return 17 + data_lenght + 1;
 }
 
-void Mqttsn::parseData() {
+void Mqttsn::connect(const uint8_t flags, const uint16_t duration, const char* client_id) {
 
+	msg_connect* msg = reinterpret_cast<msg_connect*>(messageBuffer);
+
+	msg->length = sizeof(msg_connect) + strlen(client_id);
+	msg->type = CONNECT;
+	msg->flags = flags;
+	msg->protocol_id = PROTOCOL_ID;
+	msg->duration = bitSwap(duration);
+	strcpy(msg->client_id, client_id);
+
+	sendMessage();
+	connected = false;
+}
+
+void Mqttsn::parseData() {
 
 	int i;
 	int payload_lenght = frameBufferIn[12];
@@ -457,9 +418,17 @@ void Mqttsn::parseData() {
 		payload[i] = frameBufferIn[12+i];
 	}
 
-	// logs.debug("parseData", "data have been parsed -> parseStream()");
+	// logs.debug("parseData", "data have been parsed");
 
-	parseStream(payload, payload_lenght);
+	if(waitingForPingResp){
+		pingRespTimer = millis();
+	}
+	memset(responseBuffer, 0, MAX_BUFFER_SIZE);
+	memcpy(responseBuffer, (const void*)payload, payload_lenght);
+
+	// logs.debug( "parseStream", "Stream is ready -> dispatch");
+
+	dispatch();
 
 	memset(frameBufferIn, 0, sizeof(frameBufferIn));
 }
@@ -475,41 +444,12 @@ char const* Mqttsn::stringFromReturnCode(const uint8_t return_code) {
 		return "REJECTED_INVALID_TOPIC_ID" ;
 	case REJECTED_NOT_SUPPORTED:
 		return "REJECTED_NOT_SUPPORTED";
+	case REJECTED:
+		return "REJECTED";
+	default:
+		return "UNKNOWN";
 	}
 }
-
-void Mqttsn::serialSend(const uint8_t* messageBuffer, const int length) {
-
-	int _length = createFrame(messageBuffer, length, gatewayAddress, frameBufferOut, sizeof(frameBufferOut), false);
-	if (_length > 0) {
-		xBee->write(frameBufferOut, _length);
-		xBee->flush();
-	}
-
-	// logs.debug("serialSend", "message is sent");
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 #ifdef USE_QOS2
 void Mqttsn::pubrec_handler(const msg_pubqos2* msg) {
@@ -521,7 +461,6 @@ void Mqttsn::pubrel_handler(const msg_pubqos2* msg) {
 void Mqttsn::pubcomp_handler(const msg_pubqos2* msg) {
 }
 #endif
-
 
 void Mqttsn::unsubscribeById(const uint8_t flags, const uint16_t topic_id) {
 	++messageId;
@@ -535,10 +474,6 @@ void Mqttsn::unsubscribeById(const uint8_t flags, const uint16_t topic_id) {
 	msg->topic_id = bitSwap(topic_id);
 
 	sendMessage();
-
-	if ((flags & QOS_MASK) == FLAG_QOS_1 || (flags & QOS_MASK) == FLAG_QOS_2) {
-		waitingForResponse = true;
-	}
 }
 
 void Mqttsn::unsubscribeByName(const uint8_t flags, const char* topic_name) {
@@ -555,10 +490,6 @@ void Mqttsn::unsubscribeByName(const uint8_t flags, const char* topic_name) {
 	strcpy(msg->topic_name, topic_name);
 
 	sendMessage();
-
-	if ((flags & QOS_MASK) == FLAG_QOS_1 || (flags & QOS_MASK) == FLAG_QOS_2) {
-		waitingForResponse = true;
-	}
 }
 
 void Mqttsn::subscribeByName(const uint8_t flags, const char* topic_name) {
@@ -597,10 +528,6 @@ void Mqttsn::subscribeById(const uint8_t flags, const uint16_t topic_id) {
 	msg->topic_id = bitSwap(topic_id);
 
 	sendMessage();
-
-	if ((flags & QOS_MASK) == FLAG_QOS_1 || (flags & QOS_MASK) == FLAG_QOS_2) {
-		waitingForResponse = true;
-	}
 }
 
 // extern void Mqttsn_regAckHandler(const msg_regack* msg);
@@ -617,11 +544,40 @@ void Mqttsn::regAckHandler(const msg_regack* msg) {
 		// logs.debug("regAckHandler", "Topic registered, it's table id is ", topicTable[nbRegisteredTopic].id);
 	} else {
 		// logs.debug("regAckHandler", "Topic NOT registered");
-		regAckReturnCode = REJECTED_INVALID_TOPIC_ID;
+		regAckReturnCode = REJECTED;
 	}
 }
 
-// extern void Mqttsn_reregister_handler(const msg_reregister* msg);
-void Mqttsn::reregister_handler(const msg_reregister* msg) {
-	// Mqttsn_reregister_handler(msg);
+void Mqttsn::reRegisterHandler(const msg_reregister* msg) {
+
+	// logs.debug("reregisterTopic", "topic id:", msg->topic_id);
+	short topicId = bitSwap(msg->topic_id);
+	// logs.debug("reregisterTopic", "bitSwap topic id:", topicId);
+
+	const char* topicName = findTopicName(msg->topic_id);
+
+	if( strcmp("", topicName) != 0 ) {
+		// logs.debug("reregisterTopic", "topic name found -> register:", topicName);
+		registerTopic(topicName);
+	}
+}
+
+void Mqttsn::publishMessage(const uint8_t flags, const uint16_t topic_id, const void* data, const uint8_t data_len) {
+
+	++messageId;
+
+	msg_publish* msg = reinterpret_cast<msg_publish*>(messageBuffer);
+
+	msg->length = sizeof(msg_publish) + data_len;
+	msg->type = PUBLISH;
+	msg->flags = flags;
+	// @BUG: the code of the original version
+	// msg->topic_id = bitSwap(topic_id);
+	msg->topic_id = topic_id;
+	msg->message_id = bitSwap(messageId);
+	memcpy(msg->data, data, data_len);
+
+	// logs.debug("publishMessage", "publish data on topic id", msg->topic_id);
+
+	sendMessage();
 }

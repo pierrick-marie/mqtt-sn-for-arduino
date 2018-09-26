@@ -64,21 +64,15 @@ public:
 	Mqttsn(SoftwareSerial* _xBee) ;
 	~Mqttsn() ;
 
-	bool wait_for_response();
 	bool waitForSubAck();
 	bool wait_for_puback();
 	bool wait_for_pingresp();
 	bool isConnected();
 
-#ifdef USE_SERIAL
-	void parseStream(uint8_t* buf, uint16_t len);
-#endif
+	int publish(const char* topic_name, const char* message);
 
-	void connect(const uint8_t flags, const uint16_t duration, const char* client_id);
 	void will_topic(const uint8_t flags, const char* will_topic, const bool update = false);
 	void will_messsage(const void* will_msg, const uint8_t will_msg_len, const bool update = false);
-
-	void publish(const uint8_t flags, const uint16_t topic_id, const void* data, const uint8_t data_len);
 
 #ifdef USE_QOS2
 	void pubrec();
@@ -121,8 +115,10 @@ public:
 	 */
 	short findTopicId(const char* name) ;
 
+	const char* findTopicName(const short topicId) ;
+
 	/**
-	 * @brief Mqttsn::registerByName The function asks to the gateway to register a @topic_name.
+	 * @brief Mqttsn::registerTopic The function asks to the gateway to register a @topic_name.
 	 * @param name The topic name to register.
 	 *
 	 * @return
@@ -131,7 +127,7 @@ public:
 	 *      >= 0 the id of the @topic_name already registered.
 	 *
 	 **/
-	int registerByName(const char* name) ;
+	int registerTopic(const char* name) ;
 
 private:
 
@@ -142,6 +138,8 @@ private:
 	void dispatch();
 	uint16_t bitSwap(const uint16_t val);
 	void sendMessage();
+
+	void publishMessage(const uint8_t flags, const uint16_t topic_id, const void* data, const uint8_t data_len);
 
 	/**
 	 * @brief multiCheckSerial The function calls @checkSerial until @nb_max_try have been reach or a response from the gateway have been received.
@@ -156,22 +154,12 @@ private:
 	 **/
 	void searchGateway(const uint8_t radius);
 
-
-
-
-
 	void subscribeByName(const uint8_t flags, const char* topic_name);
 	void subscribeById(const uint8_t flags, const uint16_t topic_id);
 	void unsubscribeByName(const uint8_t flags, const char* topic_name);
 	void unsubscribeById(const uint8_t flags, const uint16_t topic_id);
 
-
-
-
-	/**
-	 * The function sends the @message_buffer through the xBee module according to its @lenght.
-	 **/
-	void serialSend(const uint8_t* message_buffer, const int length) ;
+	void connect(const uint8_t flags, const uint16_t duration, const char* client_id);
 
 	/**
 	 * The function analyses the incoming data (@FrameBufferIn) and calls the function @Mqttsn.parseStream before cleaning the @FrameBufferIn.
@@ -226,38 +214,16 @@ private:
 	 **/
 	bool waitData() ;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 	void advertise_handler(const msg_advertise* msg);
 	void gatewayInfoHandler(const msg_gwinfo* msg);
 	void connackHandler(const msg_connack* msg);
 	void willtopicreq_handler(const message_header* msg);
 	void willmsgreq_handler(const message_header* msg);
 	void regAckHandler(const msg_regack* msg);
-	void reregister_handler(const msg_reregister* msg);
+	void reRegisterHandler(const msg_reregister* msg);
 	void publish_handler(const msg_publish* msg);
 	void register_handler(const msg_register* msg);
-	void puback_handler(const msg_puback* msg);
+	void pubAckHandler(const msg_puback* msg);
 
 #ifdef USE_QOS2
 	void pubrec_handler(const msg_pubqos2* msg);
