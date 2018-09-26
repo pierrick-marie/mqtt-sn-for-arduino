@@ -1,31 +1,47 @@
 package gateway;
 
+import utils.log.Log;
+
 /**
  * Created by arnaudoglaza on 04/07/2017.
  */
 public class Message {
 
-    String topic;
-    String body;
+	private String topic;
+	private String body;
 
-    public Message(String topic, String body){
-        this.body=body;
-        this.topic=topic;
-    }
+	public Message(final String topic, final String body) {
+		this.body = body;
+		this.topic = topic;
+	}
 
-    public String getTopic() {
-        return topic;
-    }
+	public String topic() {
+		return topic;
+	}
 
-    public void setTopic(String topic) {
-        this.topic = topic;
-    }
+	public Message setTopic(final String topic) {
 
-    public String getBody() {
-        return body;
-    }
+		if(null == topic) {
+			Log.error("Message", "setTopic", "topic is null");
+		}
 
-    public void setBody(String body) {
-        this.body = body;
-    }
+		this.topic = topic;
+
+		return this;
+	}
+
+	public String body() {
+		return body;
+	}
+
+	public Message setBody(final String body) {
+
+		if (null == body) {
+			Log.error("Message", "setBody", "body is null");
+		}
+
+		this.body = body;
+
+		return this;
+	}
 }

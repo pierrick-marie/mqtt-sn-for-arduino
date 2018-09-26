@@ -1,75 +1,93 @@
 package gateway;
 
-import utils.Utils;
-import utils.Log;
+import gateway.serial.SerialPortWriter;
+import mqtt.Topics;
+import utils.*;
+import utils.client.Client;
+import utils.log.Log;
+import utils.log.LogLevel;
 
 /**
  * Created by arnaudoglaza on 04/07/2017.
  */
 public class Sender extends Thread {
 
-    private final byte[] address64;
-    private final byte[] address16;
-    private final Message message;
+	private final Client client;
+	private final Message message;
 
-    public Sender(byte[] address64, byte[] address16, Message message) {
+	public Sender(final Client client, final Message message) {
 
-        this.address64 = address64;
-        this.address16 = address16;
-        this.message = message;
-    }
+		this.client = client;
+		this.message = message;
+	}
 
-    public void sendMessage(){
+	private void sendMessage() {
 
-        byte[] serialMessage = new byte[7+message.getBody().length()];
-        byte[] data = message.getBody().getBytes();
-        int nbTry = 0;
-        // for loop
-        int i;
+		byte[] serialMessage = new byte[7 + message.body().length()];
+		byte[] data = message.body().getBytes();
+		int nbTry = 0;
+		int i;
 
-        // creating the serial message to send
+		// creating the serial message to send
 
-        serialMessage[0] = (byte)serialMessage.length;
-        serialMessage[1] = (byte)0x0C;
-        serialMessage[2] = (byte)0x00;
+		serialMessage[0] = (byte) serialMessage.length;
+		serialMessage[1] = (byte) 0x0C;
+		serialMessage[2] = (byte) 0x00;
 
-        Log.print( "Sender.sendMessage() topic => " + message.getTopic() );
+		Log.debug(LogLevel.ACTIVE,"Sender", "sendMessage", "topic = " + message.topic());
 
-        serialMessage[3] = Utils.getTopicId(message.getTopic())[0];
-        serialMessage[4] = Utils.getTopicId(message.getTopic())[1];
+		serialMessage[3] = getTopicId(message.topic())[0];
+		serialMessage[4] = getTopicId(message.topic())[1];
 
-        if( Main.MessageId > 255 ) {
-            serialMessage[5] = (byte) (Main.MessageId / 256);
-            serialMessage[6] = (byte) (Main.MessageId % 256);
-        } else {
-            serialMessage[5] = (byte)0x00;
-            serialMessage[6] = (byte) Main.MessageId;
-        }
+		if (Main.MessageId > 255) {
+			serialMessage[5] = (byte) (Main.MessageId / 256);
+			serialMessage[6] = (byte) (Main.MessageId % 256);
+		} else {
+			serialMessage[5] = (byte) 0x00;
+			serialMessage[6] = (byte) Main.MessageId;
+		}
 
-        for(i=0; i < message.body.length(); i++) {
-            serialMessage[7 + i] = data[i];
-        }
-        // sending the message
-        Serial.write(Main.SerialPort, address64, address16, serialMessage);
+		for (i = 0; i < message.body().length(); i++) {
+			serialMessage[7 + i] = data[i];
+		}
 
-        // waiting for an acquittal
-        while( nbTry < 10 && !Main.MessageIdAck.contains(Main.MessageId) ) {
-            try {
-                Thread.sleep(1000);
-                nbTry++;
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+		SerialPortWriter.write(client, serialMessage);
 
-        // the message has not been acquit -> resend
-        if( !Main.MessageIdAck.contains(Main.MessageId) ){
-            Log.debug("Sender", "sendMessage", "Resend the message");
-            sendMessage();
-        }
-    }
+		// waiting for an acquittal
+		while (nbTry < 10 && !Main.MessageIdAck.contains(Main.MessageId)) {
+			Time.sleep((long) 1000, "Sender.sendMessage()");
+			nbTry++;
 
-    public void run() {
-        sendMessage();
-    }
+		}
+
+		// the message has not been acquit -> resend
+		if (!Main.MessageIdAck.contains(Main.MessageId)) {
+			Log.debug(LogLevel.ACTIVE,"Sender", "sendMessage", "Resend the message");
+			sendMessage();
+		}
+	}
+
+	private byte[] getTopicId(final String name) {
+
+		byte[] ret = new byte[2];
+		int id = Topics.list.get(name);
+
+		if (id != -1) {
+			if (id > 255) {
+				ret[0] = (byte) (id / 255);
+				ret[1] = (byte) (id % 255);
+			} else {
+				ret[0] = (byte) 0x00;
+				ret[1] = (byte) id;
+			}
+		} else {
+			return null;
+		}
+
+		return ret;
+	}
+
+	public void run() {
+		sendMessage();
+	}
 }

@@ -1,63 +1,58 @@
 package gateway;
 
-import utils.Utils;
+import utils.*;
 import org.fusesource.mqtt.client.Callback;
-import org.fusesource.mqtt.client.CallbackConnection;
-import utils.State;
+import utils.client.Client;
+import utils.log.Log;
+import utils.log.LogLevel;
 
 import java.beans.ExceptionListener;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 /**
  * Created by arnaudoglaza on 03/07/2017.
  */
 public class TimeOut implements Runnable, ExceptionListener {
 
-	int duration;
-	byte[] add64;
-	private static final DateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+	private final Integer duration;
+	private final Client client;
 
-	public TimeOut(int duration, byte[] add64) {
+	public TimeOut(final Client client, final Integer duration) {
+		this.client = client;
 		this.duration = duration;
-		this.add64 = add64;
 	}
 
 	public void start() {
+
 		for (int i = 0; i < duration; i++) {
 
-			// @TODO DEBUG
-			// if (!Main.ClientState.get(Utils.byteArrayToString(add64)).equals(State.ASLEEP)) {
-			//	System.out.println(Main.AddressClientMap.get(Utils.byteArrayToString(add64)) + " not asleep anymore");
-			//	return;
-			// }
-			try {
-				Thread.sleep(1000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+			if( client.state().equals(State.ASLEEP)) {
+				Log.debug(LogLevel.ACTIVE,"TimeOut", "start", "Not asleep anymore");
 			}
+
+			Time.sleep((long)1000, "TimeOut.start()");
 		}
-		clientTimeOut(add64);
+		clientTimeOut();
 	}
 
-	public void clientTimeOut(byte[] add64) {
+	private void clientTimeOut() {
 
-		// @TODO DEBUG
-		// Main.ClientState.put(Utils.byteArrayToString(add64), State.LOST);
-		//CallbackConnection connection = Main.AddressConnectionMap.get(Utils.byteArrayToString(add64));
-		/*
-		connection.disconnect(new Callback<Void>() {
+		client.setState(State.LOST);
+
+		/**
+		 *
+		 * @TODO: DEBUG
+		 *
+		client.connection().disconnect(new Callback<Void>() {
 			@Override
 			public void onSuccess(Void value) {
 				// @TODO
+				Log.debug(LogLevel.ACTIVE,"TimeOut", "clientTimeOut", "Success");
 			}
 
 			@Override
 			public void onFailure(Throwable value) {
-				Date date = new Date();
-				System.err.println(sdf.format(date) + ": Error on clientTimeout disconnect");
-				value.printStackTrace();
+				Log.debug(LogLevel.VERBOSE,"TimeOut", "clientTimeOut", "Failure");
+				Log.error("TimeOut", "clientTimeOut", value.getMessage());
 			}
 		});
 		*/

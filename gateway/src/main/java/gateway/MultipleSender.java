@@ -1,84 +1,71 @@
 package gateway;
 
-import utils.Utils;
-
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
+import gateway.serial.SerialPortWriter;
+import utils.client.Client;
+import utils.log.Log;
+import utils.log.LogLevel;
 
 /**
  * Created by arnaudoglaza on 04/07/2017.
  */
 public class MultipleSender extends Thread {
 
-	byte[] add64;
-	byte[] add16;
-	ArrayList<Message> messageList;
-	private static final DateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+	final Client client;
 
-	public MultipleSender(byte[] add64, byte[] add16, ArrayList<Message> messageList) {
-		this.add64 = add64;
-		this.add16 = add16;
-		this.messageList = messageList;
+	public MultipleSender(final Client client) {
+		this.client = client;
 	}
 
 	public void run() {
 
 		// DEBUG
-		System.out.println("Begin Multiple Sender: " + messageList);
+		Log.debug(LogLevel.ACTIVE,"MultiSender", "run", "Begin Multiple Sender: " + client.messages);
 
-		for (int i = 0; i < messageList.size(); i++) {
-
-			// DEBUG
-			System.out.println("Starting to send message n°" + i);
-
-			Sender sender = new Sender(add64, add16, messageList.get(i));
+		for (Message message : client.messages) {
 
 			// DEBUG
-			System.out.println("Before " + i + " sender");
+			Log.debug(LogLevel.ACTIVE,"MultiSender", "run", "Starting to send message " + message);
 
+			Sender sender = new Sender(client, message);
+
+			// DEBUG
+			Log.debug(LogLevel.ACTIVE,"MultiSender", "run", "Start sender");
 			sender.start();
 			try {
 				sender.join();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-
-			// DEBUG
-			System.out.println("After " + i + " sender");
+			Log.debug(LogLevel.ACTIVE,"MultiSender", "run", "End sender");
 		}
 
-		for (int i = 0; i < messageList.size(); i++) {
-            	// @TODO DEBUG
-			// Main.ClientBufferedMessage.put(Utils.byteArrayToString(add64),new ArrayList<>());
-		}
+		client.messages.clear();
 
-		// DEBUG
-		System.out.println("End of Msender");
+		Log.debug(LogLevel.ACTIVE,"MultiSender", "run", "End of multi-sender");
 
-		pingresp(add64, add16);
+
+		pingresp();
 	}
 
-	public void pingresp(byte[] add64, byte[] add16) {
-		Date date = new Date();
-		// @TODO DEBUG
-		// System.out.println(sdf.format(date) + ": <- " + Main.AddressClientMap.get(Utils.byteArrayToString(add64)) + " Pingresp");
+	private void pingresp() {
+
+		Log.input(client, "Ping Response");
+
 		byte[] ret = new byte[2];
 		ret[0] = (byte) 0x02;
 		ret[1] = (byte) 0x17;
-		Serial.write(Main.SerialPort, add64, add16, ret);
-		// @TODO DEBUG
-		/*
-		if (Main.ClientState.get(Utils.byteArrayToString(add64)).equals(utils.State.AWAKE)) {
-			Main.ClientState.put(Utils.byteArrayToString(add64), utils.State.ASLEEP);
-			//System.out.println(Main.AddressClientMap.get(Utils.byteArrayToString(address64))+" goes to sleep");
-			if (Main.ClientDuration.get(Utils.byteArrayToString(add64)) != null) {
-				TimeOut timeOut = new TimeOut(Main.ClientDuration.get(Utils.byteArrayToString(add64)), add64);
+
+		SerialPortWriter.write(client, ret);
+
+		if(client.state().equals(utils.State.AWAKE)) {
+			client.setState(utils.State.ASLEEP);
+			Log.debug(LogLevel.ACTIVE,"MultipleSender", "pingResp", client + " goes to sleep");
+			if(0 != client.duration()) {
+				TimeOut timeOut = new TimeOut(client, client.duration());
 				Threading.thread(timeOut, false);
 			}
 		}
-		*/
+
 	}
 
 }
