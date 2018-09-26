@@ -1,8 +1,6 @@
 package mqtt;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public enum Topics {
 
@@ -11,7 +9,7 @@ public enum Topics {
 	private final HashMap<String, Integer> names = new HashMap<>();
 
 	public Integer put(final String name, final Integer id) {
-		return put(name, id);
+		return names.put(name, id);
 	}
 
 	public Integer size() {
@@ -20,6 +18,14 @@ public enum Topics {
 
 	public Boolean contains(final Integer id) {
 		return names.containsValue(id);
+	}
+
+	public Set<String> getNames() {
+		return names.keySet();
+	}
+
+	public Collection<Integer> getIds() {
+		return names.values();
 	}
 
 	public Boolean contains(final String name) {

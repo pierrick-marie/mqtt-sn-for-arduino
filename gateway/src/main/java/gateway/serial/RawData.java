@@ -4,6 +4,8 @@ import mqtt.sn.*;
 import utils.client.Client;
 import utils.address.Address16;
 import utils.address.Address64;
+import utils.log.Log;
+import utils.log.LogLevel;
 
 import java.net.URISyntaxException;
 
@@ -37,21 +39,26 @@ enum RawData {
 			address16[i] = data[12 + i];
 		}
 
-		// check the type of message
-		if (data[15] == 0x01) {
-			payload_length = (data[16] * 16) + data[17];
-			data_type = data[18];
-			payload = new byte[payload_length];
-			for (i = 19; i < data.length; i++) {
-				payload[i] = data[i];
+		try {
+			// check the type of message
+			if (data[15] == 0x01) {
+				payload_length = (data[16] * 16) + data[17];
+				data_type = data[18];
+				payload = new byte[payload_length];
+				for (i = 19; i < data.length; i++) {
+					payload[i] = data[i];
+				}
+			} else {
+				payload_length = data[15];
+				data_type = data[16];
+				payload = new byte[payload_length];
+				for (i = 0; i < payload_length; i++) {
+					payload[i] = data[15 + i];
+				}
 			}
-		} else {
-			payload_length = data[15];
-			data_type = data[16];
-			payload = new byte[payload_length];
-			for (i = 0; i < payload_length; i++) {
-				payload[i] = data[15 + i];
-			}
+		}catch(Exception e) {
+			Log.error("RawData", "parse", "Error while reading incoming data");
+			Log.debug(LogLevel.VERBOSE,"RawData", "parse", e.getMessage());
 		}
 
 		// Compute the message for each case of the following switch except for SEARCHGW

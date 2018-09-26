@@ -54,9 +54,9 @@ public class Register extends Thread {
 			topicId = Topics.list.get(topicName);
 
 		} else {
-			Log.debug(LogLevel.ACTIVE, "Register", "register", "topic " + topicName + " (id:" + topicId + ") is NOT contained -> saving the topic");
 			topicId = Topics.list.size();
 			Topics.list.put(topicName, topicId);
+			Log.debug(LogLevel.ACTIVE, "Register", "register", "topic " + topicName + " is NOT contained -> saving the topic with id: " + topicId);
 		}
 		if (topicId != -1) {
 			Log.debug(LogLevel.ACTIVE, "Register", "register", "sending regack message: OK");

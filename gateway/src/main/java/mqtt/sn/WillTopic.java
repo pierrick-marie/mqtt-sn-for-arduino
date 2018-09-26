@@ -45,24 +45,9 @@ public class WillTopic extends Thread {
 			String willtopic = new String(data, StandardCharsets.UTF_8);
 
 			client.mqttClient().setWillTopic(willtopic);
-			client.mqttClient().setWillQos(getQoS(will_QOS));
+			client.mqttClient().setWillQos(Prtcl.getQoS(will_QOS));
 			client.mqttClient().setWillRetain(will_retain);
 		}
-	}
-
-	private QoS getQoS(final int qos) {
-
-		switch(qos) {
-			case 0:
-				return QoS.AT_MOST_ONCE;
-			case 1:
-				return QoS.AT_LEAST_ONCE;
-			case 2:
-				return QoS.EXACTLY_ONCE;
-			default:
-				return QoS.AT_LEAST_ONCE;
-		}
-
 	}
 
 	public void run() {

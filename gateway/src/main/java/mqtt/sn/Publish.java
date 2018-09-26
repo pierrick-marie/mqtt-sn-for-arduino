@@ -4,6 +4,7 @@ import gateway.serial.SerialPortWriter;
 import mqtt.Topics;
 import utils.client.Client;
 import utils.log.Log;
+import utils.log.LogLevel;
 
 /**
  * Created by arnaudoglaza on 07/07/2017.
@@ -15,7 +16,7 @@ public class Publish extends Thread {
 
 	public Publish(final Client client, final byte[] msg) {
 
-		Log.output(client, "publish");
+		Log.input(client, "publish");
 
 		this.client = client;
 		this.msg = msg;
@@ -24,10 +25,8 @@ public class Publish extends Thread {
 	final void publish() {
 
 		byte flags = msg[0];
-		boolean DUP = (flags & 0b10000000) == 1;
 		int qos = flags & 0b01100000 >> 5;
 		boolean retain = (flags & 0b00010000) == 1;
-		int topicIDType = flags & 0b00000011;
 		int topicId = (msg[2] << 8) + (msg[1] & 0xFF);
 
 		byte[] messageId = new byte[2];
@@ -49,35 +48,27 @@ public class Publish extends Thread {
 
 			String topicName = Topics.list.get(topicId);
 
-			// @TODO: DEBUG
-			// if (null != client.connection()) {
-			if (true) {
-				/**
-				 *
-				 * @TODO: DEBUG
-				 *
-				client.connection().publish(topicName, data, Utils.getQoS(qos), retain, new Callback<Void>() {
-					@Override
-					public void onSuccess(Void value) {
-						puback(topicID, msgID, 0x00);
-					}
-
-					@Override
-					public void onFailure(Throwable e) {
-						Log.error("Publish", "publish", "Error on publish");
-						Log.debug(LogLevel.ACTIVE,"Publish", "publish", e.getMessage());
-					}
-				});
-				 **/
+			if( client.mqttClient().publish(topicName, data, Prtcl.getQoS(qos), retain) ) {
+				Log.debug(LogLevel.ACTIVE, "Publish", "publish", "published "
+													 + new String(data) + " on topic "
+													 + topicName + " (id:" + topicId
+													 + ") -> send pub ack OK");
+				puback(topicId, messageId, Prtcl.ACCEPTED);
 			} else {
-				puback(topicId, messageId, 0x03);
+				Log.debug(LogLevel.ACTIVE, "Publish", "publish", "impossible to publish "
+													 + new String(data) + " on topic "
+													 + topicName + " (id:" + topicId
+													 + ") -> send pub ack KO");
+				puback(topicId, messageId, Prtcl.REJECTED);
 			}
 		} else {
-			reregister(topicId, messageId);
+			Log.debug(LogLevel.ACTIVE, "Publish", "publish", "unknown topic name (id:"
+												 + topicId + ") -> send re-register");
+			reRegister(topicId, messageId);
 		}
 	}
 
-	private void reregister(final int topicId, final byte[] messageId) {
+	private void reRegister(final int topicId, final byte[] messageId) {
 
 		Log.output(client, "re register");
 
@@ -100,7 +91,7 @@ public class Publish extends Thread {
 
 	private void puback(final int topicId, final byte[] messageId, final int returnCode) {
 
-		Log.input(client, "pub ack");
+		Log.output(client, "pub ack");
 
 		byte[] ret = new byte[7];
 		ret[0] = (byte) 0x07;
