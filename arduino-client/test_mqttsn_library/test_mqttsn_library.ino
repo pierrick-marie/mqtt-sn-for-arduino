@@ -42,6 +42,7 @@ void setup() {
       if (mqttsn.connect(MODULE_NAME) == ACCEPTED) {
         Serial.println("\nCONNECT OK");
 
+        /*
         if (-1 == mqttsn.findTopicId(TOPIC_PUB_0)) {
           Serial.println("\nNOT REGISTERED");
 
@@ -78,7 +79,9 @@ void setup() {
           } else {
             Serial.println("\ncoucou 2 NOT PUBLISHED");
           }
-          Serial.println(mqttsn.findTopicName(5));
+          Serial.println(mqttsn.findTopicName(2));
+          */
+
 
           /*
                   if (ACCEPTED == mqttsn.publish(TOPIC_PUB_0, "coucou 2")) {
@@ -97,14 +100,17 @@ void setup() {
             Serial.println(mqttsn.findTopicId("TOPIC_PUB_0"));
           */
 
-          /*
-            if(mqttsn.subscribe(TOPIC_SUB) == ACCEPTED){
-            Serial.println("\nSn_subscribe Ok");
-            } else {
-            Serial.println("\nSn_subscribe NOT ok");
-            }
-          */
+        /*
         }
+        */
+          if (mqttsn.subscribe(TOPIC_SUB) == ACCEPTED) {
+            Serial.println("\nSubscribe Ok");
+          } else {
+            Serial.println("\nSubscribe NOT ok");
+          }
+
+          mqttsn.pingReq(MODULE_NAME);
+
       }
       else {
         Serial.println("\nCONNECT KO!");

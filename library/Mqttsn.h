@@ -61,6 +61,18 @@ class Mqttsn {
 
 public:
 
+	/**
+	 *
+	 * ****************************
+	 * ****************************
+	 *
+	 * PUBLIC FUNCTIONS
+	 *
+	 * ****************************
+	 * ****************************
+	 *
+	 **/
+
 	Mqttsn(SoftwareSerial* _xBee) ;
 	~Mqttsn() ;
 
@@ -74,15 +86,7 @@ public:
 	void will_topic(const uint8_t flags, const char* will_topic, const bool update = false);
 	void will_messsage(const void* will_msg, const uint8_t will_msg_len, const bool update = false);
 
-#ifdef USE_QOS2
-	void pubrec();
-	void pubrel();
-	void pubcomp();
-#endif
-
-	int subscribe(const char* topic_name) ;
-	void pingreq(const char* client_id);
-	void pingresp();
+	int subscribe(const char* topic_name);
 	void disconnect(const uint16_t duration);
 
 	/**
@@ -96,7 +100,7 @@ public:
 	 * @param module_name The name of the module used to make the connection
 	 * @return ACCEPTED if a correct response is received, else REJECTED.
 	 **/
-	int connect(const char* moduleName) ;
+	int connect(const char* module_name) ;
 
 	bool getInitOk() ;
 	void setInitOk(const bool init_ok) ;
@@ -129,14 +133,72 @@ public:
 	 **/
 	int registerTopic(const char* name) ;
 
+	/**
+	 * @brief waitMessage waits a message from subscribed topics
+	 */
+	void waitMessage();
+
+	/**
+	 * @brief pingReq send a message to the gateway to request new published messages
+	 * @param module_name the id of the client who wants published messages
+	 */
+	void pingReq(const char* module_name);
+
+	/**
+	 * @brief pingResp Sending a ping response to the gateway. The function is called into pingReqHandler() - a function that seems to be never called.
+	 * The message seems to be not interpreted by the gateway.
+	 */
+	void pingResp();
+
+#ifdef USE_QOS2
+	void pubrec();
+	void pubrel();
+	void pubcomp();
+#endif
+
 private:
 
-	// prints the logs
-	Logs logs;
-	SoftwareSerial* xBee;
+	/**
+	 *
+	 * ****************************
+	 * ****************************
+	 *
+	 * PRIVATE FUNCTIONS
+	 *
+	 * ****************************
+	 * ****************************
+	 *
+	 **/
 
+	/**
+	 * The function waits during one second if data is available. In that case it returns true else returns false.
+	 *
+	 * Returs:
+	 * True if a response is received (xBee.available() > 1), else false.
+	 **/
+	bool waitData() ;
+
+	/**
+	 * The function analyses the incoming data (@FrameBufferIn) and calls the function @Mqttsn.parseStream before cleaning the @FrameBufferIn.
+	 **/
+	void parseData() ;
+
+	/**
+	 * @brief Mqttsn::dispatch The function is called at the end of the function parseStream.
+	 * It calls the corresponding function according to the message type.
+	 **/
 	void dispatch();
+
+	/**
+	 * @brief Mqttsn::bitSwap Magic formula (big / little indian?).
+	 * @param val A number to swap.
+	 * @return The swaped number.
+	 **/
 	uint16_t bitSwap(const uint16_t val);
+
+	/**
+	 * @brief sendMessage send a message to the gateway
+	 */
 	void sendMessage();
 
 	void publishMessage(const uint8_t flags, const uint16_t topic_id, const void* data, const uint8_t data_len);
@@ -159,12 +221,7 @@ private:
 	void unsubscribeByName(const uint8_t flags, const char* topic_name);
 	void unsubscribeById(const uint8_t flags, const uint16_t topic_id);
 
-	void connect(const uint8_t flags, const uint16_t duration, const char* client_id);
-
-	/**
-	 * The function analyses the incoming data (@FrameBufferIn) and calls the function @Mqttsn.parseStream before cleaning the @FrameBufferIn.
-	 **/
-	void parseData() ;
+	void connect(const uint8_t flags, const uint16_t duration, const char* module_name);
 
 	/**
 	 * The function creates a MeshBee frame and returns the frame lenght.
@@ -188,7 +245,7 @@ private:
 	 * Returns:
 	 * True if the message is a packet with data, else false.
 	 **/
-	bool is_data_packet() ;
+	bool isDataPacket() ;
 
 	/**
 	 * The function verifies if the transmetted message in @FrameBufferIn is a status message.
@@ -196,7 +253,7 @@ private:
 	 * Returns:
 	 * True if the message is a transmit status, else false.
 	 **/
-	bool is_transmit_status() ;
+	bool isTransmitStatus() ;
 
 	/**
 	 * The function verifies the checksum of @frame_buffer according to its @frame_size and returns true if it's OK, else return false.
@@ -207,23 +264,101 @@ private:
 	bool verifyChecksum(uint8_t frame_buffer[], int frame_size) ;
 
 	/**
-	 * The function waits during one second if data is available. In that case it returns true else returns false.
-	 *
-	 * Returs:
-	 * True if a response is received (xBee.available() > 1), else false.
-	 **/
-	bool waitData() ;
+	 * @brief advertiseHandler notifies the client with the gateway id.
+	 * @param msg the message from the gateway with it's id.
+	 */
+	void advertiseHandler(const msg_advertise* msg);
 
-	void advertise_handler(const msg_advertise* msg);
+	/**
+	 * @brief gatewayInfoHandler notifies the client with the information of the gateway
+	 * @param msg the information
+	 */
 	void gatewayInfoHandler(const msg_gwinfo* msg);
-	void connackHandler(const msg_connack* msg);
+
+	/**
+	 * @brief connackHandler notifies the client a connetion to the gateway is ok
+	 * @param msg the notification message
+	 */
+	void connAckHandler(const msg_connack* msg);
+
 	void willtopicreq_handler(const message_header* msg);
 	void willmsgreq_handler(const message_header* msg);
+
+	/**
+	 * @brief regAckHandler the gateway notifies the client it have register the topic.
+	 * @param msg The notification message.
+	 */
 	void regAckHandler(const msg_regack* msg);
+
+	/**
+	 * @brief registerHandler the gateway ask the client to register a topic.
+	 * @param msg the notification message.
+	 */
+	void registerHandler(const msg_register* msg);
+
+	/**
+	 * @brief reRegisterHandler the gateway ask to re-register a topic.
+	 * @param msg the notification message.
+	 */
 	void reRegisterHandler(const msg_reregister* msg);
-	void publish_handler(const msg_publish* msg);
-	void register_handler(const msg_register* msg);
+
+	void publishHandler(const msg_publish* msg);
+
+	/**
+	 * @brief pubAckHandler notifies the client a message have been published.
+	 * @param msg the nothification message.
+	 */
 	void pubAckHandler(const msg_puback* msg);
+
+	/**
+	 * @brief subAckHandler notifies the client a subcription topic have been regisered.
+	 * @param msg the notification message.
+	 */
+	void subAckHandler(const msg_suback* msg);
+
+	void unsuback_handler(const msg_unsuback* msg);
+
+	/**
+	 * @brief pingReqHandler Receive a ping request from the gateway. The function seems to be never used...
+	 * @param msg the message sent by the gateway
+	 */
+	void pingReqHandler(const msg_pingreq* msg);
+
+	/**
+	 * @brief pingRespHandler Do nothing.
+	 */
+	void pingRespHandler();
+
+	void disconnect_handler(const msg_disconnect* msg);
+	void willtopicresp_handler(const msg_willtopicresp* msg);
+	void willmsgresp_handler(const msg_willmsgresp* msg);
+
+	/**
+	 * @brief regAck the client notifies the gateway it have register the topic sent by the gateway.
+	 * @param topic_id the topic id.
+	 * @param message_id the message that constains the topic name.
+	 * @param return_code ACCEPTED | REJECTED.
+	 */
+	void regAck(const uint16_t topic_id, const uint16_t message_id, const return_code_t return_code);
+
+	/**
+	 * The function is never used.
+	 *
+	 * @brief reRegister the client ask the gateway to re-register a topic
+	 * @param topic_id the topic id.
+	 * @param message_id the message with the topic name.
+	 * @param return_code
+	 */
+	void reRegister(const uint16_t topic_id, const uint16_t message_id, const return_code_t return_code);
+
+	/**
+	 * @brief pubAck after a publication from the client accepted by the gateway, the client informs the gateway it received the ACK.
+	 * @param topic_id the id of the topic.
+	 * @param message_id the message id.
+	 * @param return_code ACCPETED | REJECTED
+	 */
+	void pubAck(const uint16_t topic_id, const uint16_t message_id, const return_code_t return_code);
+
 
 #ifdef USE_QOS2
 	void pubrec_handler(const msg_pubqos2* msg);
@@ -231,39 +366,21 @@ private:
 	void pubcomp_handler(const msg_pubqos2* msg);
 #endif
 
-	void suback_handler(const msg_suback* msg);
-	void unsuback_handler(const msg_unsuback* msg);
-	void pingreq_handler(const msg_pingreq* msg);
-	void pingresp_handler();
-	void disconnect_handler(const msg_disconnect* msg);
-	void willtopicresp_handler(const msg_willtopicresp* msg);
-	void willmsgresp_handler(const msg_willmsgresp* msg);
+	/**
+	 *
+	 * ****************************
+	 * ****************************
+	 *
+	 * ATTRIBUTES
+	 *
+	 * ****************************
+	 * ****************************
+	 *
+	 **/
 
-	void regack(const uint16_t topic_id, const uint16_t message_id, const return_code_t return_code);
-	void reregister(const uint16_t topic_id, const uint16_t message_id, const return_code_t return_code);
-	void puback(const uint16_t topic_id, const uint16_t message_id, const return_code_t return_code);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	// to print logs
+	Logs logs;
+	SoftwareSerial* xBee;
 
 	// the status of the connection (first sent message)
 	bool initOk = false;
@@ -283,6 +400,7 @@ private:
 	bool waitingForSubAck;
 	bool waitingForPubAck;
 	bool waitingForPingResp;
+
 	short connected;
 	int messageId;
 
