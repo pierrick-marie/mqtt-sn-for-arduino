@@ -13,31 +13,31 @@ import utils.log.LogLevel;
 public class Sender extends Thread {
 
 	private final Client client;
-	private final Message message;
+	private final MqttMessage mqttMessage;
 
-	public Sender(final Client client, final Message message) {
+	public Sender(final Client client, final MqttMessage mqttMessage) {
 
 		this.client = client;
-		this.message = message;
+		this.mqttMessage = mqttMessage;
 	}
 
 	private void sendMessage() {
 
-		byte[] serialMessage = new byte[7 + message.body().length()];
-		byte[] data = message.body().getBytes();
+		byte[] serialMessage = new byte[7 + mqttMessage.body().length()];
+		byte[] data = mqttMessage.body().getBytes();
 		int nbTry = 0;
 		int i;
 
-		// creating the serial message to send
+		// creating the serial mqttMessage to send
 
 		serialMessage[0] = (byte) serialMessage.length;
 		serialMessage[1] = (byte) 0x0C;
 		serialMessage[2] = (byte) 0x00;
 
-		Log.debug(LogLevel.ACTIVE,"Sender", "sendMessage", "topic = " + message.topic());
+		Log.debug(LogLevel.ACTIVE,"Sender", "sendMessage", "topic = " + mqttMessage.topic());
 
-		serialMessage[3] = getTopicId(message.topic())[0];
-		serialMessage[4] = getTopicId(message.topic())[1];
+		serialMessage[3] = getTopicId(mqttMessage.topic())[0];
+		serialMessage[4] = getTopicId(mqttMessage.topic())[1];
 
 		if (Main.MessageId > 255) {
 			serialMessage[5] = (byte) (Main.MessageId / 256);
@@ -47,7 +47,7 @@ public class Sender extends Thread {
 			serialMessage[6] = (byte) Main.MessageId;
 		}
 
-		for (i = 0; i < message.body().length(); i++) {
+		for (i = 0; i < mqttMessage.body().length(); i++) {
 			serialMessage[7 + i] = data[i];
 		}
 
@@ -60,9 +60,9 @@ public class Sender extends Thread {
 
 		}
 
-		// the message has not been acquit -> resend
+		// the mqttMessage has not been acquit -> resend
 		if (!Main.MessageIdAck.contains(Main.MessageId)) {
-			Log.debug(LogLevel.ACTIVE,"Sender", "sendMessage", "Resend the message");
+			Log.debug(LogLevel.ACTIVE,"Sender", "sendMessage", "Resend the mqttMessage");
 			sendMessage();
 		}
 	}

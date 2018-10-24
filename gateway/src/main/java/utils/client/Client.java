@@ -1,6 +1,6 @@
 package utils.client;
 
-import gateway.Message;
+import gateway.MqttMessage;
 import utils.State;
 import utils.address.Address16;
 import utils.address.Address64;
@@ -24,7 +24,7 @@ public class Client {
 	public Address64 address64 = null;
 	public Address16 address16 = null;
 
-	public final ArrayList<Message> messages = new ArrayList<>();
+	public final ArrayList<MqttMessage> mqttMessages = new ArrayList<>();
 
 	public Client(final Address64 address64, final Address16 address16) {
 		this.address64 = address64;
@@ -203,8 +203,8 @@ public class Client {
 		willTopicReq = savedClient.willTopicReq;
 		willMessageReq = savedClient.willMessageReq;
 
-		messages.clear();
-		messages.addAll(savedClient.messages);
+		mqttMessages.clear();
+		mqttMessages.addAll(savedClient.mqttMessages);
 
 		return true;
 	}

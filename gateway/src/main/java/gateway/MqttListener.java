@@ -31,10 +31,10 @@ public class MqttListener implements Listener {
 	@Override
 	public void onPublish(UTF8Buffer topic, Buffer body, Runnable ack) {
 
-		Log.debug(LogLevel.ACTIVE,"MqttListener", "onPublish", client + " Buffering Message");
+		Log.debug(LogLevel.ACTIVE,"MqttListener", "onPublish", client + " Buffering MqttMessage");
 
-		Message msg = new Message(topic.utf8().toString(), body.utf8().toString());
-		client.messages.add(msg);
+		MqttMessage msg = new MqttMessage(topic.utf8().toString(), body.utf8().toString());
+		client.mqttMessages.add(msg);
 		ack.run();
 
 	}

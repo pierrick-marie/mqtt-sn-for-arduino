@@ -19,7 +19,7 @@ public class WillMessageReq extends Thread {
 
 	private void willMessagerReq() {
 
-		Log.input( client, "Will Message Req");
+		Log.input( client, "Will MqttMessage Req");
 
 		byte[] ret = new byte[2];
 		ret[0] = (byte) 0x02;
@@ -38,7 +38,7 @@ public class WillMessageReq extends Thread {
 
 
 		if (client.willMessageReq()) {
-			Log.debug(LogLevel.ACTIVE,"WillMessageReq", "willMessageReq","Resend Will Message Req");
+			Log.debug(LogLevel.ACTIVE,"WillMessageReq", "willMessageReq","Resend Will MqttMessage Req");
 			willMessagerReq();
 		}
 	}

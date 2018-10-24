@@ -5,12 +5,12 @@ import utils.log.Log;
 /**
  * Created by arnaudoglaza on 04/07/2017.
  */
-public class Message {
+public class MqttMessage {
 
 	private String topic;
 	private String body;
 
-	public Message(final String topic, final String body) {
+	public MqttMessage(final String topic, final String body) {
 		this.body = body;
 		this.topic = topic;
 	}
@@ -19,10 +19,10 @@ public class Message {
 		return topic;
 	}
 
-	public Message setTopic(final String topic) {
+	public MqttMessage setTopic(final String topic) {
 
 		if(null == topic) {
-			Log.error("Message", "setTopic", "topic is null");
+			Log.error("MqttMessage", "setTopic", "topic is null");
 		}
 
 		this.topic = topic;
@@ -34,10 +34,10 @@ public class Message {
 		return body;
 	}
 
-	public Message setBody(final String body) {
+	public MqttMessage setBody(final String body) {
 
 		if (null == body) {
-			Log.error("Message", "setBody", "body is null");
+			Log.error("MqttMessage", "setBody", "body is null");
 		}
 
 		this.body = body;

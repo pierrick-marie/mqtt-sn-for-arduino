@@ -56,12 +56,9 @@ public class Subscribe extends Thread {
 			Log.debug(LogLevel.ACTIVE,"Subscribe", "subscribe", "Topics " + topicName + " is registered with final id: " + topicId);
 
 			try {
-				client.mqttClient().subscribe(topicName);
+				client.mqttClient().subscribe(client, topicName);
 				Log.debug(LogLevel.ACTIVE,"Subscribe", "subscribe", "subcription ok -> sending sub ack message");
 				suback(new byte[]{(byte)QoS.AT_LEAST_ONCE.ordinal()}, messageId, 0, Prtcl.ACCEPTED);
-				/**
-				 * TODO: handle the received messages!
-				 */
 			} catch (TimeoutException e) {
 				Log.error("Subscribre", "subscribe", "imposible to subscribe to the topic: " + topicName);
 				Log.debug(LogLevel.VERBOSE, "Subscribre", "subscribe", e.getMessage());

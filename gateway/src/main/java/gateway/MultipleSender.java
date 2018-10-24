@@ -19,14 +19,14 @@ public class MultipleSender extends Thread {
 	public void run() {
 
 		// DEBUG
-		Log.debug(LogLevel.ACTIVE,"MultiSender", "run", "Begin Multiple Sender: " + client.messages);
+		Log.debug(LogLevel.ACTIVE,"MultiSender", "run", "Begin Multiple Sender");
 
-		for (Message message : client.messages) {
+		for (MqttMessage mqttMessage : client.mqttMessages) {
 
 			// DEBUG
-			Log.debug(LogLevel.ACTIVE,"MultiSender", "run", "Starting to send message " + message);
+			Log.debug(LogLevel.ACTIVE,"MultiSender", "run", "Starting to send mqttMessage " + mqttMessage);
 
-			Sender sender = new Sender(client, message);
+			Sender sender = new Sender(client, mqttMessage);
 
 			// DEBUG
 			Log.debug(LogLevel.ACTIVE,"MultiSender", "run", "Start sender");
@@ -39,17 +39,16 @@ public class MultipleSender extends Thread {
 			Log.debug(LogLevel.ACTIVE,"MultiSender", "run", "End sender");
 		}
 
-		client.messages.clear();
+		client.mqttMessages.clear();
 
 		Log.debug(LogLevel.ACTIVE,"MultiSender", "run", "End of multi-sender");
-
 
 		pingresp();
 	}
 
 	private void pingresp() {
 
-		Log.input(client, "Ping Response");
+		Log.output(client, "ping response");
 
 		byte[] ret = new byte[2];
 		ret[0] = (byte) 0x02;

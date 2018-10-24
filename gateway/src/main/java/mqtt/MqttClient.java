@@ -1,7 +1,10 @@
 package mqtt;
 
+import gateway.MqttMessage;
+import gateway.Sender;
 import org.fusesource.mqtt.client.*;
 import utils.Time;
+import utils.client.Client;
 import utils.log.Log;
 import utils.log.LogLevel;
 
@@ -73,6 +76,40 @@ public class MqttClient extends MQTT {
 		}
 	}
 
+	class ThreadListenMessage extends Thread {
+
+		private final Client client;
+
+		public ThreadListenMessage(final Client client) {
+			this.client = client;
+		}
+
+		public void run() {
+			Message message = null;
+			try {
+
+				System.out.println("0. Attente active ?!?");
+
+				message = connection.receive();
+				System.out.println(message.getTopic());
+				String payload = new String(message.getPayload());
+				// process the message then:
+				message.ack();
+
+				// TODO: DEBUG?
+				System.out.println("1. Attente active ?!?");
+				MqttMessage mqttMessage = new MqttMessage(message.getTopic(), payload);
+				client.mqttMessages.add(mqttMessage);
+				Log.activeDebug("\t !!! A message have been received: " + payload + " !!!");
+				// TODO: DEBUG?
+
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
 	public MqttClient() {
 		try {
 			setHost(HOST, PORT);
@@ -106,7 +143,7 @@ public class MqttClient extends MQTT {
 		isConnected = true;
 	}
 
-	public void subscribe(final String topicName) throws TimeoutException {
+	public void subscribe(final Client client, final String topicName) throws TimeoutException {
 
 		Log.debug(LogLevel.ACTIVE, "MqttClient", "subscribe", "try to subscribe to the topic: " + topicName);
 
@@ -127,22 +164,8 @@ public class MqttClient extends MQTT {
 
 		Log.debug(LogLevel.ACTIVE, "MqttClient", "subscribe", "subscription to the mqtt broker OK");
 
-		/**
-		 *
-		 * TODO: how receive incomming messages
-		 *
-		Message message = null;
-		try {
-			message = connection.receive();
-			System.out.println(message.getTopic());
-			byte[] payload = message.getPayload();
-			// process the message then:
-			message.ack();
-			Log.activeDebug("A message have been received: " + new String(payload));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		*/
+		ThreadListenMessage threadListenMessage = new ThreadListenMessage(client);
+		threadListenMessage.start();
 	}
 
 	public Boolean isConnected() {

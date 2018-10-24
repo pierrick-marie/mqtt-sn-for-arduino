@@ -65,7 +65,7 @@ public class TestMain {
 			} catch (Exception e) {
 				Log.activeDebug(e.getMessage());
 			}
-			Log.activeDebug("Sent messages with index = " + index);
+			Log.activeDebug("Sent mqttMessages with index = " + index);
 			try {
 				Thread.sleep(10000);
 			} catch (InterruptedException e) {

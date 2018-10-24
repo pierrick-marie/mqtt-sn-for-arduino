@@ -26,17 +26,12 @@ public class PingReq extends Thread {
 
 		client.setState(utils.State.AWAKE);
 
-		Time.sleep((long) 1000, "PingReq.pingReq()");
-
-		sendBufferedMessage();
-	}
-
-	private void sendBufferedMessage() {
+		// TODO: DEBUG?
+		// Time.sleep((long) 1000, "PingReq.pingReq()");
 
 		MultipleSender multiSender = new MultipleSender(client);
 		Log.debug(LogLevel.ACTIVE,"PingReq", "sendBufferMessage", "Start multi-sender");
 		multiSender.start();
-		Log.debug(LogLevel.ACTIVE,"PingReq", "sendBufferMessage", "End multi-sender");
 	}
 
 	public void run() {
