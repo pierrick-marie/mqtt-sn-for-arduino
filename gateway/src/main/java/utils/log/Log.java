@@ -50,7 +50,7 @@ public class Log {
 		yellow(message + "\n");
 	}
 
-	public static void veboseDebug(final String message) {
+	public static void verboseDebug(final String message) {
 		bYellow(" # [ " + LogLevel.VERBOSE.name() + " ] ");
 		yellow(message + "\n");
 	}

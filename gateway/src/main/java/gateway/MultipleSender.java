@@ -51,7 +51,7 @@ public class MultipleSender extends Thread {
 		Log.output(client, "ping response");
 
 		byte[] ret = new byte[2];
-		ret[0] = (byte) 0x02;
+		ret[0] = (byte) 0x03;
 		ret[1] = (byte) 0x17;
 
 		SerialPortWriter.write(client, ret);
@@ -64,7 +64,5 @@ public class MultipleSender extends Thread {
 				Threading.thread(timeOut, false);
 			}
 		}
-
 	}
-
 }

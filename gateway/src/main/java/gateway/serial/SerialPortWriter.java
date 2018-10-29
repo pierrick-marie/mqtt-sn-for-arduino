@@ -39,20 +39,33 @@ public class SerialPortWriter {
 			res[17 + i] = payload[i];
 		}
 
-		int cs = 0;
-
+		int checksum = 0;
 		for (int i = 3; i < 17 + payload.length; i++) {
-			cs += res[i];
+			checksum += res[i];
 		}
-		cs = cs & 0xFF;
-		cs = 0xFF - cs;
-		res[res.length - 1] = (byte) cs;
+		checksum = checksum & 0xFF;
+		checksum = 0xFF - checksum;
+		res[res.length - 1] = (byte) checksum;
 
 		try {
+			Log.verboseDebug(messageToString(res));
+
 			XBeeSerialPort.Instance.serialPort.writeBytes(res);
 		} catch (SerialPortException e) {
 			Log.error("XBeeSerialPort", "write", "");
 			Log.debug(LogLevel.ACTIVE,"XBeeSerialPort", "write", e.getMessage());
 		}
+	}
+
+	private static String messageToString(final byte[] message) {
+
+		String result = "Message length: " + message.length + " - ";
+
+		int i = 0;
+		for(; i < message.length; i++) {
+			result += message[i];
+		}
+
+		return result;
 	}
 }
