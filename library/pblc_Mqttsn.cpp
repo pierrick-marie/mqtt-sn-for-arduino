@@ -198,8 +198,15 @@ void Mqttsn::pingReq(const char* module_name) {
 	// pingRespTimer = millis();
 	// pingRespRetries = N_RETRY;
 	// waitingForPingResp = true;
-
 	// Wainting for published messages
+	// parseData();
+
+	if( !multiCheckSerial(MAX_TRY) ) {
+		// logs.debug("pingReq", "check serial rejected");
+		return;
+	}
+
+	// logs.debug("pingReq", "parsing published messages");
 	parseData();
 }
 
