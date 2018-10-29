@@ -63,8 +63,18 @@ void Mqttsn::parseData() {
 	int payload_lenght = frameBufferIn[12];
 	uint8_t payload[payload_lenght];
 
+	// for(int i = 0; i <= 12; i++) {
+	      // Serial.print(i);
+	      // Serial.print(" : ");
+	      // Serial.println(frameBufferIn[12+i]);
+	// }
+	// Serial.println("--------");
+
 	for(i = 0; i < payload_lenght; i++){
 		payload[i] = frameBufferIn[12+i];
+		// Serial.print(i + 12);
+		// Serial.print(" : ");
+		// Serial.println(payload[i]);
 	}
 
 	logs.debug("parseData", "data have been parsed");
