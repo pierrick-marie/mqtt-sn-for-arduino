@@ -15,7 +15,7 @@ import java.nio.charset.StandardCharsets;
 /**
  * This class is used to handle the connect message.
  */
-public class Connect extends Thread {
+public class Connect {
 
 	private final Client client;
 	private final byte[] message;
@@ -26,9 +26,7 @@ public class Connect extends Thread {
 
 		this.client = client;
 		this.message = message;
-	}
 
-	public void run() {
 		connect();
 	}
 

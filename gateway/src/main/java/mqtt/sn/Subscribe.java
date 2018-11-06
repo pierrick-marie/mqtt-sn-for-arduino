@@ -13,7 +13,7 @@ import java.util.concurrent.TimeoutException;
 /**
  * Created by arnaudoglaza on 07/07/2017.
  */
-public class Subscribe extends Thread {
+public class Subscribe {
 
 	final Client client;
 	final byte[] msg;
@@ -24,6 +24,8 @@ public class Subscribe extends Thread {
 
 		this.client = client;
 		this.msg = msg;
+
+		subscribe();
 	}
 
 	public void subscribe() {
@@ -91,10 +93,4 @@ public class Subscribe extends Thread {
 
 		SerialPortWriter.write(client, ret);
 	}
-
-	public void run() {
-		subscribe();
-	}
-
-
 }

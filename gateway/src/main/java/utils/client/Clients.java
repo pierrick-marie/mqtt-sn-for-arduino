@@ -1,42 +1,38 @@
 package utils.client;
 
 import utils.address.Address;
+import utils.address.Address16;
 import utils.address.Address64;
 import utils.log.Log;
 import utils.log.LogLevel;
 
-import java.util.HashMap;
+import java.util.*;
 
-enum Clients {
+public enum Clients {
 
 	list;
 
-	private final HashMap<Address, Client> clients = new HashMap<>();
+	private static final List<Client> clients = Collections.synchronizedList(new ArrayList<>());
 
-	synchronized Client search(final Address64 address) {
+	public synchronized Client search(final Address64 address64, final Address16 address16) {
 
-		Client client = clients.get(address);
+		Client client = null;
+
+		for(Client c : clients){
+			if(c.address64.equals(address64)) {
+				client = c;
+				break;
+			}
+		}
 
 		if (null == client) {
-			Log.debug(LogLevel.VERBOSE,"Clients", "search", "client with address " + address + " is NOT registered");
+			Log.debug(LogLevel.VERBOSE, "Clients", "search", "client with address " + address64 + " is NOT registered");
+			Log.debug(LogLevel.ACTIVE, "Clients", "search", "creating a new client");
+
+			client = new Client(address64, address16);
+			clients.add(client);
 		} else {
-			Log.debug(LogLevel.VERBOSE,"Clients", "search", "client " + client + " is already registered");
-		}
-
-		return client;
-	}
-
-	synchronized Client save(final Client client) {
-
-		if(null == client || null == client.address64) {
-			Log.error("ClientManager", "save", "client = " + client + " & address64 = " + client.address64);
-			return null;
-		}
-
-		if(null == clients.put(client.address64, client)){
-			Log.debug(LogLevel.VERBOSE,"ClientManager", "save", "client " + client + " have been registered");
-		} else {
-			Log.debug(LogLevel.VERBOSE,"ClientManager", "save", "client " + client + " have been updated");
+			Log.debug(LogLevel.VERBOSE, "Clients", "search", "client " + client + " is already registered");
 		}
 
 		return client;

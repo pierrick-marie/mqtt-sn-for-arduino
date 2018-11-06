@@ -21,7 +21,7 @@ public class MultipleSender extends Thread {
 		// DEBUG
 		Log.debug(LogLevel.ACTIVE,"MultiSender", "run", "Begin Multiple Sender");
 
-		for (MqttMessage mqttMessage : client.mqttMessages) {
+		for (MqttMessage mqttMessage : client.mqttMessages()) {
 
 			// DEBUG
 			Log.debug(LogLevel.ACTIVE,"MultiSender", "run", "Starting to send mqttMessage " + mqttMessage);
@@ -39,7 +39,7 @@ public class MultipleSender extends Thread {
 			Log.debug(LogLevel.ACTIVE,"MultiSender", "run", "End sender");
 		}
 
-		client.mqttMessages.clear();
+		client.mqttMessages().clear();
 
 		Log.debug(LogLevel.ACTIVE,"MultiSender", "run", "End of multi-sender");
 

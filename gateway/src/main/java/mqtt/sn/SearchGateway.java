@@ -8,7 +8,7 @@ import utils.log.Log;
 /**
  * Created by arnaudoglaza on 07/07/2017.
  */
-public class SearchGateway extends Thread {
+public class SearchGateway {
 
 	private final Client client;
 	private final Integer radius;
@@ -19,6 +19,8 @@ public class SearchGateway extends Thread {
 
 		this.client = client;
 		this.radius = radius;
+
+		searchGateway();
 	}
 
 	private void searchGateway() {
@@ -26,12 +28,8 @@ public class SearchGateway extends Thread {
 		byte[] ret = new byte[3];
 		ret[0] = (byte) 0x03;
 		ret[1] = (byte) 0x02;
-		ret[2] = (byte) Main.GatewayId;
+		ret[2] = (byte) Main.GATEWAY_ID;
 
 		SerialPortWriter.write(client, ret);
-	}
-
-	public void run() {
-		searchGateway();
 	}
 }

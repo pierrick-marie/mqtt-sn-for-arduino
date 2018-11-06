@@ -11,7 +11,7 @@ import java.nio.charset.StandardCharsets;
 /**
  * Created by arnaudoglaza on 07/07/2017.
  */
-public class Register extends Thread {
+public class Register {
 
 	private final Client client;
 	private final byte[] message;
@@ -22,6 +22,8 @@ public class Register extends Thread {
 
 		this.client = client;
 		this.message = msg;
+
+		register();
 	}
 
 	/**
@@ -95,10 +97,5 @@ public class Register extends Thread {
 
 		SerialPortWriter.write(client, message);
 	}
-
-	public void run() {
-		register();
-	}
-
 
 }

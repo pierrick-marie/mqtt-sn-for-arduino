@@ -88,22 +88,21 @@ public class MqttClient extends MQTT {
 			Message message = null;
 			try {
 
-				System.out.println("0. Attente active ?!?");
+				// @TODO debug tests
+				client.addMqttMessage(new MqttMessage("SUB_ObiOne-RFID", "Payload 0"));
+				client.addMqttMessage(new MqttMessage("SUB_ObiOne-RFID", "Payload 1"));
+				client.addMqttMessage(new MqttMessage("SUB_ObiOne-RFID", "Payload 2"));
 
-				message = connection.receive();
-				System.out.println(message.getTopic());
-				String payload = new String(message.getPayload());
-				// process the message then:
-				message.ack();
+				while(true) {
+					message = connection.receive();
+					String payload = new String(message.getPayload());
+					MqttMessage mqttMessage = new MqttMessage(message.getTopic(), payload);
 
-				// TODO: DEBUG?
-				System.out.println("1. Attente active ?!?");
-				MqttMessage mqttMessage = new MqttMessage(message.getTopic(), payload);
-				client.mqttMessages.add(mqttMessage);
-				Log.activeDebug("\t !!! A message have been received: " + payload + " !!!");
-				// TODO: DEBUG?
+					message.ack();
+					client.addMqttMessage(mqttMessage);
 
-
+					Log.verboseDebug("Message: " + payload + " on topic: " + message.getTopic() + " have been received");
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

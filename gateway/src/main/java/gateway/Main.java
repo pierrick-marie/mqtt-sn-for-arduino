@@ -11,14 +11,9 @@ import java.util.HashMap;
  */
 public class Main {
 
-	public static int GatewayId = 1;
-
-	// @todo DEBUG: use the ClientManager instead
-	public final static ArrayList<Integer> MessageIdAck = new ArrayList<>();
+	public static final int GATEWAY_ID = 1;
 
 	public static final String SERIAL_PORT = "/dev/ttyUSB0";
-
-	public static int MessageId = 0;
 
 	public static void main(String[] args) {
 

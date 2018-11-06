@@ -9,6 +9,8 @@ import utils.log.LogLevel;
 import mqtt.MqttClient;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class Client {
 
@@ -24,12 +26,44 @@ public class Client {
 	public Address64 address64 = null;
 	public Address16 address16 = null;
 
-	public final ArrayList<MqttMessage> mqttMessages = new ArrayList<>();
+	private final List<MqttMessage> mqttMessages = Collections.synchronizedList(new ArrayList<>());
 
 	public Client(final Address64 address64, final Address16 address16) {
 		this.address64 = address64;
 		this.address16 = address16;
 		state = State.FIRSTCONNECT;
+	}
+
+	public List<MqttMessage> mqttMessages() {
+		return mqttMessages;
+	}
+
+	public synchronized Boolean addMqttMessage(final MqttMessage message) {
+		Boolean ret = mqttMessages.add(message);
+
+		return ret;
+	}
+
+	public synchronized Boolean removeMqttMessage(final int messageId) {
+		Boolean ret = false;
+
+		if( null != mqttMessages.remove(messageId) ){
+			ret = true;
+		}
+
+		return ret;
+	}
+
+	public synchronized Boolean acquitMessage(final Integer messageId) {
+		for(MqttMessage message : mqttMessages) {
+			if(message.messageId().equals(messageId)) {
+				message.setAcquitted(true);
+
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	public String name() {
@@ -45,7 +79,6 @@ public class Client {
 		this.name = name;
 
 		Log.debug(LogLevel.VERBOSE,"Client", "setName", "Register client's name with " + name);
-		save();
 
 		return this;
 	}
@@ -63,7 +96,6 @@ public class Client {
 		this.mqttClient = mqttClient;
 
 		Log.debug(LogLevel.VERBOSE,"Client", "setMqttClient", "Register client's mqttClient with " + mqttClient);
-		save();
 
 		return this;
 	}
@@ -81,7 +113,6 @@ public class Client {
 		this.state = state;
 
 		Log.debug(LogLevel.VERBOSE,"Client", "setState", "Register client's state with " + state);
-		save();
 
 		return this;
 	}
@@ -99,7 +130,6 @@ public class Client {
 		this.duration = duration;
 
 		Log.debug(LogLevel.VERBOSE,"Client", "setDuration", "Register client's duration with " + duration);
-		save();
 
 		return this;
 	}
@@ -117,7 +147,6 @@ public class Client {
 		this.willTopicReq = willTopicReq;
 
 		Log.debug(LogLevel.VERBOSE,"Client", "setWillTopicReq", "Register client's willTopicReq with " + willTopicReq);
-		save();
 
 		return this;
 	}
@@ -135,7 +164,6 @@ public class Client {
 		this.willTopicAck = willTopicAck;
 
 		Log.debug(LogLevel.VERBOSE,"Client", "setWillTopicAck", "Register client's willTopicAck with " + willTopicAck);
-		save();
 
 		return this;
 	}
@@ -153,7 +181,6 @@ public class Client {
 		this.willMessageAck = willMessageAck;
 
 		Log.debug(LogLevel.VERBOSE,"Client", "setWillMessageAck", "Register client's willMessageAck with " + willMessageAck);
-		save();
 
 		return this;
 	}
@@ -171,42 +198,12 @@ public class Client {
 		this.willMessageReq = willMessageReq;
 
 		Log.debug(LogLevel.VERBOSE,"Client", "setWillMessageReq", "Register client's willMessageReq with " + willMessageReq);
-		save();
 
 		return this;
 	}
 
 	public Boolean isSaved() {
-		return null != Clients.list.search(address64);
-	}
-
-	public Boolean save() {
-		Log.debug(LogLevel.ACTIVE,"Client","save", "saving the client " + this);
-		return null != Clients.list.save(this);
-	}
-
-	public Boolean load() {
-
-		Log.debug(LogLevel.ACTIVE,"Client","load", "searching the client with address " + address64);
-		Client savedClient = Clients.list.search(address64);
-
-		if( null == savedClient ) {
-			Log.debug(LogLevel.ACTIVE,"Client","load", "client with address " + address64 + " is unknown");
-			return false;
-		}
-
-		Log.debug(LogLevel.ACTIVE,"Client","load", "loading the client's attributes");
-		name = savedClient.name;
-		mqttClient = savedClient.mqttClient;
-		state = savedClient.state;
-		duration = savedClient.duration;
-		willTopicReq = savedClient.willTopicReq;
-		willMessageReq = savedClient.willMessageReq;
-
-		mqttMessages.clear();
-		mqttMessages.addAll(savedClient.mqttMessages);
-
-		return true;
+		return null != Clients.list.search(address64, address16);
 	}
 
 	public String toString() {

@@ -48,8 +48,6 @@ public class SerialPortWriter {
 		res[res.length - 1] = (byte) checksum;
 
 		try {
-			Log.verboseDebug(messageToString(res));
-
 			XBeeSerialPort.Instance.serialPort.writeBytes(res);
 		} catch (SerialPortException e) {
 			Log.error("XBeeSerialPort", "write", "");

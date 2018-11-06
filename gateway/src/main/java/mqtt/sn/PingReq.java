@@ -9,7 +9,7 @@ import utils.log.LogLevel;
 /**
  * Created by arnaudoglaza on 07/07/2017.
  */
-public class PingReq extends Thread {
+public class PingReq {
 
 	final Client client;
 	final byte[] msg;
@@ -20,6 +20,8 @@ public class PingReq extends Thread {
 
 		this.client = client;
 		this.msg = msg;
+
+		pingReq();
 	}
 
 	private void pingReq() {
@@ -33,10 +35,4 @@ public class PingReq extends Thread {
 		Log.debug(LogLevel.ACTIVE,"PingReq", "sendBufferMessage", "Start multi-sender");
 		multiSender.start();
 	}
-
-	public void run() {
-		pingReq();
-	}
-
-
 }

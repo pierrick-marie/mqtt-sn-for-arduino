@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets;
 /**
  * Created by arnaudoglaza on 07/07/2017.
  */
-public class WillTopic extends Thread {
+public class WillTopic {
 
 	private Client client;
 	private byte[] msg;
@@ -20,6 +20,8 @@ public class WillTopic extends Thread {
 
 		this.client = client;
 		this.msg = msg;
+
+		willtopic();
 	}
 
 	public void willtopic() {
@@ -48,9 +50,5 @@ public class WillTopic extends Thread {
 			client.mqttClient().setWillQos(Prtcl.getQoS(will_QOS));
 			client.mqttClient().setWillRetain(will_retain);
 		}
-	}
-
-	public void run() {
-		willtopic();
 	}
 }

@@ -54,7 +54,7 @@ public class SerialPortReader implements SerialPortEventListener {
 
 		if (indexOfByte == -1) {
 			if (verifyData(buffer)) {
-				RawData.Instance.parse(buffer);
+				RawDataParser.Instance.parse(buffer);
 			}
 			return;
 		}
@@ -71,7 +71,7 @@ public class SerialPortReader implements SerialPortEventListener {
 			}
 
 			if (verifyData(temp)) {
-				RawData.Instance.parse(temp);
+				RawDataParser.Instance.parse(temp);
 			}
 
 			for (i = 0; i < newBuff.length; i++) {

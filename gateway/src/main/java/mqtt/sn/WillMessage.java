@@ -8,7 +8,7 @@ import java.nio.charset.StandardCharsets;
 /**
  * Created by arnaudoglaza on 07/07/2017.
  */
-public class WillMessage extends Thread {
+public class WillMessage {
 
 	private Client client;
 	private byte[] msg;
@@ -19,6 +19,8 @@ public class WillMessage extends Thread {
 
 		this.client = client;
 		this.msg = msg;
+
+		willmessage();
 	}
 
 	public void willmessage() {
@@ -28,10 +30,5 @@ public class WillMessage extends Thread {
 		String willmessage = new String(msg, StandardCharsets.UTF_8);
 
 		client.mqttClient().setWillMessage(willmessage);
-
-	}
-
-	public void run() {
-		willmessage();
 	}
 }

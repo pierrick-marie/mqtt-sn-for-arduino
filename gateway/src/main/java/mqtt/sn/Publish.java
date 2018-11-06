@@ -9,7 +9,7 @@ import utils.log.LogLevel;
 /**
  * Created by arnaudoglaza on 07/07/2017.
  */
-public class Publish extends Thread {
+public class Publish {
 
 	private final Client client;
 	private final byte[] msg;
@@ -20,6 +20,8 @@ public class Publish extends Thread {
 
 		this.client = client;
 		this.msg = msg;
+
+		publish();
 	}
 
 	final void publish() {
@@ -108,9 +110,5 @@ public class Publish extends Thread {
 		ret[6] = (byte) returnCode;
 
 		SerialPortWriter.write(client, ret);
-	}
-
-	public void run() {
-		publish();
 	}
 }

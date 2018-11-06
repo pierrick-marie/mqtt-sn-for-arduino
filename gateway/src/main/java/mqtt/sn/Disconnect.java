@@ -10,7 +10,7 @@ import utils.log.LogLevel;
 /**
  * Created by arnaudoglaza on 07/07/2017.
  */
-public class Disconnect extends Thread {
+public class Disconnect {
 
 	private final Client client;
 	private final byte[] msg;
@@ -21,6 +21,8 @@ public class Disconnect extends Thread {
 
 		this.client = client;
 		this.msg = msg;
+
+		disconnect();
 	}
 
 	private void disconnect() {
@@ -57,10 +59,4 @@ public class Disconnect extends Thread {
 
 		SerialPortWriter.write(client, ret);
 	}
-
-	public void run() {
-		disconnect();
-	}
-
-
 }

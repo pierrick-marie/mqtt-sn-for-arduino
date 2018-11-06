@@ -31,6 +31,7 @@ public class TestMain {
 		}
 		Log.activeDebug("connected to broker !!! ");
 
+		/*
 		try {
 			Log.activeDebug("subscribe topic: MON_PETIT_CHAT");
 			mqtt.subscribe("MON_PETIT_CHAT");
@@ -39,7 +40,9 @@ public class TestMain {
 		} catch (TimeoutException e) {
 			Log.activeDebug("Exception: " + e.getMessage());
 		}
+		*/
 
+		/*
 		try {
 			Log.activeDebug("subscribe topic: MON_CACA");
 			mqtt.subscribe("MON_CACA");
@@ -48,7 +51,7 @@ public class TestMain {
 		} catch (TimeoutException e) {
 			Log.activeDebug("Exception: " + e.getMessage());
 		}
-
+		*/
 
 
 

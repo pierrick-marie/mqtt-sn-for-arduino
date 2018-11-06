@@ -12,8 +12,15 @@ import utils.log.LogLevel;
  */
 public class Sender extends Thread {
 
+	private final Integer NB_TRY_ACQUITTAL = 40;
+	private final long TIME_TO_WAIT = 250; // milliseconds
+
 	private final Client client;
 	private final MqttMessage mqttMessage;
+
+	private static volatile boolean ReceivedAcquittal = false;
+	private static volatile int AcquittalId = 0;
+	private static volatile int MessageId = 0;
 
 	public Sender(final Client client, final MqttMessage mqttMessage) {
 
@@ -39,12 +46,12 @@ public class Sender extends Thread {
 		serialMessage[3] = getTopicId(mqttMessage.topic())[0];
 		serialMessage[4] = getTopicId(mqttMessage.topic())[1];
 
-		if (Main.MessageId > 255) {
-			serialMessage[5] = (byte) (Main.MessageId / 256);
-			serialMessage[6] = (byte) (Main.MessageId % 256);
+		if (MessageId > 255) {
+			serialMessage[5] = (byte) (MessageId / 256);
+			serialMessage[6] = (byte) (MessageId % 256);
 		} else {
 			serialMessage[5] = (byte) 0x00;
-			serialMessage[6] = (byte) Main.MessageId;
+			serialMessage[6] = (byte) MessageId;
 		}
 
 		for (i = 0; i < mqttMessage.body().length(); i++) {
@@ -53,18 +60,21 @@ public class Sender extends Thread {
 
 		SerialPortWriter.write(client, serialMessage);
 
-		// waiting for an acquittal
-		while (nbTry < 10 && !Main.MessageIdAck.contains(Main.MessageId)) {
-			Time.sleep((long) 1000, "Sender.sendMessage()");
-			nbTry++;
-
+		while(!ReceivedAcquittal && nbTry < NB_TRY_ACQUITTAL) {
+			Time.sleep(TIME_TO_WAIT, "Sender.sendMessage(): waiting for acquittal");
 		}
 
-		// the mqttMessage has not been acquit -> resend
-		if (!Main.MessageIdAck.contains(Main.MessageId)) {
+		if(AcquittalId == MessageId) {
+			MessageId++;
+		} else {
 			Log.debug(LogLevel.ACTIVE,"Sender", "sendMessage", "Resend the mqttMessage");
 			sendMessage();
 		}
+	}
+
+	public static void acquittal(final Integer messageId){
+		ReceivedAcquittal = true;
+		AcquittalId = messageId;
 	}
 
 	private byte[] getTopicId(final String name) {
