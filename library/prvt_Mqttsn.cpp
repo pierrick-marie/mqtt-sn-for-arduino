@@ -110,47 +110,47 @@ void Mqttsn::dispatch() {
 		break;
 
 	case GWINFO:
-		// logs.debug("dispatch", "GWINFO");
+		logs.debug("dispatch", "GWINFO");
 		gatewayInfoHandler((msg_gwinfo*)responseBuffer);
 		break;
 
 	case CONNACK:
-		// logs.debug("dispatch", "CONNACK");
+		logs.debug("dispatch", "CONNACK");
 		connAckHandler((msg_connack*)responseBuffer);
 		break;
 
 	case WILLTOPICREQ:
-		// logs.debug("dispatch", "WILLTOPICREQ");
+		logs.debug("dispatch", "WILLTOPICREQ");
 		willtopicreq_handler(response_message);
 		break;
 
 	case WILLMSGREQ:
-		// logs.debug("dispatch", "WILLMSGREQ");
+		logs.debug("dispatch", "WILLMSGREQ");
 		willmsgreq_handler(response_message);
 		break;
 
 	case REGACK:
-		// logs.debug("dispatch", "REGACK");
+		logs.debug("dispatch", "REGACK");
 		regAckHandler((msg_regack*)responseBuffer);
 		break;
 
 	case REGISTER:
-		// logs.debug("dispatch", "REGISTER");
+		logs.debug("dispatch", "REGISTER");
 		registerHandler((msg_register*)responseBuffer);
 		break;
 
 	case REREGISTER:
-		// logs.debug("dispatch", "RE-REGISTER");
+		logs.debug("dispatch", "RE-REGISTER");
 		reRegisterHandler((msg_reregister*)responseBuffer);
 		break;
 
 	case PUBLISH:
-		// logs.debug("dispatch", "PUBLISH");
+		logs.debug("dispatch", "PUBLISH");
 		publishHandler((msg_publish*)responseBuffer);
 		break;
 
 	case PUBACK:
-		// logs.debug("dispatch", "PUBACK");
+		logs.debug("dispatch", "PUBACK");
 		pubAckHandler((msg_puback*)responseBuffer);
 		break;
 
@@ -160,7 +160,7 @@ void Mqttsn::dispatch() {
 		break;
 
 	case UNSUBACK:
-		// logs.debug("dispatch", "UNSUBACK");
+		logs.debug("dispatch", "UNSUBACK");
 		unsuback_handler((msg_unsuback*)responseBuffer);
 		break;
 
@@ -175,22 +175,22 @@ void Mqttsn::dispatch() {
 		break;
 
 	case DISCONNECT:
-		// logs.debug("dispatch", "DISCONNECT");
+		logs.debug("dispatch", "DISCONNECT");
 		disconnect_handler((msg_disconnect*)responseBuffer);
 		break;
 
 	case WILLTOPICRESP:
-		// logs.debug("dispatch", "WILLTOPICRESP");
+		logs.debug("dispatch", "WILLTOPICRESP");
 		willtopicresp_handler((msg_willtopicresp*)responseBuffer);
 		break;
 
 	case WILLMSGRESP:
-		// logs.debug("dispatch", "WILLMSGRESP");
+		logs.debug("dispatch", "WILLMSGRESP");
 		willmsgresp_handler((msg_willmsgresp*)responseBuffer);
 		break;
 
 	default:
-		// logs.debug("dispatch", "DEFAULT");
+		logs.debug("dispatch", "DEFAULT");
 		return;
 	}
 }
@@ -257,16 +257,21 @@ uint16_t Mqttsn::bitSwap(const uint16_t value) {
 void Mqttsn::publishHandler(const msg_publish* msg) {
 
 	return_code_t ret = REJECTED_INVALID_TOPIC_ID;
-
 	const uint16_t topic_id = bitSwap(msg->topic_id);
+
+	logs.debug("publishHandler", "");
 
 	for (uint8_t i = 0; i < nbRegisteredTopic; ++i) {
 		if (topicTable[i].id == topic_id) {
 			ret = ACCEPTED;
+			logs.debug("publishHandler", "message accepted");
+			logs.debug("publishHandler", msg->data);
 			break;
 		}
 	}
 
+	logs.debug("publishHandler", "send pub ack");
+	logs.debug("publishHandler", "message id:", msg->message_id);
 	pubAck(msg->topic_id, msg->message_id, ret);
 	msg=NULL;
 }
