@@ -10,6 +10,7 @@ import java.beans.ExceptionListener;
 /**
  * Created by arnaudoglaza on 03/07/2017.
  */
+@Deprecated
 public class TimeOut implements Runnable, ExceptionListener {
 
 	private final Integer duration;

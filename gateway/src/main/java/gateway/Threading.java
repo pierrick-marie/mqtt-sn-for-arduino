@@ -3,6 +3,7 @@ package gateway;
 /**
  * Created by arnaudoglaza on 03/07/2017.
  */
+@Deprecated
 public class Threading {
 
 	public static Thread thread(Runnable runnable, boolean daemon) {

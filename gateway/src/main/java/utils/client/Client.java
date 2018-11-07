@@ -1,6 +1,7 @@
 package utils.client;
 
 import gateway.MqttMessage;
+import gateway.Sender;
 import mqtt.sn.SnAction;
 import utils.DeviceState;
 import utils.Time;
@@ -16,7 +17,7 @@ import java.util.List;
 
 public class Client extends Thread {
 
-	private final long TIME_TO_WAIT = 250; // milliseconds
+	private final long TIME_TO_WAIT = 5000; // milliseconds
 	private boolean doAction = false;
 	private SnAction action = null;
 
@@ -32,38 +33,79 @@ public class Client extends Thread {
 	public Address64 address64 = null;
 	public Address16 address16 = null;
 
-	private final List<MqttMessage> mqttMessages = Collections.synchronizedList(new ArrayList<>());
+	private final  List<MqttMessage> mqttMessages = Collections.synchronizedList(new ArrayList<>());
+
+	private final Sender sender;
+	private final MessageResender resender;
 
 	public Client(final Address64 address64, final Address16 address16) {
 		this.address64 = address64;
 		this.address16 = address16;
 		state = DeviceState.FIRSTCONNECT;
-	}
-
-	public List<MqttMessage> mqttMessages() {
-		return mqttMessages;
+		sender = new Sender(this);
+		resender = new MessageResender();
+		resender.start();
 	}
 
 	public synchronized Boolean addMqttMessage(final MqttMessage message) {
-		Boolean ret = mqttMessages.add(message);
-
-		return ret;
+		return mqttMessages.add(message);
 	}
 
-	public synchronized Boolean removeMqttMessage(final int messageId) {
-		Boolean ret = false;
+	class MessageResender extends Thread {
 
-		if( null != mqttMessages.remove(messageId) ){
-			ret = true;
+		public void run() {
+
+			List<Integer> listMessageToDelete = new ArrayList<>();
+			int i;
+
+			while (true) {
+
+				i = 0;
+				for (MqttMessage mqttMessage : mqttMessages) {
+
+					if (mqttMessage.needToResend()) {
+
+						Log.debug(LogLevel.ACTIVE, "Client", "MessageResender", "re-sending message " + mqttMessage);
+
+						sender.send(mqttMessage);
+					} else if (mqttMessage.needToDelete()) {
+						listMessageToDelete.add(i);
+					}
+					i++;
+				}
+
+				for (Integer idToDelete : listMessageToDelete) {
+
+					Log.debug(LogLevel.VERBOSE, "Client", "MessageResender", "delete message " + mqttMessages.get(idToDelete));
+					synchronized (mqttMessages) { mqttMessages.remove(idToDelete); }
+				}
+
+				listMessageToDelete.clear();
+
+				Time.sleep(TIME_TO_WAIT, "Client.MessageResender: error between two resend action");
+			}
 		}
+	}
 
-		return ret;
+	public void sendMqttMessages() {
+
+
+		for (MqttMessage mqttMessage : mqttMessages) {
+			if (mqttMessage.needToSend()) {
+				Log.debug(LogLevel.ACTIVE, "Client", "sendMqttMessages", "sending mqttMessage " + mqttMessage);
+
+				sender.send(mqttMessage);
+			}
+		}
 	}
 
 	public synchronized Boolean acquitMessage(final Integer messageId) {
-		for(MqttMessage message : mqttMessages) {
-			if(message.messageId().equals(messageId)) {
-				message.setAcquitted(true);
+
+
+		for (MqttMessage message : mqttMessages) {
+			if (message.messageId().equals(messageId)) {
+				Log.debug(LogLevel.VERBOSE, "Client", "acquitMessage", "message " + messageId + " acquitted");
+				message.acquitted();
 
 				return true;
 			}
@@ -84,7 +126,7 @@ public class Client extends Thread {
 
 		this.name = name;
 
-		Log.debug(LogLevel.VERBOSE,"Client", "setName", "Register client's name with " + name);
+		Log.debug(LogLevel.VERBOSE, "Client", "setName", "Register client's name with " + name);
 
 		return this;
 	}
@@ -101,7 +143,7 @@ public class Client extends Thread {
 
 		this.mqttClient = mqttClient;
 
-		Log.debug(LogLevel.VERBOSE,"Client", "setMqttClient", "Register client's mqttClient with " + mqttClient);
+		Log.debug(LogLevel.VERBOSE, "Client", "setMqttClient", "Register client's mqttClient with " + mqttClient);
 
 		return this;
 	}
@@ -118,7 +160,7 @@ public class Client extends Thread {
 
 		this.state = state;
 
-		Log.debug(LogLevel.VERBOSE,"Client", "setState", "Register client's state with " + state);
+		Log.debug(LogLevel.VERBOSE, "Client", "setState", "Register client's state with " + state);
 
 		return this;
 	}
@@ -135,7 +177,7 @@ public class Client extends Thread {
 
 		this.duration = duration;
 
-		Log.debug(LogLevel.VERBOSE,"Client", "setDuration", "Register client's duration with " + duration);
+		Log.debug(LogLevel.VERBOSE, "Client", "setDuration", "Register client's duration with " + duration);
 
 		return this;
 	}
@@ -152,7 +194,7 @@ public class Client extends Thread {
 
 		this.willTopicReq = willTopicReq;
 
-		Log.debug(LogLevel.VERBOSE,"Client", "setWillTopicReq", "Register client's willTopicReq with " + willTopicReq);
+		Log.debug(LogLevel.VERBOSE, "Client", "setWillTopicReq", "Register client's willTopicReq with " + willTopicReq);
 
 		return this;
 	}
@@ -169,7 +211,7 @@ public class Client extends Thread {
 
 		this.willTopicAck = willTopicAck;
 
-		Log.debug(LogLevel.VERBOSE,"Client", "setWillTopicAck", "Register client's willTopicAck with " + willTopicAck);
+		Log.debug(LogLevel.VERBOSE, "Client", "setWillTopicAck", "Register client's willTopicAck with " + willTopicAck);
 
 		return this;
 	}
@@ -186,7 +228,7 @@ public class Client extends Thread {
 
 		this.willMessageAck = willMessageAck;
 
-		Log.debug(LogLevel.VERBOSE,"Client", "setWillMessageAck", "Register client's willMessageAck with " + willMessageAck);
+		Log.debug(LogLevel.VERBOSE, "Client", "setWillMessageAck", "Register client's willMessageAck with " + willMessageAck);
 
 		return this;
 	}
@@ -203,13 +245,13 @@ public class Client extends Thread {
 
 		this.willMessageReq = willMessageReq;
 
-		Log.debug(LogLevel.VERBOSE,"Client", "setWillMessageReq", "Register client's willMessageReq with " + willMessageReq);
+		Log.debug(LogLevel.VERBOSE, "Client", "setWillMessageReq", "Register client's willMessageReq with " + willMessageReq);
 
 		return this;
 	}
 
 	public String toString() {
-		if( "" == name ) {
+		if ("" == name) {
 			return address64.toString();
 		} else {
 			return name + " (" + address64.toString() + ")";
@@ -218,8 +260,8 @@ public class Client extends Thread {
 
 	public void run() {
 
-		while(true) {
-			if(doAction) {
+		while (true) {
+			if (doAction) {
 				action.exec();
 				resetAction();
 			}

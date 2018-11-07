@@ -42,7 +42,7 @@ public class Connect implements SnAction {
 		if (client.name().equals("")) {
 			String name = getClientName();
 			Log.debug(LogLevel.ACTIVE, "Connect", "getClientName", "setup the client's name with " + name);
-			client.setName(name);
+			client.setClientName(name);
 		}
 
 		Log.debug(LogLevel.ACTIVE, "Connect", "connect", client + " status is " + client.state());

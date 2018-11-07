@@ -26,7 +26,9 @@ public class Puback implements SnAction {
 		if (msg[4] == (byte) 0x00) {
 			int msgID = (msg[3] << 8) + (msg[2] & 0xFF);
 
-			Log.debug(LogLevel.VERBOSE, "PubAck", "puback","messageIdAck: " + msgID);
+			Log.debug(LogLevel.ACTIVE, "PubAck", "puback","message id ack: " + msgID);
+
+			client.acquitMessage(msgID);
 		}
 	}
 
