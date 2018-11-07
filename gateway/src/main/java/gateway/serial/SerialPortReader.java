@@ -3,6 +3,7 @@ package gateway.serial;
 import jssc.SerialPortEvent;
 import jssc.SerialPortEventListener;
 import jssc.SerialPortException;
+import utils.Time;
 import utils.log.Log;
 import utils.log.LogLevel;
 
@@ -19,6 +20,49 @@ public class SerialPortReader implements SerialPortEventListener {
 		}
 	}
 
+	class ThreadSerialReader extends Thread {
+
+		private byte[] buffer;
+
+		ThreadSerialReader(final byte[] buffer) {
+			this.buffer = buffer;
+		}
+
+		public void run() {
+			int indexOfByte = getFirstIndexforByte((byte) 0X7E, buffer);
+
+			if (indexOfByte == -1) {
+				if (verifyData(buffer)) {
+					RawDataParser.Instance.parse(buffer);
+				}
+				return;
+			}
+
+			int i;
+			while (indexOfByte != -1) {
+
+				byte[] temp = new byte[indexOfByte];
+				byte[] newBuff = new byte[buffer.length - indexOfByte];
+
+				for (i = 0; i < temp.length; i++) {
+					temp[i] = buffer[i];
+				}
+
+				if (verifyData(temp)) {
+					RawDataParser.Instance.parse(temp);
+				}
+
+				for (i = 0; i < newBuff.length; i++) {
+					newBuff[i] = buffer[indexOfByte + i];
+				}
+
+				buffer = newBuff;
+				indexOfByte = getFirstIndexforByte((byte) 0X7E, buffer);
+				Time.sleep((long) 100, "SerialPortReader.checkDuplicate(): error while checking mesage");
+			}
+		}
+	}
+
 	public void serialEvent(SerialPortEvent event) {
 
 		Log.debug(LogLevel.VERBOSE, "SerialPortReader", "serialEvent", "new event");
@@ -31,57 +75,19 @@ public class SerialPortReader implements SerialPortEventListener {
 				inputBufferSize = XBeeSerialPort.Instance.serialPort.getInputBufferBytesCount();
 				while (inputBufferSize > totalInputSize) {
 					totalInputSize = inputBufferSize;
-					Thread.sleep(100);
+					Time.sleep((long) 100, "SerialPortReader().serialEvent: error buffering message");
 					inputBufferSize = XBeeSerialPort.Instance.serialPort.getInputBufferBytesCount();
 				}
 				checkDuplicate(XBeeSerialPort.Instance.serialPort.readBytes(totalInputSize));
 			} catch (SerialPortException e) {
 				Log.error("SerialPortReader", "serialEvent", "");
-				Log.debug(LogLevel.VERBOSE,"SerialPortReader", "serialEvent", e.getMessage());
-			} catch (InterruptedException e) {
-				Log.error("SerialPortReader", "serialEvent", "");
-				Log.debug(LogLevel.VERBOSE,"SerialPortReader", "serialEvent", e.getMessage());
-			} catch (URISyntaxException e) {
-				Log.error("SerialPortReader", "serialEvent", "");
-				Log.debug(LogLevel.VERBOSE,"SerialPortReader", "serialEvent", e.getMessage());
+				Log.debug(LogLevel.VERBOSE, "SerialPortReader", "serialEvent", e.getMessage());
 			}
 		}
 	}
 
-	private void checkDuplicate(byte[] buffer) throws URISyntaxException, InterruptedException {
-
-		int indexOfByte = getFirstIndexforByte((byte) 0X7E, buffer);
-
-		if (indexOfByte == -1) {
-			if (verifyData(buffer)) {
-				RawDataParser.Instance.parse(buffer);
-			}
-			return;
-		}
-
-		// for loop
-		int i;
-		while (indexOfByte != -1) {
-
-			byte[] temp = new byte[indexOfByte];
-			byte[] newBuff = new byte[buffer.length - indexOfByte];
-
-			for (i = 0; i < temp.length; i++) {
-				temp[i] = buffer[i];
-			}
-
-			if (verifyData(temp)) {
-				RawDataParser.Instance.parse(temp);
-			}
-
-			for (i = 0; i < newBuff.length; i++) {
-				newBuff[i] = buffer[indexOfByte + i];
-			}
-
-			buffer = newBuff;
-			indexOfByte = getFirstIndexforByte((byte) 0X7E, buffer);
-			Thread.sleep(100);
-		}
+	private void checkDuplicate(final byte[] buffer) {
+		new ThreadSerialReader(buffer).start();
 	}
 
 	/**
@@ -91,7 +97,7 @@ public class SerialPortReader implements SerialPortEventListener {
 	 * @param data         The date to search into the @searchedByte.
 	 * @return The index of @searedByte or -1 if not found.
 	 */
-	private  int getFirstIndexforByte(byte searchedByte, byte[] data) {
+	private  int getFirstIndexforByte(final byte searchedByte, final byte[] data) {
 
 		for (int i = 1; i < data.length; i++) {
 			if (data[i] == searchedByte) {
@@ -109,7 +115,7 @@ public class SerialPortReader implements SerialPortEventListener {
 	 * @param data The data to verify.
 	 * @return True is the @data is OK, else false.
 	 */
-	private  boolean verifyData(byte[] data) {
+	private  boolean verifyData(final byte[] data) {
 
 		if (data[0] != (byte) 0x7E) {
 			return false;
@@ -124,7 +130,7 @@ public class SerialPortReader implements SerialPortEventListener {
 	 * @param data The data to verify the checksum.
 	 * @return True if the checksum is ok, else false.
 	 */
-	private boolean verifyChecksum(byte[] data) {
+	private boolean verifyChecksum(final byte[] data) {
 
 		int checksum = 0;
 

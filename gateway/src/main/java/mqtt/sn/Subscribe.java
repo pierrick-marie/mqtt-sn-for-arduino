@@ -13,7 +13,7 @@ import java.util.concurrent.TimeoutException;
 /**
  * Created by arnaudoglaza on 07/07/2017.
  */
-public class Subscribe {
+public class Subscribe implements SnAction {
 
 	final Client client;
 	final byte[] msg;
@@ -24,8 +24,6 @@ public class Subscribe {
 
 		this.client = client;
 		this.msg = msg;
-
-		subscribe();
 	}
 
 	public void subscribe() {
@@ -92,5 +90,10 @@ public class Subscribe {
 		ret[7] = returnCode;
 
 		SerialPortWriter.write(client, ret);
+	}
+
+	@Override
+	public void exec() {
+		subscribe();
 	}
 }

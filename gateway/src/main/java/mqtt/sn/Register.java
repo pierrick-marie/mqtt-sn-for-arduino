@@ -11,7 +11,7 @@ import java.nio.charset.StandardCharsets;
 /**
  * Created by arnaudoglaza on 07/07/2017.
  */
-public class Register {
+public class Register implements SnAction {
 
 	private final Client client;
 	private final byte[] message;
@@ -22,8 +22,6 @@ public class Register {
 
 		this.client = client;
 		this.message = msg;
-
-		register();
 	}
 
 	/**
@@ -98,4 +96,8 @@ public class Register {
 		SerialPortWriter.write(client, message);
 	}
 
+	@Override
+	public void exec() {
+		register();
+	}
 }

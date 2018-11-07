@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets;
 /**
  * Created by arnaudoglaza on 07/07/2017.
  */
-public class WillTopic {
+public class WillTopic implements SnAction {
 
 	private Client client;
 	private byte[] msg;
@@ -20,8 +20,6 @@ public class WillTopic {
 
 		this.client = client;
 		this.msg = msg;
-
-		willtopic();
 	}
 
 	public void willtopic() {
@@ -50,5 +48,10 @@ public class WillTopic {
 			client.mqttClient().setWillQos(Prtcl.getQoS(will_QOS));
 			client.mqttClient().setWillRetain(will_retain);
 		}
+	}
+
+	@Override
+	public void exec() {
+		willtopic();
 	}
 }

@@ -1,6 +1,7 @@
 package mqtt.sn;
 
 import gateway.serial.SerialPortWriter;
+import utils.DeviceState;
 import utils.client.Client;
 import utils.log.Log;
 import utils.log.LogLevel;
@@ -15,7 +16,7 @@ import java.nio.charset.StandardCharsets;
 /**
  * This class is used to handle the connect message.
  */
-public class Connect {
+public class Connect implements SnAction {
 
 	private final Client client;
 	private final byte[] message;
@@ -26,8 +27,6 @@ public class Connect {
 
 		this.client = client;
 		this.message = message;
-
-		connect();
 	}
 
 	/**
@@ -48,14 +47,14 @@ public class Connect {
 
 		Log.debug(LogLevel.ACTIVE, "Connect", "connect", client + " status is " + client.state());
 
-		if (client.state().equals(utils.State.ASLEEP)) {
+		if (client.state().equals(DeviceState.ASLEEP)) {
 			Log.debug(LogLevel.ACTIVE, "Connect", "connect", "device " + client + " comes back from sleep");
 
-			client.setState(utils.State.ACTIVE);
+			client.setState(DeviceState.ACTIVE);
 
-		} else if (client.state().equals(utils.State.LOST) || client.state().equals(utils.State.FIRSTCONNECT)) {
+		} else if (client.state().equals(DeviceState.LOST) || client.state().equals(DeviceState.FIRSTCONNECT)) {
 
-			client.setState(utils.State.ACTIVE);
+			client.setState(DeviceState.ACTIVE);
 
 			if (will) {
 				createWillHandlers();
@@ -125,16 +124,25 @@ public class Connect {
 
 		Log.debug(LogLevel.ACTIVE, "Connect", "createWillHandlers", "");
 
-		try {
+			/*
+			 * TODO: DEBUG
+			 * an action to exec
+			try {
 			WillTopicReq willTopicReq = new WillTopicReq(client);
 			willTopicReq.start();
 			willTopicReq.join();
 			WillMessageReq willMessageReq = new WillMessageReq(client);
 			willMessageReq.start();
 			willMessageReq.join();
-		} catch (InterruptedException e) {
+			} catch (InterruptedException e) {
 			Log.error("Connect", "createWillHandlers", "Exception while creating the \"will handlers\"");
 			Log.debug(LogLevel.ACTIVE, "Connect", "createWillHandlers", e.getMessage());
-		}
+			}
+			 */
+	}
+
+	@Override
+	public void exec() {
+		connect();
 	}
 }

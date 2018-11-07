@@ -1,7 +1,9 @@
 package utils.client;
 
 import gateway.MqttMessage;
-import utils.State;
+import mqtt.sn.SnAction;
+import utils.DeviceState;
+import utils.Time;
 import utils.address.Address16;
 import utils.address.Address64;
 import utils.log.Log;
@@ -12,11 +14,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class Client {
+public class Client extends Thread {
+
+	private final long TIME_TO_WAIT = 250; // milliseconds
+	private boolean doAction = false;
+	private SnAction action = null;
 
 	private String name = "";
 	private Integer duration = 0;
-	private State state = State.DISCONNECTED;
+	private DeviceState state = DeviceState.DISCONNECTED;
 	private MqttClient mqttClient = null;
 	private Boolean willTopicReq = false;
 	private Boolean willTopicAck = false;
@@ -31,7 +37,7 @@ public class Client {
 	public Client(final Address64 address64, final Address16 address16) {
 		this.address64 = address64;
 		this.address16 = address16;
-		state = State.FIRSTCONNECT;
+		state = DeviceState.FIRSTCONNECT;
 	}
 
 	public List<MqttMessage> mqttMessages() {
@@ -70,7 +76,7 @@ public class Client {
 		return name;
 	}
 
-	public Client setName(final String name) {
+	public Client setClientName(final String name) {
 
 		if (null == name) {
 			Log.error("Client", "setName", "name is null");
@@ -100,11 +106,11 @@ public class Client {
 		return this;
 	}
 
-	public State state() {
+	public DeviceState state() {
 		return state;
 	}
 
-	public Client setState(final State state) {
+	public Client setState(final DeviceState state) {
 
 		if (null == state) {
 			Log.error("Client", "setState", "state is null");
@@ -202,15 +208,39 @@ public class Client {
 		return this;
 	}
 
-	public Boolean isSaved() {
-		return null != Clients.list.search(address64, address16);
-	}
-
 	public String toString() {
 		if( "" == name ) {
 			return address64.toString();
 		} else {
 			return name + " (" + address64.toString() + ")";
 		}
+	}
+
+	public void run() {
+
+		while(true) {
+			if(doAction) {
+				action.exec();
+				resetAction();
+			}
+			Time.sleep(TIME_TO_WAIT, "Client.run(): fail to wait");
+		}
+	}
+
+	private void resetAction() {
+		doAction = false;
+		action = null;
+	}
+
+	public Client setAction(SnAction action) {
+
+		if (null == action) {
+			Log.error("Client", "setAction", "action is null");
+		}
+
+		this.action = action;
+		doAction = true;
+
+		return this;
 	}
 }

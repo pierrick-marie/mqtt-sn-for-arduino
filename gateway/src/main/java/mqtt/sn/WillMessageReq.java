@@ -9,7 +9,7 @@ import utils.Time;
 /**
  * Created by arnaudoglaza on 07/07/2017.
  */
-public class WillMessageReq extends Thread {
+public class WillMessageReq implements SnAction {
 
 	private final Client client;
 
@@ -43,7 +43,8 @@ public class WillMessageReq extends Thread {
 		}
 	}
 
-	public void run() {
+	@Override
+	public void exec() {
 		willMessagerReq();
 	}
 }

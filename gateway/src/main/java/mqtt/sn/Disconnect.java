@@ -3,6 +3,7 @@ package mqtt.sn;
 import gateway.Threading;
 import gateway.TimeOut;
 import gateway.serial.SerialPortWriter;
+import utils.DeviceState;
 import utils.client.Client;
 import utils.log.Log;
 import utils.log.LogLevel;
@@ -10,7 +11,7 @@ import utils.log.LogLevel;
 /**
  * Created by arnaudoglaza on 07/07/2017.
  */
-public class Disconnect {
+public class Disconnect implements SnAction {
 
 	private final Client client;
 	private final byte[] msg;
@@ -21,8 +22,6 @@ public class Disconnect {
 
 		this.client = client;
 		this.msg = msg;
-
-		disconnect();
 	}
 
 	private void disconnect() {
@@ -32,7 +31,7 @@ public class Disconnect {
 			//System.out.println("Duration: "+duration);
 			if (duration > 0) {
 
-				client.setState(utils.State.ASLEEP).setDuration(duration);
+				client.setState(DeviceState.ASLEEP).setDuration(duration);
 
 				disconnectAck();
 
@@ -44,7 +43,7 @@ public class Disconnect {
 		} else {
 
 			// @TODO real disconnect
-			client.setState(utils.State.DISCONNECTED);
+			client.setState(DeviceState.DISCONNECTED);
 			disconnectAck();
 		}
 	}
@@ -58,5 +57,10 @@ public class Disconnect {
 		ret[1] = (byte) 0x18;
 
 		SerialPortWriter.write(client, ret);
+	}
+
+	@Override
+	public void exec() {
+		disconnect();
 	}
 }

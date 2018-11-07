@@ -8,7 +8,7 @@ import utils.log.Log;
 /**
  * Created by arnaudoglaza on 07/07/2017.
  */
-public class SearchGateway {
+public class SearchGateway implements SnAction {
 
 	private final Client client;
 	private final Integer radius;
@@ -19,8 +19,6 @@ public class SearchGateway {
 
 		this.client = client;
 		this.radius = radius;
-
-		searchGateway();
 	}
 
 	private void searchGateway() {
@@ -31,5 +29,10 @@ public class SearchGateway {
 		ret[2] = (byte) Main.GATEWAY_ID;
 
 		SerialPortWriter.write(client, ret);
+	}
+
+	@Override
+	public void exec() {
+		searchGateway();
 	}
 }

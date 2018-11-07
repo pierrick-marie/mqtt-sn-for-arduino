@@ -8,7 +8,7 @@ import utils.log.LogLevel;
 /**
  * Created by arnaudoglaza on 07/07/2017.
  */
-public class Puback {
+public class Puback implements SnAction {
 
 	final Client client;
 	final byte[] msg;
@@ -19,8 +19,6 @@ public class Puback {
 
 		this.client = client;
 		this.msg = msg;
-
-		puback();
 	}
 
 	private void puback() {
@@ -30,5 +28,10 @@ public class Puback {
 
 			Log.debug(LogLevel.VERBOSE, "PubAck", "puback","messageIdAck: " + msgID);
 		}
+	}
+
+	@Override
+	public void exec() {
+		puback();
 	}
 }

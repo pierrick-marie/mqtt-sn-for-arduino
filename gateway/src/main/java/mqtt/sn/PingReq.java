@@ -9,7 +9,7 @@ import utils.log.LogLevel;
 /**
  * Created by arnaudoglaza on 07/07/2017.
  */
-public class PingReq {
+public class PingReq implements SnAction {
 
 	final Client client;
 	final byte[] msg;
@@ -20,13 +20,11 @@ public class PingReq {
 
 		this.client = client;
 		this.msg = msg;
-
-		pingReq();
 	}
 
 	private void pingReq() {
 
-		client.setState(utils.State.AWAKE);
+		client.setState(DeviceState.AWAKE);
 
 		// TODO: DEBUG?
 		// Time.sleep((long) 1000, "PingReq.pingReq()");
@@ -34,5 +32,10 @@ public class PingReq {
 		MultipleSender multiSender = new MultipleSender(client);
 		Log.debug(LogLevel.ACTIVE,"PingReq", "sendBufferMessage", "Start multi-sender");
 		multiSender.start();
+	}
+
+	@Override
+	public void exec() {
+		pingReq();
 	}
 }

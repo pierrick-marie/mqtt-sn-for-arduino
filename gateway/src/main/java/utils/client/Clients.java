@@ -31,6 +31,7 @@ public enum Clients {
 
 			client = new Client(address64, address16);
 			clients.add(client);
+			client.start();
 		} else {
 			Log.debug(LogLevel.VERBOSE, "Clients", "search", "client " + client + " is already registered");
 		}

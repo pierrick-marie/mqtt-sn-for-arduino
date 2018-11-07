@@ -1,6 +1,6 @@
 package utils;
 
-public enum State {
+public enum DeviceState {
 	ASLEEP("Asleep"),	LOST("Lost"), ACTIVE("Active"), AWAKE("Awake"), DISCONNECTED("Disconnected"), FIRSTCONNECT("FirstConnect");
 
 	private String state;
@@ -9,7 +9,7 @@ public enum State {
 		return this.state;
 	}
 
-	State(final String state) {
+	DeviceState(final String state) {
 		this.state = state;
 	}
 }

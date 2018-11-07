@@ -1,7 +1,6 @@
 package gateway;
 
 import utils.*;
-import org.fusesource.mqtt.client.Callback;
 import utils.client.Client;
 import utils.log.Log;
 import utils.log.LogLevel;
@@ -25,7 +24,7 @@ public class TimeOut implements Runnable, ExceptionListener {
 
 		for (int i = 0; i < duration; i++) {
 
-			if( client.state().equals(State.ASLEEP)) {
+			if( client.state().equals(DeviceState.ASLEEP)) {
 				Log.debug(LogLevel.ACTIVE,"TimeOut", "start", "Not asleep anymore");
 			}
 
@@ -36,7 +35,7 @@ public class TimeOut implements Runnable, ExceptionListener {
 
 	private void clientTimeOut() {
 
-		client.setState(State.LOST);
+		client.setState(DeviceState.LOST);
 
 		/**
 		 *

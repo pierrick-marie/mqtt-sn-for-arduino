@@ -1,6 +1,7 @@
 package gateway;
 
 import gateway.serial.SerialPortWriter;
+import utils.DeviceState;
 import utils.client.Client;
 import utils.log.Log;
 import utils.log.LogLevel;
@@ -56,8 +57,8 @@ public class MultipleSender extends Thread {
 
 		SerialPortWriter.write(client, ret);
 
-		if(client.state().equals(utils.State.AWAKE)) {
-			client.setState(utils.State.ASLEEP);
+		if(client.state().equals(DeviceState.AWAKE)) {
+			client.setState(DeviceState.ASLEEP);
 			Log.debug(LogLevel.ACTIVE,"MultipleSender", "pingResp", client + " goes to sleep");
 			if(0 != client.duration()) {
 				TimeOut timeOut = new TimeOut(client, client.duration());
