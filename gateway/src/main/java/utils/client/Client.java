@@ -17,7 +17,8 @@ import java.util.List;
 
 public class Client extends Thread {
 
-	private final long TIME_TO_WAIT = 5000; // milliseconds
+	private final long TIME_TO_WAIT_ACTION = 250; // milliseconds
+	private final long TIME_TO_WAIT_MESSAGE = 3000; // milliseconds - 3 seconds
 	private boolean doAction = false;
 	private SnAction action = null;
 
@@ -33,85 +34,54 @@ public class Client extends Thread {
 	public Address64 address64 = null;
 	public Address16 address16 = null;
 
-	private final  List<MqttMessage> mqttMessages = Collections.synchronizedList(new ArrayList<>());
+	private final List<MqttMessage> mqttMessages = Collections.synchronizedList(new ArrayList<>());
 
 	private final Sender sender;
-	private final MessageResender resender;
 
 	public Client(final Address64 address64, final Address16 address16) {
 		this.address64 = address64;
 		this.address16 = address16;
 		state = DeviceState.FIRSTCONNECT;
 		sender = new Sender(this);
-		resender = new MessageResender();
-		resender.start();
 	}
 
 	public synchronized Boolean addMqttMessage(final MqttMessage message) {
 		return mqttMessages.add(message);
 	}
 
-	class MessageResender extends Thread {
-
-		public void run() {
-
-			List<Integer> listMessageToDelete = new ArrayList<>();
-			int i;
-
-			while (true) {
-
-				i = 0;
-				for (MqttMessage mqttMessage : mqttMessages) {
-
-					if (mqttMessage.needToResend()) {
-
-						Log.debug(LogLevel.ACTIVE, "Client", "MessageResender", "re-sending message " + mqttMessage);
-
-						sender.send(mqttMessage);
-					} else if (mqttMessage.needToDelete()) {
-						listMessageToDelete.add(i);
-					}
-					i++;
-				}
-
-				for (Integer idToDelete : listMessageToDelete) {
-
-					Log.debug(LogLevel.VERBOSE, "Client", "MessageResender", "delete message " + mqttMessages.get(idToDelete));
-					synchronized (mqttMessages) { mqttMessages.remove(idToDelete); }
-				}
-
-				listMessageToDelete.clear();
-
-				Time.sleep(TIME_TO_WAIT, "Client.MessageResender: error between two resend action");
-			}
-		}
-	}
-
 	public void sendMqttMessages() {
 
+		synchronized (mqttMessages) {
+			for (MqttMessage mqttMessage : mqttMessages) {
 
-		for (MqttMessage mqttMessage : mqttMessages) {
-			if (mqttMessage.needToSend()) {
 				Log.debug(LogLevel.ACTIVE, "Client", "sendMqttMessages", "sending mqttMessage " + mqttMessage);
-
 				sender.send(mqttMessage);
+				Time.sleep(TIME_TO_WAIT_MESSAGE, "Client.sendMqttMessages(): fail waiting between two messages");
 			}
 		}
 	}
 
 	public synchronized Boolean acquitMessage(final Integer messageId) {
 
+		int idMessageToDelete = 0;
+		boolean messageFound = false;
 
 		for (MqttMessage message : mqttMessages) {
 			if (message.messageId().equals(messageId)) {
-				Log.debug(LogLevel.VERBOSE, "Client", "acquitMessage", "message " + messageId + " acquitted");
-				message.acquitted();
-
-				return true;
+				messageFound = true;
+				break;
 			}
+			idMessageToDelete++;
 		}
 
-		return false;
+		if (messageFound) {
+			synchronized (mqttMessages) {
+				mqttMessages.remove(idMessageToDelete);
+			}
+			Log.debug(LogLevel.VERBOSE, "Client", "acquitMessage", "message " + messageId + " acquitted");
+		}
+
+		return messageFound;
 	}
 
 	public String name() {
@@ -265,7 +235,7 @@ public class Client extends Thread {
 				action.exec();
 				resetAction();
 			}
-			Time.sleep(TIME_TO_WAIT, "Client.run(): fail to wait");
+			Time.sleep(TIME_TO_WAIT_ACTION, "Client.run(): fail to wait");
 		}
 	}
 

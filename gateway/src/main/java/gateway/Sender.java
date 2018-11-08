@@ -53,7 +53,6 @@ public class Sender {
 
 		SerialPortWriter.write(client, serialMessage);
 		mqttMessage.setMessageId(messageId);
-		mqttMessage.updateSentTime();
 	}
 
 	private byte[] getTopicId(final String name) {

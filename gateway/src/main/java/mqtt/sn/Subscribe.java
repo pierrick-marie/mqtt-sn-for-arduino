@@ -38,7 +38,7 @@ public class Subscribe implements SnAction {
 
 		if (null == client.mqttClient() || !client.mqttClient().isConnected()) {
 			Log.error("Subscribre", "subscribe", client + "is not connected");
-			suback(new byte[]{(byte)QoS.AT_LEAST_ONCE.ordinal()}, messageId, 0, Prtcl.REJECTED);
+			suback(new byte[]{(byte)Prtcl.DEFAUlT_QOS.ordinal()}, messageId, 0, Prtcl.REJECTED);
 			return;
 		}
 
@@ -58,14 +58,14 @@ public class Subscribe implements SnAction {
 			try {
 				client.mqttClient().subscribe(client, topicName);
 				Log.debug(LogLevel.ACTIVE,"Subscribe", "subscribe", "subcription ok -> sending sub ack message");
-				suback(new byte[]{(byte)QoS.AT_LEAST_ONCE.ordinal()}, messageId, 0, Prtcl.ACCEPTED);
+				suback(new byte[]{(byte)Prtcl.DEFAUlT_QOS.ordinal()}, messageId, 0, Prtcl.ACCEPTED);
 			} catch (TimeoutException e) {
 				Log.error("Subscribre", "subscribe", "imposible to subscribe to the topic: " + topicName);
 				Log.debug(LogLevel.VERBOSE, "Subscribre", "subscribe", e.getMessage());
 			}
 		} else {
 			Log.error("Subscribe", "subscribe", "Topics NOT registered");
-			suback(new byte[]{(byte)QoS.AT_LEAST_ONCE.ordinal()}, messageId, 0, Prtcl.REJECTED);
+			suback(new byte[]{(byte)Prtcl.DEFAUlT_QOS.ordinal()}, messageId, 0, Prtcl.REJECTED);
 			return;
 		}
 	}

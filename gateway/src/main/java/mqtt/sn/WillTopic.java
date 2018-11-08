@@ -34,7 +34,8 @@ public class WillTopic implements SnAction {
 		} else {
 
 			byte flags = msg[0];
-			int will_QOS = flags & 0b01100000 >> 5;
+			// @DEPRECATED
+			// int will_QOS = flags & 0b01100000 >> 5;
 			boolean will_retain = (flags & 0b00010000) == 1;
 			byte[] data = new byte[msg.length - 1];
 
@@ -45,7 +46,7 @@ public class WillTopic implements SnAction {
 			String willtopic = new String(data, StandardCharsets.UTF_8);
 
 			client.mqttClient().setWillTopic(willtopic);
-			client.mqttClient().setWillQos(Prtcl.getQoS(will_QOS));
+			client.mqttClient().setWillQos(Prtcl.DEFAUlT_QOS);
 			client.mqttClient().setWillRetain(will_retain);
 		}
 	}

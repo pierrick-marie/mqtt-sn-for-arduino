@@ -2,6 +2,7 @@ package mqtt.sn;
 
 import gateway.serial.SerialPortWriter;
 import mqtt.Topics;
+import org.fusesource.mqtt.client.QoS;
 import utils.client.Client;
 import utils.log.Log;
 import utils.log.LogLevel;
@@ -25,8 +26,13 @@ public class Publish implements SnAction {
 	final void publish() {
 
 		byte flags = msg[0];
-		int qos = flags & 0b01100000 >> 5;
-		boolean retain = (flags & 0b00010000) == 1;
+
+		// USING QOS LEVEL 0
+		// int qos = flags & 0b01100000 >> 5;
+		// boolean retain = (flags & 0b00010000) == 1;
+		QoS qos = Prtcl.DEFAUlT_QOS;
+		boolean retain = false;
+
 		int topicId = (msg[2] << 8) + (msg[1] & 0xFF);
 
 		byte[] messageId = new byte[2];
@@ -48,7 +54,7 @@ public class Publish implements SnAction {
 
 			String topicName = Topics.list.get(topicId);
 
-			if( client.mqttClient().publish(topicName, data, Prtcl.getQoS(qos), retain) ) {
+			if( client.mqttClient().publish(topicName, data, qos, retain) ) {
 				Log.debug(LogLevel.ACTIVE, "Publish", "publish", "published "
 													 + new String(data) + " on topic "
 													 + topicName + " (id:" + topicId

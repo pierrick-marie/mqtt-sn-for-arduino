@@ -2,6 +2,7 @@ package mqtt;
 
 import gateway.MqttMessage;
 import gateway.Sender;
+import mqtt.sn.Prtcl;
 import org.fusesource.mqtt.client.*;
 import utils.Time;
 import utils.client.Client;
@@ -61,7 +62,7 @@ public class MqttClient extends MQTT {
 		public void run() {
 			try {
 				Log.debug(LogLevel.VERBOSE, "Inner class: ThreadSubscribe", "run", "start to subscribe the topic: " + topicName);
-				connection.subscribe(new Topic[]{new Topic(topicName, QoS.AT_LEAST_ONCE)});
+				connection.subscribe(new Topic[]{new Topic(topicName, Prtcl.DEFAUlT_QOS)});
 				isSubscribed = true;
 				Log.debug(LogLevel.VERBOSE, "Inner class: ThreadSubscribe", "run", "subscription ok");
 			} catch (Exception e) {
@@ -87,12 +88,6 @@ public class MqttClient extends MQTT {
 		public void run() {
 			Message message = null;
 			try {
-
-				// @TODO debug tests
-				client.addMqttMessage(new MqttMessage("SUB_ObiOne-RFID", "Payload 0"));
-				client.addMqttMessage(new MqttMessage("SUB_ObiOne-RFID", "Payload 1"));
-				client.addMqttMessage(new MqttMessage("SUB_ObiOne-RFID", "Payload 2"));
-
 				while(true) {
 					message = connection.receive();
 					String payload = new String(message.getPayload());
@@ -173,10 +168,11 @@ public class MqttClient extends MQTT {
 
 	public Boolean publish(final String topic, final byte[] message, final QoS qos, final Boolean retain) {
 		try {
+			Log.debug(LogLevel.ACTIVE, "MqttClient", "publish", "Publish message: " + message + " on the topic: " + topic + " with QoS: " + qos);
 			connection.publish(topic, message, qos, retain);
 			return true;
 		} catch (Exception e) {
-			Log.error("MqttClient", "publish", "Impossible to publish the message: " + message + " on the topic: " + topic);
+			Log.error("MqttClient", "publish", "Impossible to publish the message: " + message);
 			Log.debug(LogLevel.VERBOSE, "MqttClient", "publish", e.getMessage());
 			return false;
 		}
