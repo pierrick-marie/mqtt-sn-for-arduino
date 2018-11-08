@@ -254,7 +254,7 @@ int Mqttsn::publish(const char* topic_name, const char* message){
 	} else {
 		// logs.debug("publish", "send message", message);
 
-		publishMessage(FLAG, topic_id, message, strlen(message));
+		publishMessage(QOS_FLAG, topic_id, message, strlen(message));
 
 		if( !multiCheckSerial(MAX_TRY) ) {
 			// logs.debug("publish", "check serial rejected");
@@ -331,7 +331,7 @@ int Mqttsn::init() {
 int Mqttsn::connect(const char* module_name) {
 
 	// logs.debug( "connect", "send a connect message");
-	connect(FLAG, KEEP_ALIVE, module_name);
+	connect(QOS_FLAG, KEEP_ALIVE, module_name);
 
 	if( !multiCheckSerial(MAX_TRY) ) {
 		// logs.debug( "connect", "check serial rejected");
@@ -450,7 +450,7 @@ int Mqttsn::subscribe(const char* name) {
 
 	// logs.debug("subscribe", "subscribing topic");
 
-	subscribeByName(FLAG, name);
+	subscribeByName(QOS_FLAG, name);
 
 	if( !multiCheckSerial(MAX_TRY) ) {
 		// logs.debug("subscribe", "check serial rejected");

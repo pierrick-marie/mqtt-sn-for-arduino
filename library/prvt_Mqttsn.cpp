@@ -270,10 +270,18 @@ void Mqttsn::publishHandler(const msg_publish* msg) {
 		}
 	}
 
+#ifdef USE_QOS2
 	logs.debug("publishHandler", "send pub ack");
 	logs.debug("publishHandler", "message id:", msg->message_id);
 	pubAck(msg->topic_id, msg->message_id, ret);
+#endif
 	msg=NULL;
+
+	// waiting next message
+	if( !multiCheckSerial(MAX_TRY) ) {
+		return;
+	}
+	parseData();
 }
 
 void Mqttsn::subAckHandler(const msg_suback* msg) {

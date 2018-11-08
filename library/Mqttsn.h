@@ -51,7 +51,7 @@ THE SOFTWARE.
 #define API_PAY_LEN  (API_DATA_LEN + 5)
 #define API_FRAME_LEN  (API_DATA_LEN + 9)
 
-#define FLAG 0
+#define QOS_FLAG 0
 #define KEEP_ALIVE 60
 
 #define TIME_TO_WAIT 2000
@@ -83,7 +83,7 @@ public:
 
 	int publish(const char* topic_name, const char* message);
 
-	void will_topic(const uint8_t flags, const char* will_topic, const bool update = false);
+	void will_topic(const uint8_t QOS_FLAGs, const char* will_topic, const bool update = false);
 	void will_messsage(const void* will_msg, const uint8_t will_msg_len, const bool update = false);
 
 	int subscribe(const char* topic_name);
