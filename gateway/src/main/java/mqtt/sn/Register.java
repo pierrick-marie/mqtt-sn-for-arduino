@@ -28,7 +28,8 @@ public class Register implements SnAction {
 	 * This method registers a topic name into the list of topics @see:Main.TopicName
 	 * The method does not register the topic name to the bus.
 	 */
-	private void register() {
+	@Override
+	public void exec() {
 
 		byte[] messageId = new byte[2];
 		messageId[0] = message[2];
@@ -94,10 +95,5 @@ public class Register implements SnAction {
 		message[6] = returnCode;
 
 		SerialPortWriter.write(client, message);
-	}
-
-	@Override
-	public void exec() {
-		register();
 	}
 }

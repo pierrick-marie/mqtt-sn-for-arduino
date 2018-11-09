@@ -7,6 +7,8 @@ import java.nio.charset.StandardCharsets;
 
 /**
  * Created by arnaudoglaza on 07/07/2017.
+ *
+ * @TODO not implemented yet
  */
 public class WillMessage implements SnAction {
 
@@ -22,8 +24,6 @@ public class WillMessage implements SnAction {
 	}
 
 	public void willmessage() {
-
-		client.setWillMessageAck(false);
 
 		String willmessage = new String(msg, StandardCharsets.UTF_8);
 

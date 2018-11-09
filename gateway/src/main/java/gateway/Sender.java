@@ -2,7 +2,6 @@ package gateway;
 
 import gateway.serial.SerialPortWriter;
 import mqtt.Topics;
-import utils.*;
 import utils.client.Client;
 import utils.log.Log;
 import utils.log.LogLevel;
@@ -25,7 +24,6 @@ public class Sender {
 
 		byte[] serialMessage = new byte[7 + mqttMessage.body().length()];
 		byte[] data = mqttMessage.body().getBytes();
-		int nbTry = 0;
 		int i;
 
 		// creating the serial mqttMessage to send

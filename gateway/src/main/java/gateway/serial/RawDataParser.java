@@ -1,9 +1,9 @@
 package gateway.serial;
 
 import mqtt.sn.*;
-import utils.client.Client;
 import utils.address.Address16;
 import utils.address.Address64;
+import utils.client.Client;
 import utils.client.Clients;
 import utils.log.Log;
 import utils.log.LogLevel;
@@ -19,7 +19,7 @@ enum RawDataParser {
 	static byte[] payload;
 	static byte[] message;
 
-	public void parse(final byte[] data)  {
+	public void parse(final byte[] data) {
 
 		if (data[3] == (byte) 0x8B) {
 			return;
@@ -55,9 +55,9 @@ enum RawDataParser {
 					payload[i] = data[15 + i];
 				}
 			}
-		} catch(Exception e) {
+		} catch (Exception e) {
 			Log.error("RawDataParser", "parse", "Error while reading incoming data");
-			Log.debug(LogLevel.VERBOSE,"RawDataParser", "parse", e.getMessage());
+			Log.debug(LogLevel.VERBOSE, "RawDataParser", "parse", e.getMessage());
 		}
 
 		// Compute the message for each case of the following switch except for SEARCHGW
@@ -77,16 +77,6 @@ enum RawDataParser {
 			case 0x04:
 				// CONNECT
 				client.setAction(new Connect(client, message));
-				break;
-
-			case 0x07:
-				// WILLTOPIC
-				client.setAction(new WillTopic(client, message));
-				break;
-
-			case 0x09:
-				// WILLMESSAGE
-				client.setAction(new WillMessage(client, message));
 				break;
 
 			case 0x0A:
@@ -109,14 +99,27 @@ enum RawDataParser {
 				client.setAction(new Publish(client, message));
 				break;
 
-			case 0x0D:
-				// PUBACK
-				client.setAction(new Puback(client, message));
-				break;
-
 			case 0x16:
 				// PINGREQ
 				client.setAction(new PingReq(client, message));
+				break;
+
+			case 0x07:
+				// WILLTOPIC
+				// @TODO not implemented yet
+				// client.setAction(new WillTopic(client, message));
+				break;
+
+			case 0x09:
+				// WILLMESSAGE
+				// @TODO not implemented yet
+				// client.setAction(new WillMessage(client, message));
+				break;
+
+			case 0x0D:
+				// PUBACK
+				// Only used with QoS level 1 and 2 - not used yet
+				// client.setAction(new Puback(client, message));
 				break;
 		}
 	}

@@ -2,6 +2,7 @@ package utils.client;
 
 import gateway.MqttMessage;
 import gateway.Sender;
+import mqtt.MqttClient;
 import mqtt.sn.SnAction;
 import utils.DeviceState;
 import utils.Time;
@@ -9,7 +10,6 @@ import utils.address.Address16;
 import utils.address.Address64;
 import utils.log.Log;
 import utils.log.LogLevel;
-import mqtt.MqttClient;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,10 +26,12 @@ public class Client extends Thread {
 	private Integer duration = 0;
 	private DeviceState state = DeviceState.DISCONNECTED;
 	private MqttClient mqttClient = null;
-	private Boolean willTopicReq = false;
-	private Boolean willTopicAck = false;
-	private Boolean willMessageAck = false;
-	private Boolean willMessageReq = false;
+
+	// TODO not implemented yet
+	// private Boolean willTopicReq = false;
+	// private Boolean willTopicAck = false;
+	// private Boolean willMessageAck = false;
+	// private Boolean willMessageReq = false;
 
 	public Address64 address64 = null;
 	public Address16 address16 = null;
@@ -61,6 +63,12 @@ public class Client extends Thread {
 		}
 	}
 
+	/**
+	 * Acquittals are only used with QoS level 1 and 2. This feature is not used in the current implementation of the client.
+	 *
+	 * @param messageId the id of the acquitted message
+	 * @return true if the message have been correctly acquitted
+	 */
 	public synchronized Boolean acquitMessage(final Integer messageId) {
 
 		int idMessageToDelete = 0;
@@ -148,74 +156,6 @@ public class Client extends Thread {
 		this.duration = duration;
 
 		Log.debug(LogLevel.VERBOSE, "Client", "setDuration", "Register client's duration with " + duration);
-
-		return this;
-	}
-
-	public Boolean willTopicReq() {
-		return willTopicReq;
-	}
-
-	public Client setWillTopicReq(final Boolean willTopicReq) {
-
-		if (null == willTopicReq) {
-			Log.error("Client", "setWillTopicReq", "willTopicReq is null");
-		}
-
-		this.willTopicReq = willTopicReq;
-
-		Log.debug(LogLevel.VERBOSE, "Client", "setWillTopicReq", "Register client's willTopicReq with " + willTopicReq);
-
-		return this;
-	}
-
-	public Boolean willTopicAck() {
-		return willTopicAck;
-	}
-
-	public Client setWillTopicAck(final Boolean willTopicAck) {
-
-		if (null == willTopicAck) {
-			Log.error("Client", "setWillTopicAck", "willTopicAck is null");
-		}
-
-		this.willTopicAck = willTopicAck;
-
-		Log.debug(LogLevel.VERBOSE, "Client", "setWillTopicAck", "Register client's willTopicAck with " + willTopicAck);
-
-		return this;
-	}
-
-	public Boolean willMessageAck() {
-		return willMessageAck;
-	}
-
-	public Client setWillMessageAck(final Boolean willMessageAck) {
-
-		if (null == willMessageAck) {
-			Log.error("Client", "setWillMessageAck", "willMessageAck is null");
-		}
-
-		this.willMessageAck = willMessageAck;
-
-		Log.debug(LogLevel.VERBOSE, "Client", "setWillMessageAck", "Register client's willMessageAck with " + willMessageAck);
-
-		return this;
-	}
-
-	public Boolean willMessageReq() {
-		return willMessageReq;
-	}
-
-	public Client setWillMessageReq(final Boolean willMessageReq) {
-
-		if (null == willMessageReq) {
-			Log.error("Client", "setWillMessageReq", "willMessageReq is null");
-		}
-
-		this.willMessageReq = willMessageReq;
-
-		Log.debug(LogLevel.VERBOSE, "Client", "setWillMessageReq", "Register client's willMessageReq with " + willMessageReq);
 
 		return this;
 	}

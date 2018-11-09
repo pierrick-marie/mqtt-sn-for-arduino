@@ -1,7 +1,6 @@
 package mqtt;
 
 import gateway.MqttMessage;
-import gateway.Sender;
 import mqtt.sn.Prtcl;
 import org.fusesource.mqtt.client.*;
 import utils.Time;
@@ -11,6 +10,8 @@ import utils.log.LogLevel;
 
 import java.net.URISyntaxException;
 import java.util.concurrent.TimeoutException;
+
+import static mqtt.sn.Prtcl.PAYLOAD_LENGTH;
 
 public class MqttClient extends MQTT {
 
@@ -91,12 +92,17 @@ public class MqttClient extends MQTT {
 				while(true) {
 					message = connection.receive();
 					String payload = new String(message.getPayload());
-					MqttMessage mqttMessage = new MqttMessage(message.getTopic(), payload);
-
-					message.ack();
-					client.addMqttMessage(mqttMessage);
-
 					Log.verboseDebug("Message: " + payload + " on topic: " + message.getTopic() + " have been received");
+
+					if(payload.length() < PAYLOAD_LENGTH) {
+
+						MqttMessage mqttMessage = new MqttMessage(message.getTopic(), payload);
+
+						client.addMqttMessage(mqttMessage);
+						message.ack();
+					} else {
+						Log.error("Inner class: ThreadListenMessage", "run", "payload too long");
+					}
 				}
 			} catch (Exception e) {
 				e.printStackTrace();

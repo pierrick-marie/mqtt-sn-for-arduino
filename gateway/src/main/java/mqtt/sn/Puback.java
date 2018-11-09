@@ -1,12 +1,13 @@
 package mqtt.sn;
 
-import gateway.Main;
 import utils.client.Client;
 import utils.log.Log;
 import utils.log.LogLevel;
 
 /**
  * Created by arnaudoglaza on 07/07/2017.
+ *
+ * @TODO not used until with QoS level 1 and 2 (not implemented)
  */
 public class Puback implements SnAction {
 
@@ -21,7 +22,8 @@ public class Puback implements SnAction {
 		this.msg = msg;
 	}
 
-	private void puback() {
+	@Override
+	public void exec() {
 
 		if (msg[4] == (byte) 0x00) {
 			int msgID = (msg[3] << 8) + (msg[2] & 0xFF);
@@ -32,8 +34,6 @@ public class Puback implements SnAction {
 		}
 	}
 
-	@Override
-	public void exec() {
-		puback();
-	}
+
+
 }

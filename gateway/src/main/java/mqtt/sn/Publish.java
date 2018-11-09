@@ -23,13 +23,10 @@ public class Publish implements SnAction {
 		this.msg = msg;
 	}
 
-	final void publish() {
+	@Override
+	public void exec() {
 
 		byte flags = msg[0];
-
-		// USING QOS LEVEL 0
-		// int qos = flags & 0b01100000 >> 5;
-		// boolean retain = (flags & 0b00010000) == 1;
 		QoS qos = Prtcl.DEFAUlT_QOS;
 		boolean retain = false;
 
@@ -114,10 +111,5 @@ public class Publish implements SnAction {
 		ret[6] = (byte) returnCode;
 
 		SerialPortWriter.write(client, ret);
-	}
-
-	@Override
-	public void exec() {
-		publish();
 	}
 }

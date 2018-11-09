@@ -21,7 +21,8 @@ public class SearchGateway implements SnAction {
 		this.radius = radius;
 	}
 
-	private void searchGateway() {
+	@Override
+	public void exec() {
 
 		byte[] ret = new byte[3];
 		ret[0] = (byte) 0x03;
@@ -29,10 +30,5 @@ public class SearchGateway implements SnAction {
 		ret[2] = (byte) Main.GATEWAY_ID;
 
 		SerialPortWriter.write(client, ret);
-	}
-
-	@Override
-	public void exec() {
-		searchGateway();
 	}
 }

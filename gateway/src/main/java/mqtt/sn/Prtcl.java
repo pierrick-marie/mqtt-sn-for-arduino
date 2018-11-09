@@ -7,6 +7,8 @@ public class Prtcl {
 	public static final byte ACCEPTED = 0x00;
 	public static final byte REJECTED = 0x03;
 
+	public static final int PAYLOAD_LENGTH = 39;
+
 	public static QoS getQoS(final int qos) {
 
 		switch(qos) {

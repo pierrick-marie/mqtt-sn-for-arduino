@@ -3,9 +3,6 @@ package gateway;
 import gateway.serial.SerialPortReader;
 import utils.log.Log;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-
 /**
  * Created by arnaudoglaza on 03/07/2017.
  */

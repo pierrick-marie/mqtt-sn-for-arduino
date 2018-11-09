@@ -54,16 +54,4 @@ public class SerialPortWriter {
 			Log.debug(LogLevel.ACTIVE,"XBeeSerialPort", "write", e.getMessage());
 		}
 	}
-
-	private static String messageToString(final byte[] message) {
-
-		String result = "Message length: " + message.length + " - ";
-
-		int i = 0;
-		for(; i < message.length; i++) {
-			result += message[i];
-		}
-
-		return result;
-	}
 }

@@ -2,7 +2,6 @@ package mqtt.sn;
 
 import gateway.serial.SerialPortWriter;
 import mqtt.Topics;
-import org.fusesource.mqtt.client.QoS;
 import utils.client.Client;
 import utils.log.Log;
 import utils.log.LogLevel;
@@ -29,9 +28,6 @@ public class Subscribe implements SnAction {
 	public void subscribe() {
 
 		byte flags = msg[0];
-		boolean DUP = (flags & 0b10000000) == 1;
-		int qos = (flags & 0b01100000) >> 5;
-		int topicIDType = flags & 0b00000011;
 		byte[] messageId = new byte[2];
 		messageId[0] = msg[1];
 		messageId[1] = msg[2];

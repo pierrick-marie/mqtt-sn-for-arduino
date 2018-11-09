@@ -1,11 +1,11 @@
 package mqtt.sn;
 
 import gateway.serial.SerialPortWriter;
+import mqtt.MqttClient;
 import utils.DeviceState;
 import utils.client.Client;
 import utils.log.Log;
 import utils.log.LogLevel;
-import mqtt.MqttClient;
 
 import java.nio.charset.StandardCharsets;
 
@@ -29,10 +29,8 @@ public class Connect implements SnAction {
 		this.message = message;
 	}
 
-	/**
-	 * Method called after receiving a connect message.
-	 **/
-	public void connect() {
+	@Override
+	public void exec() {
 
 		byte flags = message[0];
 		short duration = (short) (message[2] * 16 + message[3]);
@@ -60,7 +58,7 @@ public class Connect implements SnAction {
 				createWillHandlers();
 			}
 
-			if( connectToTheBroker(cleanSession, duration) ) {
+			if (connectToTheBroker(cleanSession, duration)) {
 				connack(Prtcl.ACCEPTED);
 			} else {
 				connack(Prtcl.REJECTED);
@@ -117,32 +115,7 @@ public class Connect implements SnAction {
 	}
 
 	/**
-	 * TODO: DEBUG
-	 * Find the usage of this method.
+	 * @TODO not implemented yet
 	 */
-	private void createWillHandlers() {
-
-		Log.debug(LogLevel.ACTIVE, "Connect", "createWillHandlers", "");
-
-			/*
-			 * TODO: DEBUG
-			 * an action to exec
-			try {
-			WillTopicReq willTopicReq = new WillTopicReq(client);
-			willTopicReq.start();
-			willTopicReq.join();
-			WillMessageReq willMessageReq = new WillMessageReq(client);
-			willMessageReq.start();
-			willMessageReq.join();
-			} catch (InterruptedException e) {
-			Log.error("Connect", "createWillHandlers", "Exception while creating the \"will handlers\"");
-			Log.debug(LogLevel.ACTIVE, "Connect", "createWillHandlers", e.getMessage());
-			}
-			 */
-	}
-
-	@Override
-	public void exec() {
-		connect();
-	}
+	private void createWillHandlers() { }
 }

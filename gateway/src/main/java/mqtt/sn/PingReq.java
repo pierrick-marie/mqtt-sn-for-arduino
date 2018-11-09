@@ -1,10 +1,7 @@
 package mqtt.sn;
 
-import gateway.MultipleSender;
-import gateway.Threading;
-import gateway.TimeOut;
 import gateway.serial.SerialPortWriter;
-import utils.*;
+import utils.DeviceState;
 import utils.client.Client;
 import utils.log.Log;
 import utils.log.LogLevel;
@@ -29,10 +26,6 @@ public class PingReq implements SnAction {
 	public void exec() {
 		client.setState(DeviceState.AWAKE);
 
-		// @DEPRECATED
-		// MultipleSender multiSender = new MultipleSender(client);
-		// Log.debug(LogLevel.ACTIVE,"PingReq", "sendBufferMessage", "Start multi-sender");
-
 		Log.debug(LogLevel.ACTIVE,"PingReq", "exec", "begin send messages");
 
 		client.sendMqttMessages();
@@ -55,10 +48,6 @@ public class PingReq implements SnAction {
 		if(client.state().equals(DeviceState.AWAKE)) {
 			client.setState(DeviceState.ASLEEP);
 			Log.debug(LogLevel.ACTIVE,"MultipleSender", "pingResp", client + " goes to sleep");
-			if(0 != client.duration()) {
-				TimeOut timeOut = new TimeOut(client, client.duration());
-				Threading.thread(timeOut, false);
-			}
 		}
 	}
 }

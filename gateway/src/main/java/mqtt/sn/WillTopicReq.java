@@ -1,13 +1,15 @@
 package mqtt.sn;
 
 import gateway.serial.SerialPortWriter;
+import utils.Time;
 import utils.client.Client;
 import utils.log.Log;
 import utils.log.LogLevel;
-import utils.Time;
 
 /**
  * Created by arnaudoglaza on 07/07/2017.
+ *
+ * @TODO not implemented yet
  */
 public class WillTopicReq implements SnAction {
 
@@ -26,20 +28,7 @@ public class WillTopicReq implements SnAction {
 		ret[0] = (byte) 0x02;
 		ret[1] = (byte) 0x06;
 
-		client.setWillTopicReq(true);
-
-		SerialPortWriter.write(client, ret);
-
-		int cpt = 0;
-		while (cpt < 10 && client.willTopicReq()) {
-			Time.sleep((long) 1000, "WillTopicReq.willtopicreq()");
-			cpt++;
-		}
-
-		if (client.willTopicReq()) {
-			Log.debug(LogLevel.ACTIVE,"WillTopicReq", "willTopicReq","Resend Will Topics Req");
-			willTopicReq();
-		}
+		// SerialPortWriter.write(client, ret);
 	}
 
 	@Override

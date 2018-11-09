@@ -1,6 +1,5 @@
 package mqtt.sn;
 
-import org.fusesource.mqtt.client.QoS;
 import utils.client.Client;
 import utils.log.Log;
 
@@ -8,6 +7,8 @@ import java.nio.charset.StandardCharsets;
 
 /**
  * Created by arnaudoglaza on 07/07/2017.
+ *
+ * @TODO not implemented yet
  */
 public class WillTopic implements SnAction {
 
@@ -24,8 +25,6 @@ public class WillTopic implements SnAction {
 
 	public void willtopic() {
 
-		client.setWillTopicAck(false);
-
 		if (msg.length == 0) {
 
 			client.mqttClient().setWillMessage("");
@@ -34,8 +33,6 @@ public class WillTopic implements SnAction {
 		} else {
 
 			byte flags = msg[0];
-			// @DEPRECATED
-			// int will_QOS = flags & 0b01100000 >> 5;
 			boolean will_retain = (flags & 0b00010000) == 1;
 			byte[] data = new byte[msg.length - 1];
 
