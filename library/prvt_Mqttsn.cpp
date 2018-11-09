@@ -64,9 +64,9 @@ void Mqttsn::parseData() {
 	uint8_t payload[payload_lenght];
 
 	// for(int i = 0; i <= 12; i++) {
-	      // Serial.print(i);
-	      // Serial.print(" : ");
-	      // Serial.println(frameBufferIn[12+i]);
+	// Serial.print(i);
+	// Serial.print(" : ");
+	// Serial.println(frameBufferIn[12+i]);
 	// }
 	// Serial.println("--------");
 
@@ -79,12 +79,6 @@ void Mqttsn::parseData() {
 
 	logs.debug("parseData", "data have been parsed");
 
-	/*
-	 * @DEBUG
-	if(waitingForPingResp){
-		pingRespTimer = millis();
-	}
-	*/
 	memset(responseBuffer, 0, MAX_BUFFER_SIZE);
 	memcpy(responseBuffer, (const void*)payload, payload_lenght);
 
@@ -119,16 +113,6 @@ void Mqttsn::dispatch() {
 		connAckHandler((msg_connack*)responseBuffer);
 		break;
 
-	case WILLTOPICREQ:
-		logs.debug("dispatch", "WILLTOPICREQ");
-		willtopicreq_handler(response_message);
-		break;
-
-	case WILLMSGREQ:
-		logs.debug("dispatch", "WILLMSGREQ");
-		willmsgreq_handler(response_message);
-		break;
-
 	case REGACK:
 		logs.debug("dispatch", "REGACK");
 		regAckHandler((msg_regack*)responseBuffer);
@@ -147,11 +131,6 @@ void Mqttsn::dispatch() {
 	case PUBLISH:
 		logs.debug("dispatch", "PUBLISH");
 		publishHandler((msg_publish*)responseBuffer);
-		break;
-
-	case PUBACK:
-		logs.debug("dispatch", "PUBACK");
-		pubAckHandler((msg_puback*)responseBuffer);
 		break;
 
 	case SUBACK:
@@ -179,19 +158,39 @@ void Mqttsn::dispatch() {
 		disconnect_handler((msg_disconnect*)responseBuffer);
 		break;
 
-	case WILLTOPICRESP:
-		logs.debug("dispatch", "WILLTOPICRESP");
-		willtopicresp_handler((msg_willtopicresp*)responseBuffer);
-		break;
-
-	case WILLMSGRESP:
-		logs.debug("dispatch", "WILLMSGRESP");
-		willmsgresp_handler((msg_willmsgresp*)responseBuffer);
-		break;
-
 	default:
 		logs.debug("dispatch", "DEFAULT");
 		return;
+
+		// @TODO not implemented yet - QoS level 1 or 2
+		// case PUBACK:
+		// logs.debug("dispatch", "PUBACK");
+		// pubAckHandler((msg_puback*)responseBuffer);
+		// break;
+
+		// @TODO not implemented yet
+		// case WILLTOPICRESP:
+		// logs.debug("dispatch", "WILLTOPICRESP");
+		// willTopicRespHandler((msg_willtopicresp*)responseBuffer);
+		// break;
+
+		// @TODO not implemented yet
+		// case WILLMSGRESP:
+		// logs.debug("dispatch", "WILLMSGRESP");
+		// willMsgRespHandler((msg_willmsgresp*)responseBuffer);
+		// break;
+
+		// @TODO not implemented yet
+		// case WILLTOPICREQ:
+		// logs.debug("dispatch", "WILLTOPICREQ");
+		// willTopicReqHandler(response_message);
+		// break;
+
+		// @TODO not implemented yet
+		// case WILLMSGREQ:
+		// logs.debug("dispatch", "WILLMSGREQ");
+		// willmsgreq_handler(response_message);
+		// break;
 	}
 }
 
@@ -219,23 +218,6 @@ void Mqttsn::reRegister(const uint16_t topic_id, const uint16_t message_id, cons
 	sendMessage();
 }
 
-void Mqttsn::pubAck(const uint16_t topic_id, const uint16_t message_id, const return_code_t return_code) {
-	msg_puback* msg = reinterpret_cast<msg_puback*>(messageBuffer);
-
-	msg->length = sizeof(msg_puback);
-	msg->type = PUBACK;
-	msg->topic_id = bitSwap(topic_id);
-	msg->message_id = bitSwap(message_id);
-	msg->return_code = return_code;
-	sendMessage();
-}
-
-void Mqttsn::willtopicresp_handler(const msg_willtopicresp* msg) {
-}
-
-void Mqttsn::willmsgresp_handler(const msg_willmsgresp* msg) {
-}
-
 void Mqttsn::unsuback_handler(const msg_unsuback* msg) {
 }
 
@@ -251,8 +233,6 @@ void Mqttsn::pingRespHandler() {
 uint16_t Mqttsn::bitSwap(const uint16_t value) {
 	return (value << 8) | (value >> 8);
 }
-
-
 
 void Mqttsn::publishHandler(const msg_publish* msg) {
 
@@ -270,11 +250,11 @@ void Mqttsn::publishHandler(const msg_publish* msg) {
 		}
 	}
 
-#ifdef USE_QOS2
-	logs.debug("publishHandler", "send pub ack");
-	logs.debug("publishHandler", "message id:", msg->message_id);
-	pubAck(msg->topic_id, msg->message_id, ret);
-#endif
+	// @TODO not implemented yet - QoS level 1 or 2
+	// logs.debug("publishHandler", "send pub ack");
+	// logs.debug("publishHandler", "message id:", msg->message_id);
+	// pubAck(msg->topic_id, msg->message_id, ret);
+
 	msg=NULL;
 
 	// waiting next message
@@ -286,10 +266,6 @@ void Mqttsn::publishHandler(const msg_publish* msg) {
 
 void Mqttsn::subAckHandler(const msg_suback* msg) {
 	subAckReturnCode = msg->return_code;
-}
-
-void Mqttsn::pubAckHandler(const msg_puback* msg) {
-	pubAckReturnCode = msg->return_code;
 }
 
 void Mqttsn::advertiseHandler(const msg_advertise* msg) {
@@ -330,7 +306,6 @@ void Mqttsn::sendMessage() {
 		return;
 	}
 
-#ifdef USE_SERIAL
 	// logs.debug("sendMessage", "");
 
 	// Sending the message stored into @messageBuffer through @MB_serial_send function
@@ -347,7 +322,6 @@ void Mqttsn::sendMessage() {
 	} else {
 		// logs.debug("sendMessage", "message not sent");
 	}
-#endif
 }
 
 bool Mqttsn::verifyChecksum(uint8_t frame_buffer[], int frame_size) {
@@ -513,14 +487,6 @@ void Mqttsn::connAckHandler(const msg_connack* msg) {
 	connected = msg->return_code;
 }
 
-void Mqttsn::willtopicreq_handler(const message_header* msg) {
-	// Mqttsn_willtopicreq_handler(msg);
-}
-
-void Mqttsn::willmsgreq_handler(const message_header* msg) {
-	// Mqttsn_willmsgreq_handler(msg);
-}
-
 void Mqttsn::disconnect_handler(const msg_disconnect* msg) {
 	connected = false;
 	// Mqttsn_disconnect_handler(msg);
@@ -555,10 +521,6 @@ void Mqttsn::subscribeByName(const uint8_t flags, const char* topic_name) {
 	// logs.debug("subscribeByName", "sending message 'subscribe topic'");
 
 	sendMessage();
-
-	if ((flags & QOS_MASK) == FLAG_QOS_1 || (flags & QOS_MASK) == FLAG_QOS_2) {
-		waitingForSubAck = true;
-	}
 }
 
 void Mqttsn::subscribeById(const uint8_t flags, const uint16_t topic_id) {
@@ -643,23 +605,159 @@ void Mqttsn::publishMessage(const uint8_t flags, const uint16_t topic_id, const 
 
 /**
  *
- * ****************************
+ * @TODO not implemented yet
+ *
+ * @brief Mqttsn::willTopic
+ * @param flags
+ * @param will_topic
+ * @param update
+ */
+/*
+void Mqttsn::willTopic(const uint8_t flags, const char* will_topic, const bool update) {
+	if (will_topic == NULL) {
+		message_header* msg = reinterpret_cast<message_header*>(messageBuffer);
+
+		msg->type = update ? WILLTOPICUPD : WILLTOPIC;
+		msg->length = sizeof(message_header);
+	} else {
+		msg_willtopic* msg = reinterpret_cast<msg_willtopic*>(messageBuffer);
+
+		msg->type = update ? WILLTOPICUPD : WILLTOPIC;
+		msg->flags = flags;
+		strcpy(msg->will_topic, will_topic);
+	}
+
+	sendMessage();
+}
+*/
+
+/**
+ *
+ * @TODO not implemented yet
+ *
+ * @brief Mqttsn::willMesssage
+ * @param will_msg
+ * @param will_msg_len
+ * @param update
+ */
+/*
+void Mqttsn::willMesssage(const void* will_msg, const uint8_t will_msg_len, const bool update) {
+	msg_willmsg* msg = reinterpret_cast<msg_willmsg*>(messageBuffer);
+
+	msg->length = sizeof(msg_willmsg) + will_msg_len;
+	msg->type = update ? WILLMSGUPD : WILLMSG;
+	memcpy(msg->willmsg, will_msg, will_msg_len);
+
+	sendMessage();
+}
+*/
+
+/**
+ *
+ * @TODO not implemented yet
+ *
+ * @brief Mqttsn::willTopicRespHandler
+ * @param msg
+ */
+/*
+void Mqttsn::willTopicRespHandler(const msg_willtopicresp* msg) {
+}
+*/
+
+/**
+ *
+ * @TODO not implemented yet
+ *
+ * @brief Mqttsn::willMsgRespHandler
+ * @param msg
+ */
+/*
+void Mqttsn::willMsgRespHandler(const msg_willmsgresp* msg) {
+}
+*/
+
+/**
+ *
+ * @TODO not implemented yet
+ *
+ * @brief Mqttsn::willTopicReqHandler
+ * @param msg
+ */
+/*
+void Mqttsn::willTopicReqHandler(const message_header* msg) {
+}
+*/
+
+/**
+ *
+ * @TODO not implemented yet
+ *
+ * @brief Mqttsn::willMsgReqHandler
+ * @param msg
+ */
+/*
+void Mqttsn::willMsgReqHandler(const message_header* msg) {
+}
+*/
+
+/**
  * ****************************
  *
  * QoS
+ * @TODO not implemented yet - QoS level 1 or 2
  *
  * ****************************
- * ****************************
- *
  **/
 
-#ifdef USE_QOS2
-void Mqttsn::pubrec_handler(const msg_pubqos2* msg) {
+/*
+void Mqttsn::pubAckHandler(const msg_puback* msg) {
+	pubAckReturnCode = msg->return_code;
 }
 
-void Mqttsn::pubrel_handler(const msg_pubqos2* msg) {
+void Mqttsn::pubRecHandler(const msg_pubqos2* msg) {
 }
 
-void Mqttsn::pubcomp_handler(const msg_pubqos2* msg) {
+void Mqttsn::pubRelHandler(const msg_pubqos2* msg) {
 }
-#endif
+
+void Mqttsn::pubCompHandler(const msg_pubqos2* msg) {
+}
+
+void Mqttsn::pubAck(const uint16_t topic_id, const uint16_t message_id, const return_code_t return_code) {
+	msg_puback* msg = reinterpret_cast<msg_puback*>(messageBuffer);
+
+	msg->length = sizeof(msg_puback);
+	msg->type = PUBACK;
+	msg->topic_id = bitSwap(topic_id);
+	msg->message_id = bitSwap(message_id);
+	msg->return_code = return_code;
+	sendMessage();
+}
+
+void Mqttsn::pubRec() {
+	msg_pubqos2* msg = reinterpret_cast<msg_pubqos2*>(message_buffer);
+	msg->length = sizeof(msg_pubqos2);
+	msg->type = PUBREC;
+	msg->message_id = bitSwap(_message_id);
+
+	sendMessage();
+}
+
+void Mqttsn::pubRel() {
+	msg_pubqos2* msg = reinterpret_cast<msg_pubqos2*>(message_buffer);
+	msg->length = sizeof(msg_pubqos2);
+	msg->type = PUBREL;
+	msg->message_id = bitSwap(_message_id);
+
+	sendMessage();
+}
+
+void Mqttsn::pubComp() {
+	msg_pubqos2* msg = reinterpret_cast<msg_pubqos2*>(message_buffer);
+	msg->length = sizeof(msg_pubqos2);
+	msg->type = PUBCOMP;
+	msg->message_id = bitSwap(_message_id);
+
+	sendMessage();
+}
+*/

@@ -10,7 +10,6 @@ of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
@@ -27,36 +26,23 @@ THE SOFTWARE.
 #include "Mqttsn.h"
 
 /**
- *
- * ****************************
  * ****************************
  *
  * PUBLIC FUNCTIONS
  *
  * ****************************
- * ****************************
- *
  **/
 
 Mqttsn::Mqttsn(SoftwareSerial* _xBee) {
 
 	xBee = _xBee;
 
-	waitingForResponse = false ;
-	waitingForSubAck = false ;
-	waitingForPubAck = false ;
-	waitingForPingResp = false ;
 	connected = false ;
 	messageId = 0 ;
 	gatewayId = 0 ;
-	responseTimer = 0 ;
 	responseRetries = 0 ;
-	pingRespTimer = 0 ;
 	pingRespRetries = 0 ;
-	subAckTimer = 0 ;
 	subAckRetries = 0 ;
-	pubAckTimer = 0 ;
-	pubAckRetries = 0 ;
 	nbRegisteredTopic = 0;
 
 	memset(topicTable, 0, sizeof(topic) * MAX_TOPICS);
@@ -72,117 +58,6 @@ bool Mqttsn::isConnected() {
 	return connected == ACCEPTED;
 }
 
-/**
- * @brief
- * @return
- *
- * @todo DEBUG
- **/
-bool Mqttsn::waitForSubAck() {
-	if (waitingForSubAck) {
-		// TODO: Watch out for overflow.
-		if ((millis() - subAckTimer) > (T_RETRY * 1000L)) {
-			subAckTimer = millis();
-
-			if (subAckRetries == 0) {
-				waitingForSubAck = false;
-				disconnect_handler(NULL);
-			} else {
-				sendMessage();
-			}
-			Serial.print("RESPONSE RETRIES ");
-			Serial.println(subAckRetries);
-			--subAckRetries;
-		}
-	}
-	return waitingForSubAck;
-}
-
-/**
- * @brief
- * @return
- *
- * @todo DEBUG
- **/
-bool Mqttsn::wait_for_puback() {
-	if (waitingForPubAck) {
-		// TODO: Watch out for overflow.
-		if ((millis() - pubAckTimer) > (T_RETRY * 1000L)) {
-			pubAckTimer = millis();
-
-			if (pubAckRetries == 0) {
-				waitingForPubAck = false;
-				disconnect_handler(NULL);
-			} else {
-				sendMessage();
-			}
-			Serial.print("RESPONSE RETRIES ");
-			Serial.println(pubAckRetries);
-			--pubAckRetries;
-		}
-	}
-	return waitingForPubAck;
-}
-
-void Mqttsn::waitMessage() {
-
-	logs.debug( "waitMessage" );
-
-	if( !multiCheckSerial(MAX_TRY) ) {
-		logs.debug( "waitMessage", "check serial rejected");
-		return;
-	}
-
-	logs.debug( "waitMessage", "message received");
-
-	int i;
-	int payload_lenght = frameBufferIn[12];
-	uint8_t payload[payload_lenght];
-
-	for(i = 0; i < payload_lenght; i++){
-		payload[i] = frameBufferIn[12+i];
-	}
-
-	logs.debug("waitMessage", "data have been received");
-
-	memset(responseBuffer, 0, MAX_BUFFER_SIZE);
-	memcpy(responseBuffer, (const void*)payload, payload_lenght);
-
-	logs.debug("waitMessage", "Stream is ready");
-	String strData;
-	for (char c : responseBuffer) strData += c;
-	Serial.println(strData);
-
-	logs.debug("waitMessage", "reset frame buffer to 0");
-	memset(frameBufferIn, 0, sizeof(frameBufferIn));
-}
-
-/**
- * @brief
- * @return
- *
- * @todo DEBUG
- **/
-bool Mqttsn::wait_for_pingresp() {
-	if (waitingForPingResp) {
-		// TODO: Watch out for overflow.
-		if ((millis() - pingRespTimer) > (PR_RETRY * 1000L)) {
-			pingRespTimer = millis();
-
-			if (pingRespRetries == 0) {
-				waitingForPingResp = false;
-				disconnect_handler(NULL);
-			} else {
-				sendMessage();
-			}
-			Serial.print("PINGRESP RETRIES ");
-			Serial.println(pingRespRetries);
-			--pingRespRetries;
-		}
-	}
-	return waitingForPingResp;
-}
-
 void Mqttsn::pingReq(const char* module_name) {
 
 	logs.debug("pingReq", "building message");
@@ -194,13 +69,6 @@ void Mqttsn::pingReq(const char* module_name) {
 
 	sendMessage();
 
-	// @TODO: DEBUG?
-	// pingRespTimer = millis();
-	// pingRespRetries = N_RETRY;
-	// waitingForPingResp = true;
-	// Wainting for published messages
-	// parseData();
-
 	if( !multiCheckSerial(MAX_TRY) ) {
 		// logs.debug("pingReq", "check serial rejected");
 		return;
@@ -211,9 +79,6 @@ void Mqttsn::pingReq(const char* module_name) {
 }
 
 void Mqttsn::pingResp() {
-
-	// ping resp handler()
-	// waitingForPingResp=false;
 
 	logs.debug("pingResp", "building message");
 
@@ -237,7 +102,7 @@ void Mqttsn::disconnect(const uint16_t duration) {
 	sendMessage();
 }
 
-int Mqttsn::publish(const char* topic_name, const char* message){
+void Mqttsn::publish(const char* topic_name, const char* message){
 
 	int topic_id = findTopicId(topic_name);
 
@@ -246,7 +111,7 @@ int Mqttsn::publish(const char* topic_name, const char* message){
 		// logs.debug("publish", "topic name unknown -> registerTopic()", topic_name);
 		if(registerTopic(topic_name) != ACCEPTED) {
 			// logs.debug("publish", "impossible to register topic, return REJECTED");
-			return REJECTED;
+			return;
 		}
 
 		// Have to recall publish function to get the good value of topic_id
@@ -258,42 +123,12 @@ int Mqttsn::publish(const char* topic_name, const char* message){
 
 		if( !multiCheckSerial(MAX_TRY) ) {
 			// logs.debug("publish", "check serial rejected");
-			return REJECTED;
+			return;
 		}
 
 		// logs.debug("publish", "parsing response 'topic registered'");
 		parseData();
-
-		// logs.debug("publish", "response from the gateway - ", regAckReturnCode);
-		return pubAckReturnCode;
 	}
-}
-
-void Mqttsn::will_topic(const uint8_t flags, const char* will_topic, const bool update) {
-	if (will_topic == NULL) {
-		message_header* msg = reinterpret_cast<message_header*>(messageBuffer);
-
-		msg->type = update ? WILLTOPICUPD : WILLTOPIC;
-		msg->length = sizeof(message_header);
-	} else {
-		msg_willtopic* msg = reinterpret_cast<msg_willtopic*>(messageBuffer);
-
-		msg->type = update ? WILLTOPICUPD : WILLTOPIC;
-		msg->flags = flags;
-		strcpy(msg->will_topic, will_topic);
-	}
-
-	sendMessage();
-}
-
-void Mqttsn::will_messsage(const void* will_msg, const uint8_t will_msg_len, const bool update) {
-	msg_willmsg* msg = reinterpret_cast<msg_willmsg*>(messageBuffer);
-
-	msg->length = sizeof(msg_willmsg) + will_msg_len;
-	msg->type = update ? WILLMSGUPD : WILLMSG;
-	memcpy(msg->willmsg, will_msg, will_msg_len);
-
-	sendMessage();
 }
 
 int Mqttsn::init() {
@@ -515,63 +350,3 @@ int Mqttsn::registerTopic(const char* topicName) {
 	return regAckReturnCode;
 }
 
-/**
- *
- * ****************************
- * ****************************
- *
- * GETTERS & SETTERS
- *
- * ****************************
- * ****************************
- *
- **/
-
-bool Mqttsn::getInitOk() {
-	return initOk;
-}
-
-void Mqttsn::setInitOk(const bool init_ok) {
-	initOk = init_ok;
-}
-
-/**
- *
- * ****************************
- * ****************************
- *
- * QoS
- *
- * ****************************
- * ****************************
- *
- **/
-
-#ifdef USE_QOS2
-void Mqttsn::pubrec() {
-	msg_pubqos2* msg = reinterpret_cast<msg_pubqos2*>(message_buffer);
-	msg->length = sizeof(msg_pubqos2);
-	msg->type = PUBREC;
-	msg->message_id = bitSwap(_message_id);
-
-	sendMessage();
-}
-
-void Mqttsn::pubrel() {
-	msg_pubqos2* msg = reinterpret_cast<msg_pubqos2*>(message_buffer);
-	msg->length = sizeof(msg_pubqos2);
-	msg->type = PUBREL;
-	msg->message_id = bitSwap(_message_id);
-
-	sendMessage();
-}
-
-void Mqttsn::pubcomp() {
-	msg_pubqos2* msg = reinterpret_cast<msg_pubqos2*>(message_buffer);
-	msg->length = sizeof(msg_pubqos2);
-	msg->type = PUBCOMP;
-	msg->message_id = bitSwap(_message_id);
-
-	sendMessage();
-}
-#endif

@@ -62,29 +62,20 @@ class Mqttsn {
 public:
 
 	/**
-	 *
-	 * ****************************
 	 * ****************************
 	 *
 	 * PUBLIC FUNCTIONS
 	 *
 	 * ****************************
-	 * ****************************
-	 *
 	 **/
 
 	Mqttsn(SoftwareSerial* _xBee) ;
 	~Mqttsn() ;
 
 	bool waitForSubAck();
-	bool wait_for_puback();
-	bool wait_for_pingresp();
 	bool isConnected();
 
-	int publish(const char* topic_name, const char* message);
-
-	void will_topic(const uint8_t QOS_FLAGs, const char* will_topic, const bool update = false);
-	void will_messsage(const void* will_msg, const uint8_t will_msg_len, const bool update = false);
+	void publish(const char* topic_name, const char* message);
 
 	int subscribe(const char* topic_name);
 	void disconnect(const uint16_t duration);
@@ -101,9 +92,6 @@ public:
 	 * @return ACCEPTED if a correct response is received, else REJECTED.
 	 **/
 	int connect(const char* module_name) ;
-
-	bool getInitOk() ;
-	void setInitOk(const bool init_ok) ;
 
 	/**
 	 * The function returns the associated string status to corresponding to the given @return_code.
@@ -150,24 +138,14 @@ public:
 	 */
 	void pingResp();
 
-#ifdef USE_QOS2
-	void pubrec();
-	void pubrel();
-	void pubcomp();
-#endif
-
 private:
 
 	/**
-	 *
-	 * ****************************
 	 * ****************************
 	 *
 	 * PRIVATE FUNCTIONS
 	 *
 	 * ****************************
-	 * ****************************
-	 *
 	 **/
 
 	/**
@@ -281,9 +259,6 @@ private:
 	 */
 	void connAckHandler(const msg_connack* msg);
 
-	void willtopicreq_handler(const message_header* msg);
-	void willmsgreq_handler(const message_header* msg);
-
 	/**
 	 * @brief regAckHandler the gateway notifies the client it have register the topic.
 	 * @param msg The notification message.
@@ -305,12 +280,6 @@ private:
 	void publishHandler(const msg_publish* msg);
 
 	/**
-	 * @brief pubAckHandler notifies the client a message have been published.
-	 * @param msg the nothification message.
-	 */
-	void pubAckHandler(const msg_puback* msg);
-
-	/**
 	 * @brief subAckHandler notifies the client a subcription topic have been regisered.
 	 * @param msg the notification message.
 	 */
@@ -330,8 +299,6 @@ private:
 	void pingRespHandler();
 
 	void disconnect_handler(const msg_disconnect* msg);
-	void willtopicresp_handler(const msg_willtopicresp* msg);
-	void willmsgresp_handler(const msg_willmsgresp* msg);
 
 	/**
 	 * @brief regAck the client notifies the gateway it have register the topic sent by the gateway.
@@ -351,31 +318,30 @@ private:
 	 */
 	void reRegister(const uint16_t topic_id, const uint16_t message_id, const return_code_t return_code);
 
+	// @TODO not implemented yet
+	// void willTopicRespHandler(const msg_willtopicresp* msg);
+	// void willMsgRespHandler(const msg_willmsgresp* msg);
+	// void willTopic(const uint8_t QOS_FLAGs, const char* will_topic, const bool update = false);
+	// void willMesssage(const void* will_msg, const uint8_t will_msg_len, const bool update = false);
+	// void willTopicReqHandler(const message_header* msg);
+	// void willMsgReqHandler(const message_header* msg);
+
+	// @TODO not implemented yet - QOS level 1 or 2
+	// void pubAckHandler(const msg_puback* msg);
+	// void pubAck(const uint16_t topic_id, const uint16_t message_id, const return_code_t return_code);
+	// void pubRecHandler(const msg_pubqos2* msg);
+	// void pubRelHandler(const msg_pubqos2* msg);
+	// void pubCompHandler(const msg_pubqos2* msg);
+	// void pubRec();
+	// void pubRel();
+	// void pubComp();
+
 	/**
-	 * @brief pubAck after a publication from the client accepted by the gateway, the client informs the gateway it received the ACK.
-	 * @param topic_id the id of the topic.
-	 * @param message_id the message id.
-	 * @param return_code ACCPETED | REJECTED
-	 */
-	void pubAck(const uint16_t topic_id, const uint16_t message_id, const return_code_t return_code);
-
-
-#ifdef USE_QOS2
-	void pubrec_handler(const msg_pubqos2* msg);
-	void pubrel_handler(const msg_pubqos2* msg);
-	void pubcomp_handler(const msg_pubqos2* msg);
-#endif
-
-	/**
-	 *
-	 * ****************************
 	 * ****************************
 	 *
 	 * ATTRIBUTES
 	 *
 	 * ****************************
-	 * ****************************
-	 *
 	 **/
 
 	// to print logs
@@ -384,22 +350,15 @@ private:
 
 	// the status of the connection (first sent message)
 	bool initOk = false;
+	bool waitingForResponse = false;
 
 	// the code received after a subscribe or register message
 	int regAckReturnCode = 0;
 
 	int subAckReturnCode = 0;
 
-	int pubAckReturnCode = 0;
-
 	// the message to send
 	String message = "";
-
-	// Set to true when we're waiting for some sort of acknowledgement from the server that will transition our state.
-	bool waitingForResponse;
-	bool waitingForSubAck;
-	bool waitingForPubAck;
-	bool waitingForPingResp;
 
 	short connected;
 	int messageId;
@@ -411,21 +370,13 @@ private:
 	topic topicTable[MAX_TOPICS];
 
 	uint8_t gatewayId;
-	uint32_t responseTimer;
 	uint8_t responseRetries;
-
-	uint32_t pingRespTimer;
 	uint8_t pingRespRetries;
-
-	uint32_t subAckTimer;
 	uint8_t subAckRetries;
-
-	uint32_t pubAckTimer;
-	uint8_t pubAckRetries;
-
-	uint8_t frameId = 0;
 	uint16_t u16TopicPubID;
 	uint8_t u8Counter;
+
+	uint8_t frameId = 0;
 	uint8_t frameBufferOut[API_FRAME_LEN] = {0};
 	uint8_t frameBufferIn[API_FRAME_LEN] = {0};
 	uint8_t gatewayAddress[8] = {0};

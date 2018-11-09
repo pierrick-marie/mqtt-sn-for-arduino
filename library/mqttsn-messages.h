@@ -27,8 +27,6 @@ THE SOFTWARE.
 #ifndef __MQTTSN_H__
 #define __MQTTSN_H__
 
-#define USE_SERIAL 1
-
 #define PROTOCOL_ID 0x01
 
 #define FLAG_DUP 0x80

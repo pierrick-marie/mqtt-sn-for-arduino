@@ -14,20 +14,18 @@ Mqttsn mqttsn(&XBee) ; // objet qui permet d'appeler les methodes de la librairi
 
 // SoftwareSerial Rfid(2, 3);
 
-#define TOPIC_SUB "SUB_ObiOne-RFID"
-
-#define TOPIC_PUB_0 "PUB_ObiPop_0"
-#define TOPIC_PUB_1 "PUB_ObiPop_1"
-#define TOPIC_PUB_2 "PUB_ObiPop_2"
-
 #define MODULE_NAME "Arduino-RFID"
+
+#define TOPIC_SUB "SUB_ObiOne"
+
+#define TOPIC_PUB_0 "PUB_ObiPop"
 
 String rfidId = "";
 long time = millis();
 
 void setup() {
 
-  delay(500);
+  delay(2000);
 
   Serial.begin(9600);
   XBee.begin(9600);
@@ -109,7 +107,7 @@ void setup() {
             Serial.println("\nSubscribe NOT ok");
           }
 
-          delay(2000);
+          delay(20000);
           
           mqttsn.pingReq(MODULE_NAME);
 
