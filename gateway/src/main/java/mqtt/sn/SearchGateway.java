@@ -24,6 +24,8 @@ public class SearchGateway implements SnAction {
 	@Override
 	public void exec() {
 
+		Log.output(client, "gateway info");
+
 		byte[] ret = new byte[3];
 		ret[0] = (byte) 0x03;
 		ret[1] = (byte) 0x02;

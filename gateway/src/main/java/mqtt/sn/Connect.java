@@ -34,7 +34,8 @@ public class Connect implements SnAction {
 
 		byte flags = message[0];
 		short duration = (short) (message[2] * 16 + message[3]);
-		boolean will = (flags >> 3) == 1;
+		// @Todo not implemented yet
+		// boolean will = (flags >> 3) == 1;
 		boolean cleanSession = (flags >> 2) == 1;
 
 		if (client.name().equals("")) {
@@ -50,25 +51,24 @@ public class Connect implements SnAction {
 
 			client.setState(DeviceState.ACTIVE);
 
-		} else if (client.state().equals(DeviceState.LOST) || client.state().equals(DeviceState.FIRSTCONNECT)) {
+		} else if (client.state().equals(DeviceState.LOST) || client.state().equals(DeviceState.FIRSTCONNECT) || client.state().equals(DeviceState.DISCONNECTED)) {
 
 			client.setState(DeviceState.ACTIVE);
-
-			if (will) {
-				createWillHandlers();
-			}
 
 			if (connectToTheBroker(cleanSession, duration)) {
 				connack(Prtcl.ACCEPTED);
 			} else {
 				connack(Prtcl.REJECTED);
 			}
+		} else {
+			// client's state is ACTIVE or AWAKE
+			connack(Prtcl.ACCEPTED);
 		}
 	}
 
 	private Boolean connectToTheBroker(final Boolean cleanSession, final Short duration) {
 
-		Log.debug(LogLevel.ACTIVE, "SearchGateway", "connectToTheBroker", "connecting to the mqtt broker");
+		Log.debug(LogLevel.ACTIVE, "Connect", "connectToTheBroker", "connecting to the mqtt broker");
 
 		MqttClient mqtt = new MqttClient();
 		mqtt.setClientId(client.name());
@@ -78,12 +78,12 @@ public class Connect implements SnAction {
 		try {
 			mqtt.connect();
 		} catch (Exception e) {
-			Log.debug(LogLevel.ACTIVE, "SearchGateway", "connectToTheBroker", "mqtt client not connected");
+			Log.debug(LogLevel.ACTIVE, "Connect", "connectToTheBroker", "mqtt client not connected");
 			Log.activeDebug(e.getMessage());
 
 			return false;
 		}
-		Log.debug(LogLevel.ACTIVE, "SearchGateway", "connectToTheBroker", "connected");
+		Log.debug(LogLevel.ACTIVE, "Connect", "connectToTheBroker", "connected");
 
 		client.setMqttClient(mqtt);
 		return true;
@@ -113,9 +113,4 @@ public class Connect implements SnAction {
 
 		return clientName;
 	}
-
-	/**
-	 * @TODO not implemented yet
-	 */
-	private void createWillHandlers() { }
 }

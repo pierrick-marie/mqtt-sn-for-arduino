@@ -27,7 +27,8 @@ public class Publish implements SnAction {
 	public void exec() {
 
 		byte flags = msg[0];
-		QoS qos = Prtcl.DEFAUlT_QOS;
+		// @TODO not implemented yet
+		// QoS qos = Prtcl.DEFAUlT_QOS;
 		boolean retain = false;
 
 		int topicId = (msg[2] << 8) + (msg[1] & 0xFF);
@@ -38,7 +39,8 @@ public class Publish implements SnAction {
 
 		if (null == client.mqttClient() || !client.mqttClient().isConnected()) {
 			Log.error("Publish", "publish", client + "is not connected");
-			puback(topicId, messageId, Prtcl.REJECTED);
+			// @TODO not used until with QoS level 1 and 2 (not implemented)
+			// puback(topicId, messageId, Prtcl.REJECTED);
 			return;
 		}
 
@@ -51,18 +53,20 @@ public class Publish implements SnAction {
 
 			String topicName = Topics.list.get(topicId);
 
-			if( client.mqttClient().publish(topicName, data, qos, retain) ) {
+			if( client.mqttClient().publish(topicName, data, retain) ) {
 				Log.debug(LogLevel.ACTIVE, "Publish", "publish", "published "
 													 + new String(data) + " on topic "
 													 + topicName + " (id:" + topicId
-													 + ") -> send pub ack OK");
-				puback(topicId, messageId, Prtcl.ACCEPTED);
+													 + ")");
+				// @TODO not used until with QoS level 1 and 2 (not implemented)
+				// puback(topicId, messageId, Prtcl.ACCEPTED);
 			} else {
 				Log.debug(LogLevel.ACTIVE, "Publish", "publish", "impossible to publish "
 													 + new String(data) + " on topic "
 													 + topicName + " (id:" + topicId
-													 + ") -> send pub ack KO");
-				puback(topicId, messageId, Prtcl.REJECTED);
+													 + ")");
+				// @TODO not used until with QoS level 1 and 2 (not implemented)
+				// puback(topicId, messageId, Prtcl.REJECTED);
 			}
 		} else {
 			Log.debug(LogLevel.ACTIVE, "Publish", "publish", "unknown topic name (id:"
@@ -92,6 +96,13 @@ public class Publish implements SnAction {
 		SerialPortWriter.write(client, ret);
 	}
 
+	/**
+	 * @TODO not used until with QoS level 1 and 2 (not implemented)
+	 *
+	 * @param topicId
+	 * @param messageId
+	 * @param returnCode
+	 */
 	private void puback(final int topicId, final byte[] messageId, final int returnCode) {
 
 		Log.output(client, "pub ack");

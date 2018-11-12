@@ -172,10 +172,10 @@ public class MqttClient extends MQTT {
 		return isConnected;
 	}
 
-	public Boolean publish(final String topic, final byte[] message, final QoS qos, final Boolean retain) {
+	public Boolean publish(final String topic, final byte[] message, final Boolean retain) {
 		try {
-			Log.debug(LogLevel.ACTIVE, "MqttClient", "publish", "Publish message: " + message + " on the topic: " + topic + " with QoS: " + qos);
-			connection.publish(topic, message, qos, retain);
+			Log.debug(LogLevel.ACTIVE, "MqttClient", "publish", "Publish message: " + message + " on the topic: " + topic);
+			connection.publish(topic, message, Prtcl.DEFAUlT_QOS, retain);
 			return true;
 		} catch (Exception e) {
 			Log.error("MqttClient", "publish", "Impossible to publish the message: " + message);
