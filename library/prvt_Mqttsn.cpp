@@ -42,18 +42,17 @@ bool Mqttsn::waitData() {
 
 	int i = 1;
 
-	// waiting for incoming data during 1 second (10x100ms)
-	while( xBee->available() <= 0 && i <= 10 ) {
+	while( xBee->available() <= 0 && i <= MAX_TRY ) {
+		// waiting for incoming data longer during 1 second (1000ms)
 		delay(1000);
 		i++;
 	}
-	if( i == 20 ) {
-		// timeout -> return false
-		// logs.debug("waitData", "No data received");
+	if( i >= MAX_TRY ) {
+		// logs.debug("waitData", "no data received");
 		return false;
 	}
 
-	// logs.debug("waitData", "Data are received");
+	// logs.debug("waitData", "data received");
 	return true;
 }
 
@@ -77,12 +76,12 @@ void Mqttsn::parseData() {
 		// Serial.println(payload[i]);
 	}
 
-	logs.debug("parseData", "data have been parsed");
+	// logs.debug("parseData", "data have been parsed");
 
 	memset(responseBuffer, 0, MAX_BUFFER_SIZE);
 	memcpy(responseBuffer, (const void*)payload, payload_lenght);
 
-	logs.debug( "parseStream", "Stream is ready -> dispatch");
+	// logs.debug( "parseStream", "Stream is ready -> dispatch");
 
 	dispatch();
 
@@ -94,72 +93,72 @@ void Mqttsn::dispatch() {
 	waitingForResponse = false;
 	message_header* response_message = (message_header*)responseBuffer;
 
-	logs.debug("dispatch", "response type:", response_message->type);
-	logs.debug("dispatch", "response length:", response_message->length);
+	// logs.debug("dispatch", "response type:", response_message->type);
+	// logs.debug("dispatch", "response length:", response_message->length);
 
 	switch (response_message->type) {
 	case ADVERTISE:
-		logs.debug("dispatch", "ADVERTISE");
+		// logs.debug("dispatch", "ADVERTISE");
 		advertiseHandler((msg_advertise*)responseBuffer);
 		break;
 
 	case GWINFO:
-		logs.debug("dispatch", "GWINFO");
+		// logs.debug("dispatch", "GWINFO");
 		gatewayInfoHandler((msg_gwinfo*)responseBuffer);
 		break;
 
 	case CONNACK:
-		logs.debug("dispatch", "CONNACK");
+		// logs.debug("dispatch", "CONNACK");
 		connAckHandler((msg_connack*)responseBuffer);
 		break;
 
 	case REGACK:
-		logs.debug("dispatch", "REGACK");
+		// logs.debug("dispatch", "REGACK");
 		regAckHandler((msg_regack*)responseBuffer);
 		break;
 
 	case REGISTER:
-		logs.debug("dispatch", "REGISTER");
+		// logs.debug("dispatch", "REGISTER");
 		registerHandler((msg_register*)responseBuffer);
 		break;
 
 	case REREGISTER:
-		logs.debug("dispatch", "RE-REGISTER");
+		// logs.debug("dispatch", "RE-REGISTER");
 		reRegisterHandler((msg_reregister*)responseBuffer);
 		break;
 
 	case PUBLISH:
-		logs.debug("dispatch", "PUBLISH");
+		// logs.debug("dispatch", "PUBLISH");
 		publishHandler((msg_publish*)responseBuffer);
 		break;
 
 	case SUBACK:
-		logs.debug("dispatch", "SUBACK");
+		// logs.debug("dispatch", "SUBACK");
 		subAckHandler((msg_suback*)responseBuffer);
 		break;
 
 	case UNSUBACK:
-		logs.debug("dispatch", "UNSUBACK");
+		// logs.debug("dispatch", "UNSUBACK");
 		unsuback_handler((msg_unsuback*)responseBuffer);
 		break;
 
 	case PINGREQ:
-		logs.debug("dispatch", "PINGREQ");
+		// logs.debug("dispatch", "PINGREQ");
 		pingReqHandler((msg_pingreq*)responseBuffer);
 		break;
 
 	case PINGRESP:
-		logs.debug("dispatch", "PINGRESP");
+		// logs.debug("dispatch", "PINGRESP");
 		pingRespHandler();
 		break;
 
 	case DISCONNECT:
-		logs.debug("dispatch", "DISCONNECT");
+		// logs.debug("dispatch", "DISCONNECT");
 		disconnect_handler((msg_disconnect*)responseBuffer);
 		break;
 
 	default:
-		logs.debug("dispatch", "DEFAULT");
+		// logs.debug("dispatch", "DEFAULT");
 		return;
 
 		// @TODO not implemented yet - QoS level 1 or 2
@@ -227,7 +226,7 @@ void Mqttsn::pingReqHandler(const msg_pingreq* msg) {
 
 void Mqttsn::pingRespHandler() {
 	// do nothing
-	logs.debug("pingResphandler", "end of published messages");
+	// logs.debug("pingResphandler", "end of published messages");
 }
 
 uint16_t Mqttsn::bitSwap(const uint16_t value) {
@@ -239,13 +238,15 @@ void Mqttsn::publishHandler(const msg_publish* msg) {
 	return_code_t ret = REJECTED_INVALID_TOPIC_ID;
 	const uint16_t topic_id = bitSwap(msg->topic_id);
 
-	logs.debug("publishHandler", "");
+	// logs.debug("publishHandler", "");
 
 	for (uint8_t i = 0; i < nbRegisteredTopic; ++i) {
 		if (topicTable[i].id == topic_id) {
 			ret = ACCEPTED;
-			logs.debug("publishHandler", "message accepted");
-			logs.debug("publishHandler", msg->data);
+			// logs.debug("publishHandler", "message accepted");
+			// logs.debug("publishHandler", msg->data);
+			memcpy(receivedMessages[nbReceivedMessages], msg->data, strlen(msg->data));
+			nbReceivedMessages++;
 			break;
 		}
 	}
@@ -255,13 +256,78 @@ void Mqttsn::publishHandler(const msg_publish* msg) {
 	// logs.debug("publishHandler", "message id:", msg->message_id);
 	// pubAck(msg->topic_id, msg->message_id, ret);
 
-	msg=NULL;
-
 	// waiting next message
-	if( !multiCheckSerial(MAX_TRY) ) {
+	if( !checkSerial() ) {
 		return;
 	}
 	parseData();
+}
+
+/**
+ * The function waits a response from the gateway (@waitData). If a response is available, the function analyse and store the message if necessary.
+ *
+ * Returns:
+ * True if a correct message have been received, else false.
+ **/
+bool Mqttsn::checkSerial() {
+
+	int i, frame_size;
+	uint8_t delimiter, length1, length2;
+
+	// no data is available
+	if(!waitData()) {
+		// logs.debug("checkSerial", "no data available -> timeout");
+		return false;
+	}
+	delimiter = xBee->read();
+
+	if(delimiter != 0x7E) {
+		// logs.debug("checkSerial", "delimiter KO!");
+		return false;
+	}
+
+	if(xBee->available() > 0) {
+		length1 = xBee->read();
+		length2 = xBee->read();
+		frame_size = (length1*16)+length2+1;
+
+		// store the data in @frameBuffer
+		for(i = 0; i < frame_size; i++){
+			delay(10);
+			frameBufferIn[i] = xBee->read();
+		}
+
+		if(!verifyChecksum(frameBufferIn, frame_size)) {
+			// logs.debug("checkSerial", "checksum KO!");
+			return false;
+		}
+
+		if(isTransmitStatus()) {
+			// logs.debug("checkSerial", "a transmit status (XBEE acquitall) -> get next message!");
+			return checkSerial();
+		}
+
+		if(isDataPacket()) {
+			// this is a data packet, copy the gateway address
+			if(gatewayAddress[0]==0 && gatewayAddress[1]==0 && gatewayAddress[2]==0 && gatewayAddress[3]==0){
+				gatewayAddress[0] = frameBufferIn[1];
+				gatewayAddress[1] = frameBufferIn[2];
+				gatewayAddress[2] = frameBufferIn[3];
+				gatewayAddress[3] = frameBufferIn[4];
+				gatewayAddress[4] = frameBufferIn[5];
+				gatewayAddress[5] = frameBufferIn[6];
+				gatewayAddress[6] = frameBufferIn[7];
+				gatewayAddress[7] = frameBufferIn[8];
+			}
+			// all data have been store in @frameBufferIn
+			// logs.debug("checkSerial", "correct data received");
+			return true;
+		}
+	}
+	// not data available, clear the buffer and return false
+	memset(frameBufferIn, 0, sizeof(frameBufferIn));
+	// logs.debug("checkSerial", "default KO!");
+	return false;
 }
 
 void Mqttsn::subAckHandler(const msg_suback* msg) {
@@ -270,19 +336,6 @@ void Mqttsn::subAckHandler(const msg_suback* msg) {
 
 void Mqttsn::advertiseHandler(const msg_advertise* msg) {
 	gatewayId = msg->gw_id;
-}
-
-bool Mqttsn::multiCheckSerial(const int nb_max_try) {
-
-	int nb_try = 0;
-
-	logs.debug("multiCheckSerial", "check serial iteration: ", nb_try);
-	while( !checkSerial() && nb_try < nb_max_try ) {
-		nb_try++;
-		logs.debug("multiCheckSerial", "check serial iteration: ", nb_try);
-	}
-
-	return nb_try != nb_max_try;
 }
 
 void Mqttsn::searchGateway(const uint8_t radius) {
@@ -302,7 +355,7 @@ void Mqttsn::searchGateway(const uint8_t radius) {
 void Mqttsn::sendMessage() {
 
 	if(waitingForResponse) {
-		logs.debug("sendMessage", "the module is already waiting for a response");
+		// logs.debug("sendMessage", "the module is already waiting for a response");
 		return;
 	}
 
@@ -365,7 +418,7 @@ int Mqttsn::createFrame(const uint8_t* data, const int data_lenght, const uint8_
 	}
 
 	// frame buffer is fine, clear it
-	memset (frame, 0, frame_max_lenght);
+	memset(frame, 0, frame_max_lenght);
 
 	/* The header */
 
@@ -592,14 +645,13 @@ void Mqttsn::publishMessage(const uint8_t flags, const uint16_t topic_id, const 
 	msg->length = sizeof(msg_publish) + data_len;
 	msg->type = PUBLISH;
 	msg->flags = flags;
-	// @BUG: the code of the original version
-	// msg->topic_id = bitSwap(topic_id);
+	msg->topic_id = bitSwap(topic_id);
+
 	msg->topic_id = topic_id;
 	msg->message_id = bitSwap(messageId);
 	memcpy(msg->data, data, data_len);
 
 	// logs.debug("publishMessage", "publish data on topic id", msg->topic_id);
-
 	sendMessage();
 }
 

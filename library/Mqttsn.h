@@ -42,20 +42,20 @@ THE SOFTWARE.
 
 #define DEFAULT_TOPIC_ID 0xffff
 
-#define API_DATA_PACKET  0x02
 #define API_START_DELIMITER  0x7E
-#define OPTION_CAST_MASK  0x40   //option unicast or broadcast MASK
-#define OPTION_ACK_MASK  0x80    // option ACK or not MASK
 
 #define API_DATA_LEN  40
 #define API_PAY_LEN  (API_DATA_LEN + 5)
 #define API_FRAME_LEN  (API_DATA_LEN + 9)
 
+#define MAX_MESSAGES 10
+
 #define QOS_FLAG 0
 #define KEEP_ALIVE 60
 
-#define TIME_TO_WAIT 2000
-#define MAX_TRY 5
+#define MAX_TRY 10
+
+#define RADIUS 0
 
 class Mqttsn {
 
@@ -75,9 +75,9 @@ public:
 	bool waitForSubAck();
 	bool isConnected();
 
-	void publish(const char* topic_name, const char* message);
+	void publish(const char* topic_name, const String message);
 
-	int subscribe(const char* topic_name);
+	int subscribeTopic(const char* topic_name);
 	void disconnect(const uint16_t duration);
 
 	/**
@@ -97,8 +97,6 @@ public:
 	 * The function returns the associated string status to corresponding to the given @return_code.
 	 **/
 	char const* stringFromReturnCode(const uint8_t return_code) ;
-
-	bool checkSerial() ;
 
 	/**
 	 * @brief Mqttsn::findTopicId The function search the index of a @topicName within @topicTable list.
@@ -138,6 +136,10 @@ public:
 	 */
 	void pingResp();
 
+	short getNbReceivedMessages();
+
+	String getReceivedMessage(const short number);
+
 private:
 
 	/**
@@ -147,6 +149,8 @@ private:
 	 *
 	 * ****************************
 	 **/
+
+	bool checkSerial();
 
 	/**
 	 * The function waits during one second if data is available. In that case it returns true else returns false.
@@ -180,13 +184,6 @@ private:
 	void sendMessage();
 
 	void publishMessage(const uint8_t flags, const uint16_t topic_id, const void* data, const uint8_t data_len);
-
-	/**
-	 * @brief multiCheckSerial The function calls @checkSerial until @nb_max_try have been reach or a response from the gateway have been received.
-	 * @param nb_max_try The maximum number of try @checkSerial before the time out.
-	 * @return True if a respense is received, else false.
-	 **/
-	bool multiCheckSerial(const int nb_max_try) ;
 
 	/**
 	 * @brief Mqttsn::searchgw The function sends a message to the search the closest gateway arround @radius scale.
@@ -359,6 +356,7 @@ private:
 
 	// the message to send
 	String message = "";
+	char** receivedMessages;
 
 	short connected;
 	int messageId;
@@ -367,14 +365,11 @@ private:
 	uint8_t responseBuffer[MAX_BUFFER_SIZE];
 
 	short nbRegisteredTopic;
+	short nbReceivedMessages;
 	topic topicTable[MAX_TOPICS];
 
 	uint8_t gatewayId;
-	uint8_t responseRetries;
-	uint8_t pingRespRetries;
-	uint8_t subAckRetries;
 	uint16_t u16TopicPubID;
-	uint8_t u8Counter;
 
 	uint8_t frameId = 0;
 	uint8_t frameBufferOut[API_FRAME_LEN] = {0};

@@ -1,9 +1,11 @@
 
+/*
 int connack_return_code;
 int regack_return_code;
 int suback_return_code;
 int puback_return_code;
 String message;
+
 
 // int nb_topic_registered=0;
 
@@ -47,8 +49,9 @@ int sn_init(){
   } else {
     return _REJECTED;
   }
-  */
+  
 }
+*/
 
 /*
 int sn_connect(const char* module_name){
