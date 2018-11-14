@@ -1,8 +1,7 @@
 package mqtt.sn;
 
 import gateway.serial.SerialPortWriter;
-import mqtt.Topics;
-import org.fusesource.mqtt.client.QoS;
+import mqtt.SnTopic;
 import utils.client.Client;
 import utils.log.Log;
 import utils.log.LogLevel;
@@ -49,28 +48,28 @@ public class Publish implements SnAction {
 			data[i] = msg[5 + i];
 		}
 
-		if (Topics.list.contains(topicId)) {
+		if (client.Topics.contains(topicId)) {
 
-			String topicName = Topics.list.get(topicId);
+			SnTopic topic = client.Topics.get(topicId);
 
-			if( client.mqttClient().publish(topicName, data, retain) ) {
+			if( client.mqttClient().publish(topic.name().toString(), data, retain) ) {
 				Log.debug(LogLevel.ACTIVE, "Publish", "publish", "published "
 													 + new String(data) + " on topic "
-													 + topicName + " (id:" + topicId
+													 + topic.name().toString() + " (id:" + topicId
 													 + ")");
 				// @TODO not used until with QoS level 1 and 2 (not implemented)
 				// puback(topicId, messageId, Prtcl.ACCEPTED);
 			} else {
-				Log.debug(LogLevel.ACTIVE, "Publish", "publish", "impossible to publish "
+				Log.error("Publish", "publish", "impossible to publish "
 													 + new String(data) + " on topic "
-													 + topicName + " (id:" + topicId
+													 + topic.name().toString() + " (id:" + topicId
 													 + ")");
 				// @TODO not used until with QoS level 1 and 2 (not implemented)
 				// puback(topicId, messageId, Prtcl.REJECTED);
 			}
 		} else {
-			Log.debug(LogLevel.ACTIVE, "Publish", "publish", "unknown topic name (id:"
-												 + topicId + ") -> send re-register");
+			Log.error("Publish", "publish", "unknown topic id: " + topicId
+												 + "-> send re-register");
 			reRegister(topicId, messageId);
 		}
 	}
@@ -83,11 +82,11 @@ public class Publish implements SnAction {
 		ret[0] = (byte) 0x07;
 		ret[1] = (byte) 0x1E;
 		if (topicId > 255) {
-			ret[2] = (byte) (topicId / 255);
-			ret[3] = (byte) (topicId % 255);
+			ret[2] = (byte) (topicId % 255);
+			ret[3] = (byte) (topicId / 255);
 		} else {
-			ret[2] = (byte) 0x00;
-			ret[3] = (byte) topicId;
+			ret[2] = (byte) topicId;
+			ret[3] = (byte) 0x00;
 		}
 		ret[4] = messageId[0];
 		ret[5] = messageId[1];

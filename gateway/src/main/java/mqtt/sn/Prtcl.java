@@ -7,8 +7,14 @@ public class Prtcl {
 	public static final byte ACCEPTED = 0x00;
 	public static final byte REJECTED = 0x03;
 
-	public static final int PAYLOAD_LENGTH = 39;
+	public static final int PAYLOAD_LENGTH = 35;
 
+	/**
+	 * @TODO not implemented yet
+	 *
+	 * @param qos
+	 * @return
+	 *
 	public static QoS getQoS(final int qos) {
 
 		switch(qos) {
@@ -22,6 +28,7 @@ public class Prtcl {
 				return QoS.AT_MOST_ONCE;
 		}
 	}
+	*/
 
 	public static final QoS DEFAUlT_QOS = QoS.AT_MOST_ONCE;
 }

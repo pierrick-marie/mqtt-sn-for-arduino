@@ -1,7 +1,7 @@
 package mqtt.sn;
 
 import gateway.serial.SerialPortWriter;
-import mqtt.Topics;
+import mqtt.SnTopic;
 import utils.client.Client;
 import utils.log.Log;
 import utils.log.LogLevel;
@@ -25,7 +25,7 @@ public class Register implements SnAction {
 	}
 
 	/**
-	 * This method registers a topic name into the list of topics @see:Main.TopicName
+	 * This method registers a topic name into the list of Topics @see:Main.TopicName
 	 * The method does not register the topic name to the bus.
 	 */
 	@Override
@@ -36,11 +36,13 @@ public class Register implements SnAction {
 		messageId[1] = message[3];
 		byte[] name = new byte[message.length - 4];
 		String topicName;
-		int i, topicId = -1;
+		int i;
+		SnTopic topic;
 
 		if (null == client.mqttClient() || !client.mqttClient().isConnected()) {
 			Log.error("Register", "register", client + "is not connected");
-			regack(topicId, messageId, Prtcl.REJECTED);
+			// Error - topicId = -1
+			regack(-1, messageId, Prtcl.REJECTED);
 			return;
 		}
 
@@ -50,21 +52,17 @@ public class Register implements SnAction {
 
 		topicName = new String(name, StandardCharsets.UTF_8);
 
-		if (Topics.list.contains(topicName)) {
-			Log.debug(LogLevel.ACTIVE, "Register", "register", "topic " + topicName + " (id:" + topicId + ") is contained");
-			topicId = Topics.list.get(topicName);
+		synchronized (client.Topics) {
 
-		} else {
-			topicId = Topics.list.size();
-			Topics.list.put(topicName, topicId);
-			Log.debug(LogLevel.ACTIVE, "Register", "register", "topic " + topicName + " is NOT contained -> saving the topic with id: " + topicId);
-		}
-		if (topicId != -1) {
-			Log.debug(LogLevel.ACTIVE, "Register", "register", "sending regack message: OK");
-			regack(topicId, messageId, Prtcl.ACCEPTED);
-		} else {
-			Log.debug(LogLevel.ACTIVE, "Register", "register", "topicId = -1 -> sending regack message: KO");
-			regack(topicId, messageId, Prtcl.REJECTED);
+			topic = client.Topics.get(topicName);
+
+			if (null != topic) {
+				Log.debug(LogLevel.ACTIVE, "Register", "register", "topic " + topic.name() + " (id:" + topic.id() + ") is already registered");
+			} else {
+				Log.debug(LogLevel.ACTIVE, "Register", "register", "topic " + topicName + " is NOT contained -> saving the topic with id: " + client.Topics.size());
+				topic = client.Topics.put(client.Topics.size(), topicName);
+			}
+			regack(topic.id(), messageId, Prtcl.ACCEPTED);
 		}
 	}
 
@@ -84,11 +82,11 @@ public class Register implements SnAction {
 		message[0] = (byte) 0x07;
 		message[1] = (byte) 0x0B;
 		if (topicId > 255) {
-			message[3] = (byte) (topicId / 255);
 			message[2] = (byte) (topicId % 255);
+			message[3] = (byte) (topicId / 255);
 		} else {
-			message[3] = (byte) topicId;
-			message[2] = (byte) 0x00;
+			message[2] = (byte) topicId;
+			message[3] = (byte) 0x00;
 		}
 		message[4] = messageId[0];
 		message[5] = messageId[1];

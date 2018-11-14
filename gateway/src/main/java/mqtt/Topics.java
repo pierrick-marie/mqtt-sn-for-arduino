@@ -2,51 +2,63 @@ package mqtt;
 
 import java.util.*;
 
-public enum Topics {
+public class Topics {
 
-	list;
+	private final List<SnTopic> topics = Collections.synchronizedList(new ArrayList<>());
 
-	private final HashMap<String, Integer> names = new HashMap<>();
+	synchronized public SnTopic put(final Integer id, final String name) {
 
-	public Integer put(final String name, final Integer id) {
-		return names.put(name, id);
+		SnTopic ret = new SnTopic(id, name);
+		topics.add(ret);
+
+		return ret;
 	}
 
-	public Integer size() {
-		return names.size();
+	synchronized public Integer size() {
+		return topics.size();
 	}
 
-	public Boolean contains(final Integer id) {
-		return names.containsValue(id);
-	}
+	synchronized public Boolean contains(final Integer id) {
 
-	public Set<String> getNames() {
-		return names.keySet();
-	}
-
-	public Collection<Integer> getIds() {
-		return names.values();
-	}
-
-	public Boolean contains(final String name) {
-		return names.containsKey(name);
-	}
-
-	public Integer get(final String name) {
-		return names.get(name);
-	}
-
-	public String get(final Integer id) {
-
-		String key = "";
-
-		for (Map.Entry<String, Integer> entry : names.entrySet()) {
-			if (Objects.equals(id, entry.getValue())) {
-				key = entry.getKey();
-				break;
+		for(SnTopic topic : topics) {
+			if(topic.id().equals(id)){
+				return true;
 			}
 		}
 
-		return key;
+		return false;
+	}
+
+	synchronized public Boolean contains(final String name) {
+
+		for(SnTopic topic : topics) {
+			if(topic.name().toString().equals(name)){
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	synchronized public SnTopic get(final String name) {
+
+		for(SnTopic topic : topics) {
+			if(topic.name().toString().equals(name)){
+				return topic;
+			}
+		}
+
+		return null;
+	}
+
+	synchronized public SnTopic get(final Integer id) {
+
+		for(SnTopic topic : topics) {
+			if(topic.id().equals(id)){
+				return topic;
+			}
+		}
+
+		return null;
 	}
 }

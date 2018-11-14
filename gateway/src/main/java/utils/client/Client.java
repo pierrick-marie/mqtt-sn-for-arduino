@@ -3,6 +3,7 @@ package utils.client;
 import gateway.MqttMessage;
 import gateway.Sender;
 import mqtt.MqttClient;
+import mqtt.Topics;
 import mqtt.sn.SnAction;
 import utils.DeviceState;
 import utils.Time;
@@ -18,7 +19,9 @@ import java.util.List;
 public class Client extends Thread {
 
 	private final long TIME_TO_WAIT_ACTION = 250; // milliseconds
-	private final long TIME_TO_WAIT_MESSAGE = 3000; // milliseconds - 3 seconds
+	private final long TIME_TO_WAIT_MESSAGE = 5000; // milliseconds - 1 second
+	private final short MAX_MESSAGES = 5;
+
 	private boolean doAction = false;
 	private SnAction action = null;
 
@@ -27,18 +30,15 @@ public class Client extends Thread {
 	private DeviceState state = DeviceState.DISCONNECTED;
 	private MqttClient mqttClient = null;
 
-	// TODO not implemented yet
-	// private Boolean willTopicReq = false;
-	// private Boolean willTopicAck = false;
-	// private Boolean willMessageAck = false;
-	// private Boolean willMessageReq = false;
 
 	public Address64 address64 = null;
 	public Address16 address16 = null;
 
+	private final Sender sender;
+
 	private final List<MqttMessage> mqttMessages = Collections.synchronizedList(new ArrayList<>());
 
-	private final Sender sender;
+	public static final Topics Topics = new Topics();
 
 	public Client(final Address64 address64, final Address16 address16) {
 		this.address64 = address64;
@@ -48,6 +48,11 @@ public class Client extends Thread {
 	}
 
 	public synchronized Boolean addMqttMessage(final MqttMessage message) {
+
+		while (MAX_MESSAGES < mqttMessages.size()) {
+			mqttMessages.remove(0);
+		}
+
 		return mqttMessages.add(message);
 	}
 
@@ -58,12 +63,17 @@ public class Client extends Thread {
 
 				Log.debug(LogLevel.ACTIVE, "Client", "sendMqttMessages", "sending mqttMessage " + mqttMessage);
 				sender.send(mqttMessage);
+
+				Log.debug(LogLevel.VERBOSE, "Client", "sendMqttMessages", "wait before sending next message");
 				Time.sleep(TIME_TO_WAIT_MESSAGE, "Client.sendMqttMessages(): fail waiting between two messages");
 			}
+			Log.debug(LogLevel.VERBOSE, "Client", "sendMqttMessages", "all messages have been sent");
+			mqttMessages.clear();
 		}
 	}
 
 	/**
+	 * @TODO not implemented yet
 	 * Acquittals are only used with QoS level 1 and 2. This feature is not used in the current implementation of the client.
 	 *
 	 * @param messageId the id of the acquitted message

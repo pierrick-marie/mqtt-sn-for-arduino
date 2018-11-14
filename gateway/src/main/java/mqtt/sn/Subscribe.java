@@ -1,7 +1,7 @@
 package mqtt.sn;
 
 import gateway.serial.SerialPortWriter;
-import mqtt.Topics;
+import mqtt.SnTopic;
 import utils.client.Client;
 import utils.log.Log;
 import utils.log.LogLevel;
@@ -43,46 +43,50 @@ public class Subscribe implements SnAction {
 			name[i] = msg[3 + i];
 		}
 		String topicName = new String(name, StandardCharsets.UTF_8);
-		int topicId;
 
-		if (Topics.list.contains(topicName)) {
+		synchronized (client.Topics) {
 
-			topicId = Topics.list.get(topicName);
+			SnTopic topic = client.Topics.get(topicName);
 
-			Log.debug(LogLevel.ACTIVE,"Subscribe", "subscribe", "Topics " + topicName + " is registered with final id: " + topicId);
-
-			try {
-				client.mqttClient().subscribe(client, topicName);
-				Log.debug(LogLevel.ACTIVE,"Subscribe", "subscribe", "subcription ok -> sending sub ack message");
-				suback(new byte[]{(byte)Prtcl.DEFAUlT_QOS.ordinal()}, messageId, 0, Prtcl.ACCEPTED);
-			} catch (TimeoutException e) {
-				Log.error("Subscribre", "subscribe", "imposible to subscribe to the topic: " + topicName);
-				Log.debug(LogLevel.VERBOSE, "Subscribre", "subscribe", e.getMessage());
+			if (null != topic) {
+				if (!topic.isSubscribed()) {
+					try {
+						client.mqttClient().subscribe(client, topic);
+						Log.debug(LogLevel.ACTIVE, "Subscribe", "subscribe", "subcription ok -> sending sub ack message");
+					} catch (TimeoutException e) {
+						Log.error("Subscribre", "subscribe", "imposible to subscribe to the topic: " + topicName);
+						Log.debug(LogLevel.VERBOSE, "Subscribre", "subscribe", e.getMessage());
+						suback(new byte[]{(byte) Prtcl.DEFAUlT_QOS.ordinal()}, messageId, topic.id(), Prtcl.REJECTED);
+						return;
+					}
+				}
+				Log.debug(LogLevel.ACTIVE, "Subscribe", "subscribe", "Topics " + topicName + " is already registered with id: " + topic.id());
+				suback(new byte[]{(byte) Prtcl.DEFAUlT_QOS.ordinal()}, messageId, topic.id(), Prtcl.ACCEPTED);
+			} else {
+				Log.error("Subscribe", "subscribe", "Topics NOT registered " + client.Topics.get(1));
+				// Error - topicId = -1
+				suback(new byte[]{(byte) Prtcl.DEFAUlT_QOS.ordinal()}, messageId, -1, Prtcl.REJECTED);
 			}
-		} else {
-			Log.error("Subscribe", "subscribe", "Topics NOT registered");
-			suback(new byte[]{(byte)Prtcl.DEFAUlT_QOS.ordinal()}, messageId, 0, Prtcl.REJECTED);
-			return;
 		}
 	}
 
-	private void suback(final byte[] qoses, final byte[] msgID, final int topicID, final byte returnCode) {
+	private void suback(final byte[] qos, final byte[] messageId, final int topicId, final byte returnCode) {
 
 		Log.output(client, "sub ack");
 
 		byte[] ret = new byte[8];
 		ret[0] = (byte) 0x08;
 		ret[1] = (byte) 0x13;
-		ret[2] = qoses[0];
-		if (topicID > 255) {
-			ret[3] = (byte) (topicID / 255);
-			ret[4] = (byte) (topicID % 255);
+		ret[2] = qos[0];
+		if (topicId > 255) {
+			ret[3] = (byte) (topicId / 255);
+			ret[4] = (byte) (topicId % 255);
 		} else {
 			ret[3] = (byte) 0x00;
-			ret[4] = (byte) topicID;
+			ret[4] = (byte) topicId;
 		}
-		ret[5] = msgID[0];
-		ret[6] = msgID[1];
+		ret[5] = messageId[0];
+		ret[6] = messageId[1];
 		ret[7] = returnCode;
 
 		SerialPortWriter.write(client, ret);

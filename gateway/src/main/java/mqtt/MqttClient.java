@@ -15,11 +15,11 @@ import static mqtt.sn.Prtcl.PAYLOAD_LENGTH;
 
 public class MqttClient extends MQTT {
 
-	public static final String HOST = "localhost";
-	public static final Integer PORT = 1883;
+	private static final String HOST = "localhost";
+	private static final Integer PORT = 1883;
 
 	private final long TIME_TO_WAIT = 500; // 0.5 seconds
-	public final short NB_TRY = 5;
+	private final short NB_TRY = 5;
 
 	private final BlockingConnection connection;
 	private Boolean isConnected = false;
@@ -89,20 +89,18 @@ public class MqttClient extends MQTT {
 		public void run() {
 			Message message = null;
 			try {
-				while(true) {
+				while (true) {
 					message = connection.receive();
 					String payload = new String(message.getPayload());
-					Log.verboseDebug("Message: " + payload + " on topic: " + message.getTopic() + " have been received");
+					Log.print("MQTT message received: " + payload + " on topic: " + message.getTopic());
 
-					if(payload.length() < PAYLOAD_LENGTH) {
-
+					if (payload.length() < PAYLOAD_LENGTH) {
 						MqttMessage mqttMessage = new MqttMessage(message.getTopic(), payload);
-
 						client.addMqttMessage(mqttMessage);
-						message.ack();
 					} else {
-						Log.error("Inner class: ThreadListenMessage", "run", "payload too long");
+						Log.error("MqttClient.ThreadListenMessage", "run", "payload too long");
 					}
+					message.ack();
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -143,11 +141,11 @@ public class MqttClient extends MQTT {
 		isConnected = true;
 	}
 
-	public void subscribe(final Client client, final String topicName) throws TimeoutException {
+	public void subscribe(final Client client, final SnTopic topic) throws TimeoutException {
 
-		Log.debug(LogLevel.ACTIVE, "MqttClient", "subscribe", "try to subscribe to the topic: " + topicName);
+		Log.debug(LogLevel.ACTIVE, "MqttClient", "subscribe", "try to subscribe to the topic: " + topic.name());
 
-		ThreadSubscribe threadSubscribe = new ThreadSubscribe(topicName);
+		ThreadSubscribe threadSubscribe = new ThreadSubscribe(topic.name().toString());
 		threadSubscribe.start();
 		long time = System.currentTimeMillis();
 
@@ -158,7 +156,7 @@ public class MqttClient extends MQTT {
 		if (!threadSubscribe.isSubscribed) {
 			Log.error("MqttClient", "subscribe", "time out - stop subscription to mqtt server");
 			threadSubscribe.stopSubscribe();
-			TimeoutException e = new TimeoutException("impossible to subscribe " + topicName + " to the mqtt server");
+			TimeoutException e = new TimeoutException("impossible to subscribe " + topic.name() + " to the mqtt server");
 			throw e;
 		}
 
@@ -166,6 +164,7 @@ public class MqttClient extends MQTT {
 
 		ThreadListenMessage threadListenMessage = new ThreadListenMessage(client);
 		threadListenMessage.start();
+		topic.setSubscribed();
 	}
 
 	public Boolean isConnected() {

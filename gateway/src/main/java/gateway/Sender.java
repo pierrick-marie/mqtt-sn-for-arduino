@@ -1,7 +1,6 @@
 package gateway;
 
 import gateway.serial.SerialPortWriter;
-import mqtt.Topics;
 import utils.client.Client;
 import utils.log.Log;
 import utils.log.LogLevel;
@@ -56,7 +55,7 @@ public class Sender {
 	private byte[] getTopicId(final String name) {
 
 		byte[] ret = new byte[2];
-		int id = Topics.list.get(name);
+		int id = client.Topics.get(name).id();
 
 		if (id != -1) {
 			if (id > 255) {

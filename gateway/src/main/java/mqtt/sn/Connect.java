@@ -46,23 +46,18 @@ public class Connect implements SnAction {
 
 		Log.debug(LogLevel.ACTIVE, "Connect", "connect", client + " status is " + client.state());
 
-		if (client.state().equals(DeviceState.ASLEEP)) {
-			Log.debug(LogLevel.ACTIVE, "Connect", "connect", "device " + client + " comes back from sleep");
-
-			client.setState(DeviceState.ACTIVE);
-
-		} else if (client.state().equals(DeviceState.LOST) || client.state().equals(DeviceState.FIRSTCONNECT) || client.state().equals(DeviceState.DISCONNECTED)) {
-
-			client.setState(DeviceState.ACTIVE);
-
+		if (client.state().equals(DeviceState.LOST) || client.state().equals(DeviceState.FIRSTCONNECT) || client.state().equals(DeviceState.DISCONNECTED)) {
 			if (connectToTheBroker(cleanSession, duration)) {
 				connack(Prtcl.ACCEPTED);
+				client.setState(DeviceState.ACTIVE);
 			} else {
 				connack(Prtcl.REJECTED);
+				client.setState(DeviceState.DISCONNECTED);
 			}
 		} else {
 			// client's state is ACTIVE or AWAKE
 			connack(Prtcl.ACCEPTED);
+			client.setState(DeviceState.ACTIVE);
 		}
 	}
 
@@ -78,7 +73,7 @@ public class Connect implements SnAction {
 		try {
 			mqtt.connect();
 		} catch (Exception e) {
-			Log.debug(LogLevel.ACTIVE, "Connect", "connectToTheBroker", "mqtt client not connected");
+			Log.error("Connect", "connectToTheBroker", "mqtt client not connected");
 			Log.activeDebug(e.getMessage());
 
 			return false;
