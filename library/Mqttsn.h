@@ -38,17 +38,11 @@ THE SOFTWARE.
 #include "Logs.h"
 
 #define MAX_TOPICS 10
-#define MAX_BUFFER_SIZE 66
+#define MAX_SUBSCRIBED_TOPICS 5
 
 #define DEFAULT_TOPIC_ID 0xffff
 
 #define API_START_DELIMITER  0x7E
-
-#define API_DATA_LEN  40
-#define API_PAY_LEN  (API_DATA_LEN + 5)
-#define API_FRAME_LEN  (API_DATA_LEN + 9)
-
-#define MAX_MESSAGES 10
 
 #define QOS_FLAG 0
 #define KEEP_ALIVE 60
@@ -56,6 +50,9 @@ THE SOFTWARE.
 #define MAX_TRY 10
 
 #define RADIUS 0
+
+#define LONG_WAIT 2000 // 2000ms - 2s
+#define SHORT_WAIT 500 // 500ms - 0.s
 
 class Mqttsn {
 
@@ -75,7 +72,7 @@ public:
 	bool waitForSubAck();
 	bool isConnected();
 
-	void publish(const char* topic_name, const String message);
+	void publish(const char* topic_name, const char* message);
 
 	int subscribeTopic(const char* topic_name);
 	void disconnect(const uint16_t duration);
@@ -94,11 +91,6 @@ public:
 	int connect(const char* module_name) ;
 
 	/**
-	 * The function returns the associated string status to corresponding to the given @return_code.
-	 **/
-	char const* stringFromReturnCode(const uint8_t return_code) ;
-
-	/**
 	 * @brief Mqttsn::findTopicId The function search the index of a @topicName within @topicTable list.
 	 * @param topicName The name of the topic to search.
 	 * @return The index of the topic or -1 if not found.
@@ -114,7 +106,7 @@ public:
 	 * @return
 	 *      -2 if it is not possible to register the @topic_name.
 	 *      -1 if the message to register @topic_name is sent.
-	 *      >= 0 the id of the @topic_name already registered.
+	 *      >= 0 the id of the @topic_name already registered.f
 	 *
 	 **/
 	int registerTopic(const char* name) ;
@@ -136,9 +128,7 @@ public:
 	 */
 	void pingResp();
 
-	short getNbReceivedMessages();
-
-	String getReceivedMessage(const short number);
+	char* getReceivedData(const char* topic_name);
 
 private:
 
@@ -183,52 +173,16 @@ private:
 	 */
 	void sendMessage();
 
-	void publishMessage(const uint8_t flags, const uint16_t topic_id, const void* data, const uint8_t data_len);
-
-	/**
-	 * @brief Mqttsn::searchgw The function sends a message to the search the closest gateway arround @radius scale.
-	 * @param radius The max hop to search an available gateway.
-	 **/
-	void searchGateway(const uint8_t radius);
-
-	void subscribeByName(const uint8_t flags, const char* topic_name);
-	void subscribeById(const uint8_t flags, const uint16_t topic_id);
-	void unsubscribeByName(const uint8_t flags, const char* topic_name);
-	void unsubscribeById(const uint8_t flags, const uint16_t topic_id);
-
-	void connect(const uint8_t flags, const uint16_t duration, const char* module_name);
-
 	/**
 	 * The function creates a MeshBee frame and returns the frame lenght.
 	 *
 	 * Arguments:
-	 * data: the data used to create the frame
-	 * data_lenght: the lenght of @data
-	 * destination_address: the address to send the frame
-	 * frame: the frame that will be fill with the @data
-	 * frame_max_lenght: the maximum lenght of the @frame
-	 * broadcast: true if the frame is a broadcast message
+	 * header_lenght: the lenght of @data
 	 *
 	 * Returns:
 	 * The size of the created frame.
 	 **/
-	int createFrame(const uint8_t* data, const int data_lenght, const uint8_t* destination_address, uint8_t* frame, const int frame_max_lenght, const bool broadcast) ;
-
-	/**
-	 * The function verifies if the transmetted message in @FrameBufferIn is a data packet.
-	 *
-	 * Returns:
-	 * True if the message is a packet with data, else false.
-	 **/
-	bool isDataPacket() ;
-
-	/**
-	 * The function verifies if the transmetted message in @FrameBufferIn is a status message.
-	 *
-	 * Returns:
-	 * True if the message is a transmit status, else false.
-	 **/
-	bool isTransmitStatus() ;
+	int createFrame(const int header_lenght) ;
 
 	/**
 	 * The function verifies the checksum of @frame_buffer according to its @frame_size and returns true if it's OK, else return false.
@@ -262,18 +216,6 @@ private:
 	 */
 	void regAckHandler(const msg_regack* msg);
 
-	/**
-	 * @brief registerHandler the gateway ask the client to register a topic.
-	 * @param msg the notification message.
-	 */
-	void registerHandler(const msg_register* msg);
-
-	/**
-	 * @brief reRegisterHandler the gateway ask to re-register a topic.
-	 * @param msg the notification message.
-	 */
-	void reRegisterHandler(const msg_reregister* msg);
-
 	void publishHandler(const msg_publish* msg);
 
 	/**
@@ -281,8 +223,6 @@ private:
 	 * @param msg the notification message.
 	 */
 	void subAckHandler(const msg_suback* msg);
-
-	void unsuback_handler(const msg_unsuback* msg);
 
 	/**
 	 * @brief pingReqHandler Receive a ping request from the gateway. The function seems to be never used...
@@ -297,23 +237,7 @@ private:
 
 	void disconnect_handler(const msg_disconnect* msg);
 
-	/**
-	 * @brief regAck the client notifies the gateway it have register the topic sent by the gateway.
-	 * @param topic_id the topic id.
-	 * @param message_id the message that constains the topic name.
-	 * @param return_code ACCEPTED | REJECTED.
-	 */
-	void regAck(const uint16_t topic_id, const uint16_t message_id, const return_code_t return_code);
-
-	/**
-	 * The function is never used.
-	 *
-	 * @brief reRegister the client ask the gateway to re-register a topic
-	 * @param topic_id the topic id.
-	 * @param message_id the message with the topic name.
-	 * @param return_code
-	 */
-	void reRegister(const uint16_t topic_id, const uint16_t message_id, const return_code_t return_code);
+	void resetRegisteredTopicId(const short topicId);
 
 	// @TODO not implemented yet
 	// void willTopicRespHandler(const msg_willtopicresp* msg);
@@ -322,6 +246,15 @@ private:
 	// void willMesssage(const void* will_msg, const uint8_t will_msg_len, const bool update = false);
 	// void willTopicReqHandler(const message_header* msg);
 	// void willMsgReqHandler(const message_header* msg);
+	// void subscribeByName(const uint8_t flags, const char* topic_name);
+	// void subscribeById(const uint8_t flags, const uint16_t topic_id);
+	// void unsubscribeByName(const uint8_t flags, const char* topic_name);
+	// void unsubscribeById(const uint8_t flags, const uint16_t topic_id);
+	// void registerHandler(const msg_register* msg);
+	void reRegisterHandler(const msg_reregister* msg);
+	// void regAck(const uint16_t topic_id, const uint16_t message_id, const return_code_t return_code);
+	// void unsuback_handler(const msg_unsuback* msg);
+	// void reRegister(const uint16_t topic_id, const uint16_t message_id, const return_code_t return_code);
 
 	// @TODO not implemented yet - QOS level 1 or 2
 	// void pubAckHandler(const msg_puback* msg);
@@ -356,7 +289,9 @@ private:
 
 	// the message to send
 	String message = "";
-	char** receivedMessages;
+
+	msg_publish receivedMessages[MAX_SUBSCRIBED_TOPICS];
+	int nbReceivedMessage;
 
 	short connected;
 	int messageId;
@@ -364,12 +299,10 @@ private:
 	uint8_t messageBuffer[MAX_BUFFER_SIZE];
 	uint8_t responseBuffer[MAX_BUFFER_SIZE];
 
-	short nbRegisteredTopic;
-	short nbReceivedMessages;
+	int nbRegisteredTopic;
 	topic topicTable[MAX_TOPICS];
 
 	uint8_t gatewayId;
-	uint16_t u16TopicPubID;
 
 	uint8_t frameId = 0;
 	uint8_t frameBufferOut[API_FRAME_LEN] = {0};

@@ -41,7 +41,7 @@ Mqttsn::Mqttsn(SoftwareSerial* _xBee) {
 	messageId = 0 ;
 	gatewayId = 0 ;
 	nbRegisteredTopic = 0;
-	nbReceivedMessages = 0;
+	nbReceivedMessage = 0;
 
 	memset(topicTable, 0, sizeof(topic) * MAX_TOPICS);
 	memset(messageBuffer, 0, MAX_BUFFER_SIZE);
@@ -67,7 +67,7 @@ void Mqttsn::pingReq(const char* module_name) {
 
 	sendMessage();
 
-	nbReceivedMessages = 0;
+	nbReceivedMessage = 0;
 
 	if( !checkSerial() ) {
 		// logs.debug("pingReq", "check serial rejected");
@@ -102,26 +102,37 @@ void Mqttsn::disconnect(const uint16_t duration) {
 	sendMessage();
 }
 
-void Mqttsn::publish(const char* topic_name, const String message){
+void Mqttsn::publish(const char* topic_name, const char* message){
 
 	int topic_id = findTopicId(topic_name);
-	char* messageToSend = new char [message.length()+1];
-	strcpy (messageToSend, message.c_str());
 
 	if(-1 == topic_id) {
-
 		// logs.debug("publish", "topic name unknown -> registerTopic()", topic_name);
 		if(registerTopic(topic_name) != ACCEPTED) {
 			// logs.debug("publish", "impossible to register topic, return REJECTED");
 			return;
 		}
-
-		// Have to recall publish function to get the good value of topic_id
-		publish(topic_name, messageToSend);
+		// logs.debug("publish", "call publish again with right topic id");
+		publish(topic_name, message);
 	} else {
-		// logs.debug("publish", "send message");
 
-		publishMessage(QOS_FLAG, topic_id, messageToSend, message.length());
+		msg_publish* msg = reinterpret_cast<msg_publish*>(messageBuffer);
+		++messageId;
+
+		// get sizeof (msg_publish + message) - sizeof msg_publish.data (array of 40 char)
+		// get "sizeof(header of msg_publish)" + sizeof(message)
+		msg->length = sizeof(msg_publish) - sizeof(msg->data) + strlen(message);
+		msg->type = PUBLISH;
+		msg->flags = QOS_FLAG;
+		// @BUG msg->topic_id = bitSwap(topic_id);
+		msg->topic_id = ( topic_id + 5 );
+		msg->message_id = bitSwap(messageId);
+		strcpy(msg->data, message);
+
+		// logs.debug("publish", "publish data on topic id", msg->topic_id);
+		// logs.debug("publish", "preparing message: ", msg->data);
+
+		sendMessage();
 
 		// @TODO not implemented yet - QoS level 1 or 2
 		// if( !checkSerial() ) {
@@ -135,9 +146,18 @@ void Mqttsn::publish(const char* topic_name, const String message){
 
 int Mqttsn::init() {
 
-	// logs.debug("init", "");
+	// logs.debug("init");
 
-	searchGateway(RADIUS);
+	msg_searchgw* msg = reinterpret_cast<msg_searchgw*>(messageBuffer);
+
+	msg->length = sizeof(msg_searchgw);
+	msg->type = SEARCHGW;
+	msg->radius = RADIUS;
+
+	// logs.debug("searchGateway", "sending message");
+
+	waitingForResponse = false;
+	sendMessage();
 
 	// logs.debug( "init", "checking the response from the gateway");
 
@@ -157,13 +177,23 @@ int Mqttsn::init() {
 int Mqttsn::connect(const char* module_name) {
 
 	// logs.debug( "connect", "send a connect message");
-	connect(QOS_FLAG, KEEP_ALIVE, module_name);
+
+	msg_connect* msg = reinterpret_cast<msg_connect*>(messageBuffer);
+
+	msg->length = sizeof(msg_connect) + strlen(module_name);
+	msg->type = CONNECT;
+	msg->flags = QOS_FLAG;
+	msg->protocol_id = PROTOCOL_ID;
+	msg->duration = bitSwap(KEEP_ALIVE);
+	strcpy(msg->client_id, module_name);
+
+	sendMessage();
+	connected = false;
 
 	if( !checkSerial() ) {
 		// logs.debug( "connect", "check serial rejected");
 		return REJECTED;
 	}
-
 	parseData();
 
 	// logs.debug( "connect", "response from the gateway:", connected);
@@ -198,19 +228,32 @@ const char* Mqttsn::findTopicName(const short topicId) {
 
 int Mqttsn::subscribeTopic(const char* name) {
 
-	// logs.debug("subscribe", "searching topic id");
+	// logs.debug("subscribeTopic", "searching topic id");
 
 	if(-1 == findTopicId(name)){
-		// logs.debug( "subscribe", "topic is not already registered -> registerTopic()");
+		// logs.debug( "subscribeTopic", "topic is not already registered -> registerTopic()");
 		if(registerTopic(name) != ACCEPTED){
-			// logs.debug( "subscribe", "registerTopic() not accepted");
+			// logs.debug( "subscribeTopic", "registerTopic() not accepted");
 			return REJECTED_NOT_SUPPORTED;
 		}
 	}
 
-	// logs.debug("subscribe", "subscribing topic");
+	// logs.debug("subscribeTopic", name);
 
-	subscribeByName(QOS_FLAG, name);
+	++messageId;
+	msg_subscribe* msg = reinterpret_cast<msg_subscribe*>(messageBuffer);
+
+	// The -2 here is because we're unioning a 0-length member (topic_name)
+	// with a uint16_t in the msg_subscribe struct.
+	msg->length = sizeof(msg_subscribe) + strlen(name) - 2;
+	msg->type = SUBSCRIBE;
+	msg->flags = (QOS_MASK & QOS_MASK) | FLAG_TOPIC_NAME;
+	msg->message_id = bitSwap(messageId);
+	strcpy(msg->topic_name, name);
+
+	// logs.debug("subscribeTopic", "sending message 'subscribe topic'");
+
+	sendMessage();
 
 	if( !checkSerial() ) {
 		// logs.debug("subscribe", "check serial rejected");
@@ -220,7 +263,7 @@ int Mqttsn::subscribeTopic(const char* name) {
 	// logs.debug("subscribe", "parsing response 'subscribe topic'");
 	parseData();
 
-	// logs.debug("subscribe", "response from the gateway - ", subAckReturnCode);
+	// logs.debug("subscribeTopic", "response from the gateway", subAckReturnCode);
 	return subAckReturnCode;
 }
 
@@ -236,8 +279,9 @@ int Mqttsn::registerTopic(const char* topicName) {
 	int topic_id = findTopicId(topicName);
 	if(topic_id != -1) {
 		// logs.debug( "registerTopic", "name is already registered");
-		return topic_id;
+		return ACCEPTED;
 	}
+	// logs.debug( "registerTopic", "found topic id: ", topic_id);
 
 	// Fill in the next table entry, but we only increment the counter to
 	// the next topic when we get a REGACK from the broker. So don't issue
@@ -248,8 +292,6 @@ int Mqttsn::registerTopic(const char* topicName) {
 	topicTable[nbRegisteredTopic].id = DEFAULT_TOPIC_ID;
 
 	messageId++;
-
-	// logs.debug( "registerTopic", "topic is registered localy: ", topicName);
 
 	msg_register* msg = reinterpret_cast<msg_register*>(messageBuffer);
 
@@ -267,7 +309,6 @@ int Mqttsn::registerTopic(const char* topicName) {
 		return REJECTED;
 	}
 
-	// logs.debug( "registerTopic", "parsing response 'topic registered'");
 	parseData();
 
 	// logs.debug("registerTopic", "response from the gateway - ", regAckReturnCode);
@@ -275,10 +316,26 @@ int Mqttsn::registerTopic(const char* topicName) {
 	return regAckReturnCode;
 }
 
-short Mqttsn::getNbReceivedMessages() {
-	return nbReceivedMessages;
-}
+char* Mqttsn::getReceivedData(const char* topic_name) {
 
-String Mqttsn::getReceivedMessage(const short number) {
-	return String(receivedMessages[number]);
+	int i = 0;
+	short topicId = findTopicId(topic_name);
+
+	if(-1 != topicId) {
+		// logs.debug("getReceivedData", "topic name:", topic_name);
+		// logs.debug("getReceivedData", "topic id:", topicId);
+
+		for(; i < nbReceivedMessage; i++) {
+			if(receivedMessages[i].topic_id == topicId) {
+				// logs.debug("getReceivedData", "message found: ", receivedMessages[i].data);
+				receivedMessages[i].topic_id = -1;
+				return receivedMessages[i].data;
+			}
+		}
+		// logs.debug("getReceivedData", "topic id not found: ", topicId);
+		return NULL;
+	}
+
+	// logs.debug("getReceivedData", "topic name not found: ", topic_name);
+	return NULL;
 }
