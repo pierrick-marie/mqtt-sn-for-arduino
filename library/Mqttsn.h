@@ -38,7 +38,7 @@ THE SOFTWARE.
 #include "Logs.h"
 
 #define MAX_TOPICS 10
-#define MAX_SUBSCRIBED_TOPICS 5
+#define MAX_MESSAGES 5
 
 #define DEFAULT_TOPIC_ID 0xffff
 
@@ -46,10 +46,15 @@ THE SOFTWARE.
 
 #define QOS_FLAG 0
 #define KEEP_ALIVE 60
+#define TIME_TO_SLEEP 30 // 30 seconds
 
 #define MAX_TRY 10
 
 #define RADIUS 0
+
+#define GATEWAY_ID 1
+
+#define BAUD_RATE 9600
 
 #define LONG_WAIT 2000 // 2000ms - 2s
 #define SHORT_WAIT 500 // 500ms - 0.s
@@ -72,30 +77,30 @@ public:
 	bool waitForSubAck();
 	bool isConnected();
 
-	void publish(const char* topic_name, const char* message);
+	void publish(String topic_name, String message);
 
-	int subscribeTopic(const char* topic_name);
-	void disconnect(const uint16_t duration);
+	int subscribeTopic(String topicName);
+	void disconnect();
 
 	/**
 	 * @brief ABSTRCT_init The init function searches a gateway with a radius = 0.
 	 * @return ACCEPTED if a correct response is received, else REJECTED.
 	 **/
-	int init() ;
+	void start() ;
 
 	/**
 	 * @brief ABSTRCT_connect The funtion tries to connect the module to the gateway.
 	 * @param module_name The name of the module used to make the connection
 	 * @return ACCEPTED if a correct response is received, else REJECTED.
 	 **/
-	int connect(const char* module_name) ;
+	void connect(String module_name) ;
 
 	/**
 	 * @brief Mqttsn::findTopicId The function search the index of a @topicName within @topicTable list.
 	 * @param topicName The name of the topic to search.
 	 * @return The index of the topic or -1 if not found.
 	 */
-	short findTopicId(const char* name) ;
+	short findTopicId(String name) ;
 
 	const char* findTopicName(const short topicId) ;
 
@@ -109,26 +114,19 @@ public:
 	 *      >= 0 the id of the @topic_name already registered.f
 	 *
 	 **/
-	int registerTopic(const char* name) ;
-
-	/**
-	 * @brief waitMessage waits a message from subscribed topics
-	 */
-	void waitMessage();
+	int registerTopic(String name) ;
 
 	/**
 	 * @brief pingReq send a message to the gateway to request new published messages
 	 * @param module_name the id of the client who wants published messages
 	 */
-	void pingReq(const char* module_name);
+	void requestMessages();
 
-	/**
-	 * @brief pingResp Sending a ping response to the gateway. The function is called into pingReqHandler() - a function that seems to be never called.
-	 * The message seems to be not interpreted by the gateway.
-	 */
-	void pingResp();
+	char* getReceivedData(String topicName);
 
-	char* getReceivedData(const char* topic_name);
+	msg_publish* getReceivedMessages();
+
+	int getNbReceivedMessages();
 
 private:
 
@@ -193,16 +191,10 @@ private:
 	bool verifyChecksum(uint8_t frame_buffer[], int frame_size) ;
 
 	/**
-	 * @brief advertiseHandler notifies the client with the gateway id.
-	 * @param msg the message from the gateway with it's id.
-	 */
-	void advertiseHandler(const msg_advertise* msg);
-
-	/**
 	 * @brief gatewayInfoHandler notifies the client with the information of the gateway
 	 * @param msg the information
 	 */
-	void gatewayInfoHandler(const msg_gwinfo* msg);
+	void searchGatewayHandler(const msg_gwinfo* msg);
 
 	/**
 	 * @brief connackHandler notifies the client a connetion to the gateway is ok
@@ -225,19 +217,15 @@ private:
 	void subAckHandler(const msg_suback* msg);
 
 	/**
-	 * @brief pingReqHandler Receive a ping request from the gateway. The function seems to be never used...
-	 * @param msg the message sent by the gateway
-	 */
-	void pingReqHandler(const msg_pingreq* msg);
-
-	/**
 	 * @brief pingRespHandler Do nothing.
 	 */
 	void pingRespHandler();
 
-	void disconnect_handler(const msg_disconnect* msg);
+	void disconnectHandler(const msg_disconnect* msg);
 
 	void resetRegisteredTopicId(const short topicId);
+
+	void reRegisterHandler(const msg_reregister* msg);
 
 	// @TODO not implemented yet
 	// void willTopicRespHandler(const msg_willtopicresp* msg);
@@ -251,10 +239,12 @@ private:
 	// void unsubscribeByName(const uint8_t flags, const char* topic_name);
 	// void unsubscribeById(const uint8_t flags, const uint16_t topic_id);
 	// void registerHandler(const msg_register* msg);
-	void reRegisterHandler(const msg_reregister* msg);
 	// void regAck(const uint16_t topic_id, const uint16_t message_id, const return_code_t return_code);
 	// void unsuback_handler(const msg_unsuback* msg);
 	// void reRegister(const uint16_t topic_id, const uint16_t message_id, const return_code_t return_code);
+	// void pingReqHandler(const msg_pingreq* msg);
+	// void pingResp();
+	// void advertiseHandler(const msg_advertise* msg);
 
 	// @TODO not implemented yet - QOS level 1 or 2
 	// void pubAckHandler(const msg_puback* msg);
@@ -287,11 +277,11 @@ private:
 
 	int subAckReturnCode = 0;
 
-	// the message to send
-	String message = "";
-
-	msg_publish receivedMessages[MAX_SUBSCRIBED_TOPICS];
+	msg_publish receivedMessages[MAX_MESSAGES];
 	int nbReceivedMessage;
+
+	int nbRegisteredTopic;
+	topic topicTable[MAX_TOPICS];
 
 	short connected;
 	int messageId;
@@ -299,11 +289,9 @@ private:
 	uint8_t messageBuffer[MAX_BUFFER_SIZE];
 	uint8_t responseBuffer[MAX_BUFFER_SIZE];
 
-	int nbRegisteredTopic;
-	topic topicTable[MAX_TOPICS];
+	String moduleName;
 
 	uint8_t gatewayId;
-
 	uint8_t frameId = 0;
 	uint8_t frameBufferOut[API_FRAME_LEN] = {0};
 	uint8_t frameBufferIn[API_FRAME_LEN] = {0};

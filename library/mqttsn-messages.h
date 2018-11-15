@@ -100,7 +100,7 @@ enum message_type {
 };
 
 typedef struct {
-	const char* name;
+	char name[0];
 	short id;
 } topic;
 

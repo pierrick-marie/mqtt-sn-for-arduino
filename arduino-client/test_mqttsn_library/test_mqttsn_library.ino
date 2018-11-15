@@ -2,17 +2,10 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include <SoftwareSerial.h>
-
 #include <Logs.h>
 #include <Mqttsn.h>
 
-SoftwareSerial XBee(5, 4); //objet qui permet d'appeler les méthodes pour envoyer des données via le module XBee
-
-Logs logs ; // objet pour ecrire des logs dans la console
-Mqttsn mqttsn(&XBee) ; // objet qui permet d'appeler les methodes de la librairie mqttsn
-
-// SoftwareSerial Rfid(2, 3);
+#include <SoftwareSerial.h>
 
 #define MODULE_NAME "Arduino-RFID"
 
@@ -25,97 +18,63 @@ Mqttsn mqttsn(&XBee) ; // objet qui permet d'appeler les methodes de la librairi
 #define WAIT 5000
 
 String rfidId = "";
-
 String message = "";
 int i = 0;
+
+// SoftwareSerial Rfid(2, 3);
+
+Logs logs ; // objet pour ecrire des logs dans la console
+SoftwareSerial XBee(5, 4); //objet qui permet d'appeler les méthodes pour envoyer des données via le module XBee
+Mqttsn mqttsn(&XBee) ; // objet qui permet d'appeler les methodes de la librairie mqttsn
 
 void setup() {
 
   delay(WAIT);
 
   Serial.begin(9600);
-  XBee.begin(9600);
-  XBee.listen();
+
   // Rfid.begin(9600);
+
+  mqttsn.start();
 }
 
 void loop() {
 
-  if (XBee.isListening()) {
+  mqttsn.connect(MODULE_NAME);
 
-    if (mqttsn.init() == ACCEPTED) {
-      Serial.println("\nInit OK");
+  /*
+  if (mqttsn.registerTopic(TOPIC_PUB_0) == ACCEPTED) {
+    Serial.println("\nRegister 0 ok");
+  } else {
+    Serial.println("\n!!! Register 0 KO !!!");
+  }
+  */
 
-      if (mqttsn.connect(MODULE_NAME) == ACCEPTED) {
-        Serial.println("\nConnect OK");
+  message += "pub ";
+  message += i;
+  mqttsn.publish(TOPIC_PUB_1, message);
+  message = "";
+  i++;
 
-        /*
-        if (mqttsn.registerTopic(TOPIC_PUB_0) == ACCEPTED) {
-          Serial.println("\nRegister 0 ok");
-        } else {
-          Serial.println("\n!!! Register 0 KO !!!");
-        }
-        */
+  /*
+  if (mqttsn.subscribeTopic(TOPIC_SUB_1) == ACCEPTED) {
+    Serial.println("\nSubscribe 1 Ok");
 
-          message += "pub ";
-          message += i;
-          mqttsn.publish(TOPIC_PUB_1, message.c_str());
-          message = "";
-          i++;
+    mqttsn.requestMessages();
 
-        /*
-        if (mqttsn.registerTopic(TOPIC_PUB_1) == ACCEPTED) {
-          Serial.println("\nRegister 1 ok");
-
-          message += "pub ";
-          message += i;
-          mqttsn.publish(TOPIC_PUB, message.c_str());
-          message = "";
-          i++;
-
-        } else {
-          Serial.println("\n!!! Register 1 KO !!!");
-        }
-        */
-
-        /*
-        if (mqttsn.subscribeTopic(TOPIC_SUB_0) == ACCEPTED) {
-          Serial.println("\nSubscribe 0 Ok");
-        } else {
-          Serial.println("\n!!! Subscribe 0 KO !!!");
-        }
-
-        if (mqttsn.subscribeTopic(TOPIC_SUB_1) == ACCEPTED) {
-          Serial.println("\nSubscribe 1 Ok");
-
-          mqttsn.pingReq(MODULE_NAME);
- 
-          message = mqttsn.getReceivedData(TOPIC_SUB_0);
-          while( NULL != message) {
-            Serial.print("\nReceived message: ");
-            Serial.println(message);
-            message = mqttsn.getReceivedData(TOPIC_SUB_0);
-          }
-          
-          message = mqttsn.getReceivedData(TOPIC_SUB_1);
-          while( NULL != message) {
-            Serial.print("\nReceived message: ");
-            Serial.println(message);
-            message = mqttsn.getReceivedData(TOPIC_SUB_1);
-          }
-       
-        } else {
-          Serial.println("\n!!! Subscribe 1 KO !!!");
-        }
-        */
-      }
-      else {
-        Serial.println("\n!!! Connect KO !!!");
-      }
+    int nbReceivedMessages = mqttsn.getNbReceivedMessages();
+    msg_publish* msg = mqttsn.getReceivedMessages();
+    while (nbReceivedMessages > 0) {
+      Serial.print("RECEIVED MESSAGE ");
+      Serial.print(nbReceivedMessages);
+      Serial.print(": ");
+      Serial.println(msg[nbReceivedMessages].data);
+      nbReceivedMessages--;
     }
   } else {
-    Serial.println("\n!!! Init KO !!!");
+    Serial.println("\n!!! Subscribe 1 KO !!!");
   }
+  */
 
-  delay(WAIT);
+  mqttsn.disconnect();
 }

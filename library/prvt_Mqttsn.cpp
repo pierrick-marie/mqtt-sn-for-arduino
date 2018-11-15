@@ -99,14 +99,10 @@ void Mqttsn::dispatch() {
 	// logs.debug("dispatch", "response length:", response_message->length);
 
 	switch (response_message->type) {
-	case ADVERTISE:
-		// logs.debug("dispatch", "ADVERTISE");
-		advertiseHandler((msg_advertise*)responseBuffer);
-		break;
 
 	case GWINFO:
 		// logs.debug("dispatch", "GWINFO");
-		gatewayInfoHandler((msg_gwinfo*)responseBuffer);
+		searchGatewayHandler((msg_gwinfo*)responseBuffer);
 		break;
 
 	case CONNACK:
@@ -129,11 +125,6 @@ void Mqttsn::dispatch() {
 		subAckHandler((msg_suback*)responseBuffer);
 		break;
 
-	case PINGREQ:
-		// logs.debug("dispatch", "PINGREQ");
-		pingReqHandler((msg_pingreq*)responseBuffer);
-		break;
-
 	case PINGRESP:
 		// logs.debug("dispatch", "PINGRESP");
 		pingRespHandler();
@@ -141,7 +132,7 @@ void Mqttsn::dispatch() {
 
 	case DISCONNECT:
 		// logs.debug("dispatch", "DISCONNECT");
-		disconnect_handler((msg_disconnect*)responseBuffer);
+		disconnectHandler((msg_disconnect*)responseBuffer);
 		break;
 
 	case REREGISTER:
@@ -152,6 +143,18 @@ void Mqttsn::dispatch() {
 	default:
 		// logs.debug("dispatch", "DEFAULT");
 		return;
+
+		// @TODO not implemented yet
+		// case ADVERTISE:
+		// logs.debug("dispatch", "ADVERTISE");
+		// advertiseHandler((msg_advertise*)responseBuffer);
+		// break;
+
+		// @TODO not implemented yet
+		// case PINGREQ:
+		// logs.debug("dispatch", "PINGREQ");
+		// pingReqHandler((msg_pingreq*)responseBuffer);
+		// break;
 
 		// @TODO not implemented yet - QoS level 1 or 2
 		// case PUBACK:
@@ -197,10 +200,6 @@ void Mqttsn::dispatch() {
 	}
 }
 
-void Mqttsn::pingReqHandler(const msg_pingreq* msg) {
-	pingResp();
-}
-
 void Mqttsn::pingRespHandler() {
 	// do nothing
 	// logs.debug("pingRespHandler", "end of published messages");
@@ -212,30 +211,8 @@ uint16_t Mqttsn::bitSwap(const uint16_t value) {
 
 void Mqttsn::publishHandler(const msg_publish* msg) {
 
-	// logs.debug("publishHandler");
-
-	/*
-	 * @TODO remove useless code
-	 *
-	return_code_t ret = REJECTED_INVALID_TOPIC_ID;
-	const uint16_t topic_id = bitSwap(msg->topic_id);
-	for (uint8_t i = 0; i < nbRegisteredTopic; ++i) {
-	if (topicTable[i].id == topic_id) {
-	ret = ACCEPTED;
-	*/
-
-	// logs.debug("publishHandler", msg->data);
-	// logs.debug("publishHandler", receivedMessages[nbReceivedMessages]);
-
-	/*
-	 * @TODO remove useless code
-	 *
-	break;
-	}
-	}
-	*/
-
-	if(nbReceivedMessage < MAX_SUBSCRIBED_TOPICS) {
+	if(nbReceivedMessage < MAX_MESSAGES) {
+		logs.info("message received");
 		receivedMessages[nbReceivedMessage].topic_id = bitSwap(msg->topic_id);
 		strcpy(receivedMessages[nbReceivedMessage].data, msg->data);
 		nbReceivedMessage++;
@@ -253,6 +230,7 @@ void Mqttsn::publishHandler(const msg_publish* msg) {
 
 	// waiting next message
 	if( !checkSerial() ) {
+		connected = REJECTED;
 		return;
 	}
 	parseData();
@@ -326,11 +304,13 @@ bool Mqttsn::checkSerial() {
 }
 
 void Mqttsn::subAckHandler(const msg_suback* msg) {
-	subAckReturnCode = msg->return_code;
-}
 
-void Mqttsn::advertiseHandler(const msg_advertise* msg) {
-	gatewayId = msg->gw_id;
+	if (msg->return_code == ACCEPTED) {
+		logs.info("subscribed topic ok");
+	} else {
+		logs.error("subscribed topic rejected");
+	}
+	subAckReturnCode = msg->return_code;
 }
 
 void Mqttsn::sendMessage() {
@@ -350,9 +330,14 @@ void Mqttsn::sendMessage() {
 	int length = createFrame(header->length);
 
 	if (length > 0) {
-		xBee->write(frameBufferOut, length);
-		xBee->flush();
-		// logs.debug("sendMessage", "message sent");
+		xBee->listen();
+		if(xBee->isListening()) {
+			xBee->write(frameBufferOut, length);
+			xBee->flush();
+			// logs.debug("sendMessage", "message sent");
+		} else {
+			// logs.debug("sendMessage", "xBee is not listening");
+		}
 	} else {
 		// logs.debug("sendMessage", "message not sent");
 	}
@@ -440,37 +425,54 @@ int Mqttsn::createFrame(const int header_lenght) {
 
 void Mqttsn::connAckHandler(const msg_connack* msg) {
 
-	connected = msg->return_code;
+	if(msg->return_code == ACCEPTED) {
+		connected = ACCEPTED;
+		logs.info("connected");
+	} else {
+		connected = REJECTED;
+		logs.notConnected();
+		while(1);
+	}
 }
 
-void Mqttsn::disconnect_handler(const msg_disconnect* msg) {
-	connected = false;
-	// Mqttsn_disconnect_handler(msg);
+void Mqttsn::disconnectHandler(const msg_disconnect* msg) {
+
+	connected = REJECTED;
+
+	logs.info("slepping");
+
+	delay(TIME_TO_SLEEP*1000); // time in seconds to milliseconds
+
+	// logs.debug("disconnectHandler", "Arduino's awake");
 }
 
-void Mqttsn::gatewayInfoHandler(const msg_gwinfo* message) {
+void Mqttsn::searchGatewayHandler(const msg_gwinfo* message) {
 
-	// logs.debug( "gatewayInfoHandler");
-
-	if(message->gw_id == 1) {
+	if(message->gw_id == GATEWAY_ID) {
+		logs.info("started");
 		initOk = true;
 	} else {
+		logs.error("wrong gateway: stop");
 		initOk = false;
+		while(1);
 	}
 }
 
 void Mqttsn::regAckHandler(const msg_regack* msg) {
 
 	if (msg->return_code == ACCEPTED && nbRegisteredTopic < MAX_TOPICS && bitSwap(msg->message_id) == messageId) {
-		topicTable[nbRegisteredTopic].id = msg->topic_id;
+		logs.info("topic registered");
 
-		// logs.debug("regAckHandler", "Topic registered, it's id is ", msg->topic_id);
-		// logs.debug("regAckHandler", "Topic registered, it's table id is ", topicTable[nbRegisteredTopic].id);
+		topicTable[nbRegisteredTopic].id = msg->topic_id;
+		regAckReturnCode = ACCEPTED;
+
+		logs.debug("regAckHandler", "Topic registered, id: ", msg->topic_id);
+		logs.debug("regAckHandler", "Topic registered, table id: ", topicTable[nbRegisteredTopic].id);
+		logs.debug("regAckHandler", "Topic registered, table name: ", topicTable[nbRegisteredTopic].name);
 
 		nbRegisteredTopic++;
-		regAckReturnCode = ACCEPTED;
 	} else {
-		// logs.debug("regAckHandler", "Topic NOT registered");
+		logs.error("topic not registered");
 		regAckReturnCode = REJECTED;
 	}
 }
@@ -557,6 +559,20 @@ void Mqttsn::unsubscribeByName(const uint8_t flags, const char* topic_name) {
 	strcpy(msg->topic_name, topic_name);
 
 	sendMessage();
+}
+*/
+
+/**
+ * @TODO not implemented yet
+ *
+ * @brief Mqttsn::advertiseHandler
+ * @param msg
+ *
+void Mqttsn::advertiseHandler(const msg_advertise* msg) {
+
+	// logs.debug("advertiseHandler");
+
+	gatewayId = msg->gw_id;
 }
 */
 
@@ -792,5 +808,16 @@ void Mqttsn::reRegister(const uint16_t topic_id, const uint16_t message_id, cons
 	msg->return_code = return_code;
 
 	sendMessage();
+}
+*/
+
+/**
+ * @TODO not implemented yet
+ *
+ * @brief Mqttsn::pingReqHandler
+ * @param msg
+ *
+void Mqttsn::pingReqHandler(const msg_pingreq* msg) {
+	pingResp();
 }
 */

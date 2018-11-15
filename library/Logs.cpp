@@ -43,3 +43,20 @@ void Logs::debug(const char* methodeName, const char* message, const char* value
 	Serial.print(" ");
 	Serial.println(value);
 }
+
+void Logs::info(const char* message) {
+
+	Serial.print("\n[MQTT-SN] -INFO- ");
+	Serial.println(message);
+}
+
+void Logs::error(const char* message) {
+
+	Serial.print("\n[MQTT-SN] -ERROR- ");
+	Serial.println(message);
+}
+
+void Logs::notConnected() {
+
+	error("not connected: stop");
+}

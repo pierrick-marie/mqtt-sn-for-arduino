@@ -15,6 +15,12 @@ public:
 	void debug(const char* methodeName, const char* message, const int value);
 
 	void debug(const char* methodeName, const char* message, const char* value);
+
+	void info(const char* message);
+
+	void error(const char* message);
+
+	void notConnected();
 };
 
 #endif
