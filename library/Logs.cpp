@@ -46,13 +46,13 @@ void Logs::debug(const char* methodeName, const char* message, const char* value
 
 void Logs::info(const char* message) {
 
-	Serial.print("\n[MQTT-SN] -INFO- ");
+	Serial.print("\n[MQTT] ");
 	Serial.println(message);
 }
 
 void Logs::error(const char* message) {
 
-	Serial.print("\n[MQTT-SN] -ERROR- ");
+	Serial.print("\n[MQTT] -ERR- ");
 	Serial.println(message);
 }
 

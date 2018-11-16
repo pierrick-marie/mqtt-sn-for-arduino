@@ -77,9 +77,10 @@ public:
 	bool waitForSubAck();
 	bool isConnected();
 
-	void publish(String topic_name, String message);
+	void publish(const char* topic_name, String message);
 
-	int subscribeTopic(String topicName);
+	bool subscribeTopic(const char* topicName);
+
 	void disconnect();
 
 	/**
@@ -93,16 +94,16 @@ public:
 	 * @param module_name The name of the module used to make the connection
 	 * @return ACCEPTED if a correct response is received, else REJECTED.
 	 **/
-	void connect(String module_name) ;
+	void connect(const char* module_name) ;
 
 	/**
 	 * @brief Mqttsn::findTopicId The function search the index of a @topicName within @topicTable list.
 	 * @param topicName The name of the topic to search.
 	 * @return The index of the topic or -1 if not found.
 	 */
-	short findTopicId(String name) ;
+	short findTopicId(const char* name) ;
 
-	const char* findTopicName(const short topicId) ;
+	const char* findTopicName(short topicId) ;
 
 	/**
 	 * @brief Mqttsn::registerTopic The function asks to the gateway to register a @topic_name.
@@ -114,19 +115,15 @@ public:
 	 *      >= 0 the id of the @topic_name already registered.f
 	 *
 	 **/
-	int registerTopic(String name) ;
+	bool registerTopic(const char* name) ;
 
 	/**
 	 * @brief pingReq send a message to the gateway to request new published messages
 	 * @param module_name the id of the client who wants published messages
 	 */
-	void requestMessages();
-
-	char* getReceivedData(String topicName);
+	int requestMessages();
 
 	msg_publish* getReceivedMessages();
-
-	int getNbReceivedMessages();
 
 private:
 
@@ -164,7 +161,7 @@ private:
 	 * @param val A number to swap.
 	 * @return The swaped number.
 	 **/
-	uint16_t bitSwap(const uint16_t val);
+	uint16_t bitSwap(uint16_t val);
 
 	/**
 	 * @brief sendMessage send a message to the gateway
@@ -180,7 +177,7 @@ private:
 	 * Returns:
 	 * The size of the created frame.
 	 **/
-	int createFrame(const int header_lenght) ;
+	int createFrame(int header_lenght) ;
 
 	/**
 	 * The function verifies the checksum of @frame_buffer according to its @frame_size and returns true if it's OK, else return false.
@@ -194,64 +191,64 @@ private:
 	 * @brief gatewayInfoHandler notifies the client with the information of the gateway
 	 * @param msg the information
 	 */
-	void searchGatewayHandler(const msg_gwinfo* msg);
+	void searchGatewayHandler(msg_gwinfo* msg);
 
 	/**
 	 * @brief connackHandler notifies the client a connetion to the gateway is ok
 	 * @param msg the notification message
 	 */
-	void connAckHandler(const msg_connack* msg);
+	void connAckHandler(msg_connack* msg);
 
 	/**
 	 * @brief regAckHandler the gateway notifies the client it have register the topic.
 	 * @param msg The notification message.
 	 */
-	void regAckHandler(const msg_regack* msg);
+	void regAckHandler(msg_regack* msg);
 
-	void publishHandler(const msg_publish* msg);
+	void publishHandler(msg_publish* msg);
 
 	/**
 	 * @brief subAckHandler notifies the client a subcription topic have been regisered.
 	 * @param msg the notification message.
 	 */
-	void subAckHandler(const msg_suback* msg);
+	void subAckHandler(msg_suback* msg);
 
 	/**
 	 * @brief pingRespHandler Do nothing.
 	 */
 	void pingRespHandler();
 
-	void disconnectHandler(const msg_disconnect* msg);
+	void disconnectHandler(msg_disconnect* msg);
 
-	void resetRegisteredTopicId(const short topicId);
+	void resetRegisteredTopicId(short topicId);
 
-	void reRegisterHandler(const msg_reregister* msg);
+	void reRegisterHandler(msg_reregister* msg);
 
 	// @TODO not implemented yet
-	// void willTopicRespHandler(const msg_willtopicresp* msg);
-	// void willMsgRespHandler(const msg_willmsgresp* msg);
-	// void willTopic(const uint8_t QOS_FLAGs, const char* will_topic, const bool update = false);
-	// void willMesssage(const void* will_msg, const uint8_t will_msg_len, const bool update = false);
-	// void willTopicReqHandler(const message_header* msg);
-	// void willMsgReqHandler(const message_header* msg);
-	// void subscribeByName(const uint8_t flags, const char* topic_name);
-	// void subscribeById(const uint8_t flags, const uint16_t topic_id);
-	// void unsubscribeByName(const uint8_t flags, const char* topic_name);
-	// void unsubscribeById(const uint8_t flags, const uint16_t topic_id);
-	// void registerHandler(const msg_register* msg);
-	// void regAck(const uint16_t topic_id, const uint16_t message_id, const return_code_t return_code);
-	// void unsuback_handler(const msg_unsuback* msg);
-	// void reRegister(const uint16_t topic_id, const uint16_t message_id, const return_code_t return_code);
-	// void pingReqHandler(const msg_pingreq* msg);
+	// void willTopicRespHandler(msg_willtopicresp* msg);
+	// void willMsgRespHandler(msg_willmsgresp* msg);
+	// void willTopic(uint8_t QOS_FLAGs, char* will_topic, bool update = false);
+	// void willMesssage(void* will_msg, uint8_t will_msg_len, bool update = false);
+	// void willTopicReqHandler(message_header* msg);
+	// void willMsgReqHandler(message_header* msg);
+	// void subscribeByName(uint8_t flags, char* topic_name);
+	// void subscribeById(uint8_t flags, uint16_t topic_id);
+	// void unsubscribeByName(uint8_t flags, char* topic_name);
+	// void unsubscribeById(uint8_t flags, uint16_t topic_id);
+	// void registerHandler(msg_register* msg);
+	// void regAck(uint16_t topic_id, uint16_t message_id, return_code_t return_code);
+	// void unsuback_handler(msg_unsuback* msg);
+	// void reRegister(uint16_t topic_id, uint16_t message_id, return_code_t return_code);
+	// void pingReqHandler(msg_pingreq* msg);
 	// void pingResp();
-	// void advertiseHandler(const msg_advertise* msg);
+	// void advertiseHandler(msg_advertise* msg);
 
 	// @TODO not implemented yet - QOS level 1 or 2
-	// void pubAckHandler(const msg_puback* msg);
-	// void pubAck(const uint16_t topic_id, const uint16_t message_id, const return_code_t return_code);
-	// void pubRecHandler(const msg_pubqos2* msg);
-	// void pubRelHandler(const msg_pubqos2* msg);
-	// void pubCompHandler(const msg_pubqos2* msg);
+	// void pubAckHandler(msg_puback* msg);
+	// void pubAck(uint16_t topic_id, uint16_t message_id, return_code_t return_code);
+	// void pubRecHandler(msg_pubqos2* msg);
+	// void pubRelHandler(msg_pubqos2* msg);
+	// void pubCompHandler(msg_pubqos2* msg);
 	// void pubRec();
 	// void pubRel();
 	// void pubComp();
@@ -289,7 +286,7 @@ private:
 	uint8_t messageBuffer[MAX_BUFFER_SIZE];
 	uint8_t responseBuffer[MAX_BUFFER_SIZE];
 
-	String moduleName;
+	char moduleName[API_DATA_LEN];
 
 	uint8_t gatewayId;
 	uint8_t frameId = 0;

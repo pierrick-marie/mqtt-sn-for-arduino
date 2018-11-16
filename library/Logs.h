@@ -2,6 +2,9 @@
 #ifndef __LOGS_H__
 #define __LOGS_H__
 
+#include <stdint.h>
+#include <string.h>
+
 class Logs {
 
 public:

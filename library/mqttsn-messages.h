@@ -74,33 +74,33 @@ enum message_type {
 	GWINFO = 0x02,
 	CONNECT = 0x04,
 	CONNACK = 0x05,
-	// WILLTOPICREQ = 0x06,
-	// WILLTOPIC = 0x07,
-	// WILLMSGREQ = 0x08,
-	// WILLMSG = 0x09,
 	REGISTER = 0xA,
 	REGACK = 0x0B,
 	PUBLISH = 0x0C,
 	PUBACK = 0x0D,
-	// PUBCOMP = 0x0E,
-	// PUBREC = 0x0F,
-	// PUBREL = 0x10,
 	SUBSCRIBE = 0x12,
 	SUBACK = 0x13,
-	// UNSUBSCRIBE = 0x14,
-	// UNSUBACK = 0x15,
 	PINGREQ = 0x16,
 	PINGRESP = 0x17,
 	DISCONNECT = 0x18,
+	REREGISTER = 0x1E
+	// WILLTOPICREQ = 0x06,
+	// WILLTOPIC = 0x07,
+	// WILLMSGREQ = 0x08,
+	// WILLMSG = 0x09,
+	// PUBCOMP = 0x0E,
+	// PUBREC = 0x0F,
+	// PUBREL = 0x10,
 	// WILLTOPICUPD = 0x1A,
 	// WILLTOPICRESP = 0x1B,
 	// WILLMSGUPD = 0x1C,
 	// WILLMSGRESP = 0x1D,
-	REREGISTER = 0x1E
+	// UNSUBSCRIBE = 0x14,
+	// UNSUBACK = 0x15,
 };
 
 typedef struct {
-	char name[0];
+	char name[API_DATA_LEN];
 	short id;
 } topic;
 
@@ -202,7 +202,7 @@ struct msg_pubqos2 : public message_header {
  *
 struct msg_willtopic : public message_header {
 	uint8_t flags;
-	char will_topic[0];
+	char* will_topic;
 };
 */
 
@@ -210,7 +210,7 @@ struct msg_willtopic : public message_header {
  * @brief The msg_willmsg struct
  *
 struct msg_willmsg : public message_header {
-	char willmsg[0];
+	char* willmsg;
 };
 */
 
@@ -221,7 +221,7 @@ struct msg_unsubscribe : public message_header {
 	uint8_t flags;
 	uint16_t message_id;
 	union {
-		char topic_name[0];
+		char* topic_name;
 		uint16_t topic_id;
 	};
 };
