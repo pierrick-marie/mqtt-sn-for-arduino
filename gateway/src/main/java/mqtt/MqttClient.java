@@ -173,7 +173,7 @@ public class MqttClient extends MQTT {
 
 	public Boolean publish(final String topic, final byte[] message, final Boolean retain) {
 		try {
-			Log.debug(LogLevel.ACTIVE, "MqttClient", "publish", "Publish message: " + message + " on the topic: " + topic);
+			Log.debug(LogLevel.VERBOSE, "MqttClient", "publish", "Publish message: " + new String(message) + " on the topic: " + topic);
 			connection.publish(topic, message, Prtcl.DEFAUlT_QOS, retain);
 			return true;
 		} catch (Exception e) {

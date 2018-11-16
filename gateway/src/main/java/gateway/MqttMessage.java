@@ -32,4 +32,8 @@ public class MqttMessage {
 		return body;
 	}
 
+	public String toString() {
+		return body;
+	}
+
 }

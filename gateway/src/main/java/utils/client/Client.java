@@ -49,10 +49,12 @@ public class Client extends Thread {
 
 	public synchronized Boolean addMqttMessage(final MqttMessage message) {
 
-		while (MAX_MESSAGES < mqttMessages.size()) {
+		while (MAX_MESSAGES <= mqttMessages.size()) {
 			mqttMessages.remove(0);
+			Log.debug(LogLevel.VERBOSE, "Client", "addMqttMessage", "too many messages -> removing oldest message");
 		}
 
+		Log.debug(LogLevel.VERBOSE, "Client", "addMqttMessage", "save message");
 		return mqttMessages.add(message);
 	}
 
