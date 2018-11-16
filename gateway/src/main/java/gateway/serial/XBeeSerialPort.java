@@ -1,10 +1,11 @@
 package gateway.serial;
 
 import gateway.Main;
+import gateway.utils.Config;
 import jssc.SerialPort;
 import jssc.SerialPortException;
-import utils.log.Log;
-import utils.log.LogLevel;
+import gateway.utils.log.Log;
+import gateway.utils.log.LogLevel;
 
 /**
  * Created by arnaudoglaza on 03/07/2017.
@@ -13,13 +14,15 @@ enum XBeeSerialPort {
 
 	Instance;
 
+	final String SERIAL_PORT = Config.SERIAL_PORT;
+
 	final SerialPort serialPort;
 
 	XBeeSerialPort() {
 
 		Log.debug(LogLevel.VERBOSE, "XBeeSerialPort", "constructor", "connection to the XBee module");
 
-		serialPort = new jssc.SerialPort(Main.SERIAL_PORT);
+		serialPort = new jssc.SerialPort(SERIAL_PORT);
 
 		try {
 			serialPort.openPort();

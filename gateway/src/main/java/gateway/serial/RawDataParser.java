@@ -1,12 +1,12 @@
 package gateway.serial;
 
-import mqtt.sn.*;
-import utils.address.Address16;
-import utils.address.Address64;
-import utils.client.Client;
-import utils.client.Clients;
-import utils.log.Log;
-import utils.log.LogLevel;
+import gateway.mqtt.sn.*;
+import gateway.mqtt.address.Address16;
+import gateway.mqtt.address.Address64;
+import gateway.mqtt.client.Client;
+import gateway.mqtt.client.Clients;
+import gateway.utils.log.Log;
+import gateway.utils.log.LogLevel;
 
 enum RawDataParser {
 

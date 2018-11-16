@@ -1,6 +1,6 @@
 package gateway.serial;
 
-import utils.Time;
+import gateway.utils.Time;
 
 public class ExecutorReader implements Runnable {
 

@@ -3,9 +3,9 @@ package gateway.serial;
 import jssc.SerialPortEvent;
 import jssc.SerialPortEventListener;
 import jssc.SerialPortException;
-import utils.Time;
-import utils.log.Log;
-import utils.log.LogLevel;
+import gateway.utils.Time;
+import gateway.utils.log.Log;
+import gateway.utils.log.LogLevel;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
