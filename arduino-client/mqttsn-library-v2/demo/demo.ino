@@ -2,13 +2,11 @@
 
 #define MODULE_NAME "Arduino-RFID"
 
-#define TOPIC_SUB_0 "SUB_ObiOne_0"
-#define TOPIC_SUB_1 "SUB_ObiOne_1"
+#define TOPIC_SUB "RFID_1"
 
-#define TOPIC_PUB_0 "PUB_ObiOne_0"
-#define TOPIC_PUB_1 "PUB_ObiOne_1"
+#define TOPIC_PUB "RFID_0"
 
-String message = "";
+String rfid = "";
 int nbReceivedMessages = 0;
 int i = 0;
 
@@ -19,6 +17,7 @@ Mqttsn mqttsn(&XBee) ; // objet qui permet d'appeler les methodes de la librairi
 void setup() {
 
   Serial.begin(9600);
+  XBee.begin(9600);
 
   mqttsn.start();
 }
