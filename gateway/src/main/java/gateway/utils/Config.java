@@ -12,7 +12,7 @@ public enum Config {
 
 	public void parseArgs(String[] args) {
 
-		if(args.length != 3) {
+		if(args.length != 3 || args[2].equals("")) {
 			out.println();
 			out.println("\tMissing arguments. Usage:   SERIAL_PORT   IP_SERVER   PORT_SERVER");
 			out.println();
