@@ -9,7 +9,7 @@ new-gateway/.idea/
 *.class
 *.iml
 *.zip
-*.jar
+# *.jar
 
 
 
