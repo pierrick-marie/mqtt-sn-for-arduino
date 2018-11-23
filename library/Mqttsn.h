@@ -1,5 +1,5 @@
 /*
-mqttsn-messages.h
+Mqttsn-messages.h
 
 The MIT License (MIT)
 
@@ -24,119 +24,275 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#ifndef __MQTTSN_MESSAGES_H__
-#define __MQTTSN_MESSAGES_H__
+#ifndef __Mqttsn_MESSAGES_H__
+#define __Mqttsn_MESSAGES_H__
+
+#include <stdint.h>
+#include <stdbool.h>
+#include <string.h>
+
+#include <SoftwareSerial.h>
+#include <Arduino.h>
 
 #include "mqttsn-messages.h"
 #include "Logs.h"
 
 #define MAX_TOPICS 10
-#define MAX_BUFFER_SIZE 66
+#define MAX_MESSAGES 5
 
 #define DEFAULT_TOPIC_ID 0xffff
 
-class MQTTSN {
+#define API_START_DELIMITER  0x7E
+
+#define QOS_FLAG 0
+#define KEEP_ALIVE 60
+#define TIME_TO_SLEEP 30 // 30 seconds
+
+#define MAX_TRY 10
+
+#define RADIUS 0
+
+#define GATEWAY_ID 1
+
+#define BAUD_RATE 9600
+
+#define LONG_WAIT 2000 // 2000ms - 2s
+#define SHORT_WAIT 500 // 500ms - 0.s
+
+class Mqttsn {
+
 public:
-	MQTTSN();
-	virtual ~MQTTSN();
 
-	bool wait_for_response();
-	bool wait_for_suback();
-	bool wait_for_puback();
-	bool wait_for_pingresp();
-	bool connected();
+	/**
+	 * ****************************
+	 *
+	 * PUBLIC FUNCTIONS
+	 *
+	 * ****************************
+	 **/
 
-#ifdef USE_SERIAL
-	void parse_stream(uint8_t* buf, uint16_t len);
-#endif
+	Mqttsn(SoftwareSerial* _xBee) ;
+	~Mqttsn() ;
 
-	void searchgw(const uint8_t radius);
-	void connect(const uint8_t flags, const uint16_t duration, const char* client_id);
-	void will_topic(const uint8_t flags, const char* will_topic, const bool update = false);
-	void will_messsage(const void* will_msg, const uint8_t will_msg_len, const bool update = false);
-	int  register_topic(const char* name);
-	void publish(const uint8_t flags, const uint16_t topic_id, const void* data, const uint8_t data_len);
+	bool waitForSubAck();
+	bool isConnected();
 
-#ifdef USE_QOS2
-	void pubrec();
-	void pubrel();
-	void pubcomp();
-#endif
+	void publish(const char* topic_name, String message);
 
-	void subscribe_by_name(const uint8_t flags, const char* topic_name);
-	void subscribe_by_id(const uint8_t flags, const uint16_t topic_id);
-	void unsubscribe_by_name(const uint8_t flags, const char* topic_name);
-	void unsubscribe_by_id(const uint8_t flags, const uint16_t topic_id);
-	void pingreq(const char* client_id);
-	void pingresp();
-	void disconnect(const uint16_t duration);
+	bool subscribeTopic(const char* topicName);
 
-protected:
-	virtual void advertise_handler(const msg_advertise* msg);
-	virtual void gwinfo_handler(const msg_gwinfo* msg);
-	virtual void connack_handler(const msg_connack* msg);
-	virtual void willtopicreq_handler(const message_header* msg);
-	virtual void willmsgreq_handler(const message_header* msg);
-	virtual void regack_handler(const msg_regack* msg);
-	virtual void reregister_handler(const msg_reregister* msg);
-	virtual void publish_handler(const msg_publish* msg);
-	virtual void register_handler(const msg_register* msg);
-	virtual void puback_handler(const msg_puback* msg);
-#ifdef USE_QOS2
-	virtual void pubrec_handler(const msg_pubqos2* msg);
-	virtual void pubrel_handler(const msg_pubqos2* msg);
-	virtual void pubcomp_handler(const msg_pubqos2* msg);
-#endif
-	virtual void suback_handler(const msg_suback* msg);
-	virtual void unsuback_handler(const msg_unsuback* msg);
-	virtual void pingreq_handler(const msg_pingreq* msg);
-	virtual void pingresp_handler();
-	virtual void disconnect_handler(const msg_disconnect* msg);
-	virtual void willtopicresp_handler(const msg_willtopicresp* msg);
-	virtual void willmsgresp_handler(const msg_willmsgresp* msg);
+	void disconnect();
 
-	void regack(const uint16_t topic_id, const uint16_t message_id, const return_code_t return_code);
-	void reregister(const uint16_t topic_id, const uint16_t message_id, const return_code_t return_code);
-	void puback(const uint16_t topic_id, const uint16_t message_id, const return_code_t return_code);
+	/**
+	 * @brief ABSTRCT_init The init function searches a gateway with a radius = 0.
+	 * @return ACCEPTED if a correct response is received, else REJECTED.
+	 **/
+	void start() ;
+
+	/**
+	 * @brief ABSTRCT_connect The funtion tries to connect the module to the gateway.
+	 * @param module_name The name of the module used to make the connection
+	 * @return ACCEPTED if a correct response is received, else REJECTED.
+	 **/
+	void connect(const char* module_name) ;
+
+	/**
+	 * @brief Mqttsn::findTopicId The function search the index of a @topicName within @topicTable list.
+	 * @param topicName The name of the topic to search.
+	 * @return The index of the topic or -1 if not found.
+	 */
+	short findTopicId(const char* name) ;
+
+	const char* findTopicName(short topicId) ;
+
+	/**
+	 * @brief Mqttsn::registerTopic The function asks to the gateway to register a @topic_name.
+	 * @param name The topic name to register.
+	 *
+	 * @return
+	 *      -2 if it is not possible to register the @topic_name.
+	 *      -1 if the message to register @topic_name is sent.
+	 *      >= 0 the id of the @topic_name already registered.f
+	 *
+	 **/
+	bool registerTopic(const char* name) ;
+
+	/**
+	 * @brief pingReq send a message to the gateway to request new published messages
+	 * @param module_name the id of the client who wants published messages
+	 */
+	int requestMessages();
+
+	msg_publish* getReceivedMessages();
 
 private:
-	Logs logs;
 
-	typedef struct {
-		const char* name;
-		short id;
-	} topic;
+	/**
+	 * ****************************
+	 *
+	 * PRIVATE FUNCTIONS
+	 *
+	 * ****************************
+	 **/
 
+	bool checkSerial();
+
+	/**
+	 * The function waits during one second if data is available. In that case it returns true else returns false.
+	 *
+	 * Returs:
+	 * True if a response is received (xBee.available() > 1), else false.
+	 **/
+	bool waitData() ;
+
+	/**
+	 * The function analyses the incoming data (@FrameBufferIn) and calls the function @Mqttsn.parseStream before cleaning the @FrameBufferIn.
+	 **/
+	void parseData() ;
+
+	/**
+	 * @brief Mqttsn::dispatch The function is called at the end of the function parseStream.
+	 * It calls the corresponding function according to the message type.
+	 **/
 	void dispatch();
-	uint16_t bswap(const uint16_t val);
-	void send_message();
-	short find_topic_id(const char* name);
 
-	// Set to true when we're waiting for some sort of acknowledgement from the server that will transition our state.
-	bool WaitingForResponse;
-	bool WaitingForSuback;
-	bool WaitingForPuback;
-	bool WaitingForPingresp;
-	bool Connected;
-	short TopicCount;
-	int MessageId;
+	/**
+	 * @brief Mqttsn::bitSwap Magic formula (big / little indian?).
+	 * @param val A number to swap.
+	 * @return The swaped number.
+	 **/
+	uint16_t bitSwap(uint16_t val);
 
-	uint8_t MessageBuffer[MAX_BUFFER_SIZE];
-	uint8_t ResponseBuffer[MAX_BUFFER_SIZE];
-	topic TopicTable[MAX_TOPICS];
+	/**
+	 * @brief sendMessage send a message to the gateway
+	 */
+	void sendMessage();
 
-	uint8_t GatewayId;
-	uint32_t ResponseTimer;
-	uint8_t ResponseRetries;
+	/**
+	 * The function creates a MeshBee frame and returns the frame lenght.
+	 *
+	 * Arguments:
+	 * header_lenght: the lenght of @data
+	 *
+	 * Returns:
+	 * The size of the created frame.
+	 **/
+	int createFrame(int header_lenght) ;
 
-	uint32_t PingrespTimer;
-	uint8_t PingrespRetries;
+	/**
+	 * The function verifies the checksum of @frame_buffer according to its @frame_size and returns true if it's OK, else return false.
+	 *
+	 * Returns:
+	 * True if the checksum of @frame_buffer is ok, else false.
+	 **/
+	bool verifyChecksum(uint8_t frame_buffer[], int frame_size) ;
 
-	uint32_t SubackTimer;
-	uint8_t SubackRetries;
+	/**
+	 * @brief gatewayInfoHandler notifies the client with the information of the gateway
+	 * @param msg the information
+	 */
+	void searchGatewayHandler(msg_gwinfo* msg);
 
-	uint32_t PubackTimer;
-	uint8_t PubackRetries;
+	/**
+	 * @brief connackHandler notifies the client a connetion to the gateway is ok
+	 * @param msg the notification message
+	 */
+	void connAckHandler(msg_connack* msg);
+
+	/**
+	 * @brief regAckHandler the gateway notifies the client it have register the topic.
+	 * @param msg The notification message.
+	 */
+	void regAckHandler(msg_regack* msg);
+
+	void publishHandler(msg_publish* msg);
+
+	/**
+	 * @brief subAckHandler notifies the client a subcription topic have been regisered.
+	 * @param msg the notification message.
+	 */
+	void subAckHandler(msg_suback* msg);
+
+	/**
+	 * @brief pingRespHandler Do nothing.
+	 */
+	void pingRespHandler();
+
+	void disconnectHandler(msg_disconnect* msg);
+
+	void resetRegisteredTopicId(short topicId);
+
+	void reRegisterHandler(msg_reregister* msg);
+
+	// @TODO not implemented yet
+	// void willTopicRespHandler(msg_willtopicresp* msg);
+	// void willMsgRespHandler(msg_willmsgresp* msg);
+	// void willTopic(uint8_t QOS_FLAGs, char* will_topic, bool update = false);
+	// void willMesssage(void* will_msg, uint8_t will_msg_len, bool update = false);
+	// void willTopicReqHandler(message_header* msg);
+	// void willMsgReqHandler(message_header* msg);
+	// void subscribeByName(uint8_t flags, char* topic_name);
+	// void subscribeById(uint8_t flags, uint16_t topic_id);
+	// void unsubscribeByName(uint8_t flags, char* topic_name);
+	// void unsubscribeById(uint8_t flags, uint16_t topic_id);
+	// void registerHandler(msg_register* msg);
+	// void regAck(uint16_t topic_id, uint16_t message_id, return_code_t return_code);
+	// void unsuback_handler(msg_unsuback* msg);
+	// void reRegister(uint16_t topic_id, uint16_t message_id, return_code_t return_code);
+	// void pingReqHandler(msg_pingreq* msg);
+	// void pingResp();
+	// void advertiseHandler(msg_advertise* msg);
+
+	// @TODO not implemented yet - QOS level 1 or 2
+	// void pubAckHandler(msg_puback* msg);
+	// void pubAck(uint16_t topic_id, uint16_t message_id, return_code_t return_code);
+	// void pubRecHandler(msg_pubqos2* msg);
+	// void pubRelHandler(msg_pubqos2* msg);
+	// void pubCompHandler(msg_pubqos2* msg);
+	// void pubRec();
+	// void pubRel();
+	// void pubComp();
+
+	/**
+	 * ****************************
+	 *
+	 * ATTRIBUTES
+	 *
+	 * ****************************
+	 **/
+
+	// to print logs
+	Logs logs;
+	SoftwareSerial* xBee;
+
+	// the status of the connection (first sent message)
+	bool initOk = false;
+	bool waitingForResponse = false;
+
+	// the code received after a subscribe or register message
+	int regAckReturnCode = 0;
+
+	int subAckReturnCode = 0;
+
+	msg_publish receivedMessages[MAX_MESSAGES];
+	int nbReceivedMessage;
+
+	int nbRegisteredTopic;
+	topic topicTable[MAX_TOPICS];
+
+	short connected;
+	int messageId;
+
+	uint8_t messageBuffer[MAX_BUFFER_SIZE];
+	uint8_t responseBuffer[MAX_BUFFER_SIZE];
+
+	char moduleName[API_DATA_LEN];
+
+	uint8_t gatewayId;
+	uint8_t frameId = 0;
+	uint8_t frameBufferOut[API_FRAME_LEN] = {0};
+	uint8_t frameBufferIn[API_FRAME_LEN] = {0};
+	uint8_t gatewayAddress[8] = {0};
 };
 
 #endif
