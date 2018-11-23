@@ -259,42 +259,45 @@ bool Mqttsn::checkSerial() {
 		return checkSerial();
 	}
 
-	if(xBee->available() > 0) {
-		length1 = xBee->read();
-		length2 = xBee->read();
-		frame_size = (length1*16)+length2+1;
+	xBee->listen();
+	if(xBee->isListening()) {
+		if(xBee->available() > 0) {
+			length1 = xBee->read();
+			length2 = xBee->read();
+			frame_size = (length1*16)+length2+1;
 
-		// store the data in @frameBuffer
-		for(i = 0; i < frame_size; i++){
-			delay(10);
-			frameBufferIn[i] = xBee->read();
-		}
-
-		if(!verifyChecksum(frameBufferIn, frame_size)) {
-			// logs.debug("checkSerial", "checksum KO!");
-			return checkSerial();
-		}
-
-		if(frameBufferIn[0] == 139) {
-			// logs.debug("checkSerial", "a transmit status (XBEE acquitall) -> get next message!");
-			return checkSerial();
-		}
-
-		if(frameBufferIn[0] == 144) {
-			// this is a data packet, copy the gateway address
-			if(gatewayAddress[0]==0 && gatewayAddress[1]==0 && gatewayAddress[2]==0 && gatewayAddress[3]==0){
-				gatewayAddress[0] = frameBufferIn[1];
-				gatewayAddress[1] = frameBufferIn[2];
-				gatewayAddress[2] = frameBufferIn[3];
-				gatewayAddress[3] = frameBufferIn[4];
-				gatewayAddress[4] = frameBufferIn[5];
-				gatewayAddress[5] = frameBufferIn[6];
-				gatewayAddress[6] = frameBufferIn[7];
-				gatewayAddress[7] = frameBufferIn[8];
+			// store the data in @frameBuffer
+			for(i = 0; i < frame_size; i++){
+				delay(10);
+				frameBufferIn[i] = xBee->read();
 			}
-			// all data have been store in @frameBufferIn
-			// logs.debug("checkSerial", "correct data received");
-			return true;
+
+			if(!verifyChecksum(frameBufferIn, frame_size)) {
+				// logs.debug("checkSerial", "checksum KO!");
+				return checkSerial();
+			}
+
+			if(frameBufferIn[0] == 139) {
+				// logs.debug("checkSerial", "a transmit status (XBEE acquitall) -> get next message!");
+				return checkSerial();
+			}
+
+			if(frameBufferIn[0] == 144) {
+				// this is a data packet, copy the gateway address
+				if(gatewayAddress[0]==0 && gatewayAddress[1]==0 && gatewayAddress[2]==0 && gatewayAddress[3]==0){
+					gatewayAddress[0] = frameBufferIn[1];
+					gatewayAddress[1] = frameBufferIn[2];
+					gatewayAddress[2] = frameBufferIn[3];
+					gatewayAddress[3] = frameBufferIn[4];
+					gatewayAddress[4] = frameBufferIn[5];
+					gatewayAddress[5] = frameBufferIn[6];
+					gatewayAddress[6] = frameBufferIn[7];
+					gatewayAddress[7] = frameBufferIn[8];
+				}
+				// all data have been store in @frameBufferIn
+				// logs.debug("checkSerial", "correct data received");
+				return true;
+			}
 		}
 	}
 	// not data available, clear the buffer and return false
@@ -316,6 +319,7 @@ void Mqttsn::subAckHandler(msg_suback* msg) {
 void Mqttsn::sendMessage() {
 
 	// logs.debug("sendMessage");
+	delay(SHORT_WAIT);
 
 	if(waitingForResponse) {
 		// logs.debug("sendMessage", "the module is already waiting for a response");
@@ -330,14 +334,13 @@ void Mqttsn::sendMessage() {
 	int length = createFrame(header->length);
 
 	if (length > 0) {
+
 		xBee->listen();
-		if(xBee->isListening()) {
-			xBee->write(frameBufferOut, length);
-			xBee->flush();
-			// logs.debug("sendMessage", "message sent");
-		} else {
-			// logs.debug("sendMessage", "xBee is not listening");
-		}
+		while(!xBee->isListening()) { } // infinite loop to wait xBee module
+
+		xBee->write(frameBufferOut, length);
+		xBee->flush();
+		// logs.debug("sendMessage", "message sent");
 	} else {
 		// logs.debug("sendMessage", "message not sent");
 	}
@@ -443,7 +446,7 @@ void Mqttsn::disconnectHandler(msg_disconnect* msg) {
 
 	delay(TIME_TO_SLEEP*1000); // time in seconds to milliseconds
 
-	// logs.debug("disconnectHandler", "Arduino's awake");
+	logs.info("awake");
 }
 
 void Mqttsn::searchGatewayHandler(msg_gwinfo* message) {

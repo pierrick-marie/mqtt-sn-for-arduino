@@ -66,7 +66,7 @@ int Mqttsn::requestMessages() {
 		while(1);
 	}
 
-	// logs.debug("pingReq", "building message");
+	logs.info("request");
 
 	msg_pingreq* msg = reinterpret_cast<msg_pingreq*>(messageBuffer);
 	msg->length = sizeof(msg_pingreq) + strlen(moduleName);
@@ -133,13 +133,13 @@ void Mqttsn::publish(const char* topicName, String message){
 	int topic_id = findTopicId(topicName);
 
 	if(-1 == topic_id) {
-		// logs.debug("publish", "topic name unknown -> registerTopic()", topicName);
-		if(registerTopic(topicName) != ACCEPTED) {
-			// logs.debug("publish", "impossible to register topic, return REJECTED");
+		// logs.debug("publish", "unknown->register", topicName);
+		if( ! registerTopic(topicName)) {
+			// logs.debug("publish", "can't register topic");
 			return;
 		}
-		// logs.debug("publish", "call publish again with right topic id");
-		// logs.debug("publish", "TEST topic name: ", topicTable[nbRegisteredTopic].name);
+		// logs.debug("publish", "call again");
+		// logs.debug("publish", "name: ", topicTable[nbRegisteredTopic].name);
 		publish(topicName, message);
 	} else {
 
@@ -159,8 +159,8 @@ void Mqttsn::publish(const char* topicName, String message){
 
 		logs.info("publish msg");
 
-		// logs.debug("publish", "publish data on topic id", msg->topic_id);
-		// logs.debug("publish", "preparing message: ", msg->data);
+		// logs.debug("publish", "id:", msg->topic_id);
+		// logs.debug("publish", "msg: ", msg->data);
 
 		sendMessage();
 
@@ -315,26 +315,26 @@ bool Mqttsn::registerTopic(const char* topicName) {
 		while(1);
 	}
 
-	// logs.debug("registerTopic", "register topic: ", topicName);
+	// logs.debug("register", "topic: ", topicName);
 
 	if(nbRegisteredTopic >= MAX_TOPICS) {
-		// logs.debug( "registerTopic", "nbRegisteredTopic > MAX_TOPICS");
+		// logs.debug("register", "nb > MAX_TOPICS");
 		return false;
 	}
 
 	int topicId = findTopicId(topicName);
 	if(topicId != -1) {
-		// logs.debug( "registerTopic", "name is already registered");
+		// logs.debug("register", "already registered");
 		return true;
 	}
-	// logs.debug("registerTopic", "found topic id: ", topicId);
+	// logs.debug("register", "id:", topicId);
 
 	// Fill in the next table entry, but we only increment the counter to
 	// the next topic when we get a REGACK from the broker. So don't issue
 	// another REGISTER until we have resolved this one.
 	// @name is save now because it will be lost at the end of this function.
 	strcpy(topicTable[nbRegisteredTopic].name, topicName);
-	// logs.debug("registerTopic", "topic name: ", topicTable[nbRegisteredTopic].name);
+	// logs.debug("register", "name:", topicTable[nbRegisteredTopic].name);
 
 	// A magic number while the gateway respond: @see:regAckHandler()
 	topicTable[nbRegisteredTopic].id = DEFAULT_TOPIC_ID;
@@ -349,19 +349,19 @@ bool Mqttsn::registerTopic(const char* topicName) {
 	msg->message_id = bitSwap(messageId);
 	strcpy(msg->topic_name, topicName);
 
-	// logs.debug( "registerTopic", "sending message: register topic ", topicName);
 	sendMessage();
 
 	if( !checkSerial() ) {
-		// logs.debug( "registerTopic", "check serial rejected");
+		// logs.debug("register", "rejected");
 		connected = REJECTED;
 		return false;
 	}
 
 	parseData();
 
-	// logs.debug("registerTopic", "response from the gateway - ", regAckReturnCode);
-	// logs.debug("registerTopic", "topic id is: ", findTopicId(topicName));
+	// logs.debug("register", "response:", regAckReturnCode);
+	// logs.debug("register", "id:", findTopicId(topicName));
+
 	return regAckReturnCode == ACCEPTED;
 }
 
