@@ -7,9 +7,9 @@ new-gateway/.idea/
 .DS_Store
 
 *.class
-*.iml
 *.zip
 # *.jar
+# *.iml
 
 
 
