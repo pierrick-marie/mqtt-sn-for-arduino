@@ -1,6 +1,6 @@
 package gateway.utils.log;
 
-import gateway.mqtt.client.Client;
+import gateway.mqtt.client.Device;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -9,7 +9,7 @@ import java.util.Date;
 public class Log {
 
 	public static final Boolean ERROR = true;
-	public static final LogLevel LEVEL = LogLevel.VERBOSE;
+	public static final gateway.utils.log.LogLevel LEVEL = gateway.utils.log.LogLevel.VERBOSE;
 
 	private static final DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 
@@ -20,12 +20,12 @@ public class Log {
 
 	}
 
-	public static void input(final Client client, final String message) {
-		print(client + " - " + INPUT + message);
+	public static void input(final Device device, final String message) {
+		print(device + " - " + INPUT + message);
 	}
 
-	public static void output(final Client client, final String message) {
-		print(client + " - " + OUTPUT + message);
+	public static void output(final Device device, final String message) {
+		print(device + " - " + OUTPUT + message);
 	}
 
 	public static void print(final String message) {
@@ -34,7 +34,7 @@ public class Log {
 		blue(message + "\n");
 	}
 
-	public static void debug(final LogLevel level, final String className, final String methodeName, final String message) {
+	public static void debug(final gateway.utils.log.LogLevel level, final String className, final String methodeName, final String message) {
 		if (LEVEL.ordinal() >= level.ordinal()) {
 
 			bYellow(" # [ " + level.name() + " ] ");
@@ -46,12 +46,12 @@ public class Log {
 	}
 
 	public static void activeDebug(final String message) {
-		bYellow(" # [ " + LogLevel.ACTIVE.name() + " ] ");
+		bYellow(" # [ " + gateway.utils.log.LogLevel.ACTIVE.name() + " ] ");
 		yellow(message + "\n");
 	}
 
 	public static void verboseDebug(final String message) {
-		bYellow(" # [ " + LogLevel.VERBOSE.name() + " ] ");
+		bYellow(" # [ " + gateway.utils.log.LogLevel.VERBOSE.name() + " ] ");
 		yellow(message + "\n");
 	}
 

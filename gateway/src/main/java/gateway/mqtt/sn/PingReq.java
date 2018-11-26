@@ -1,8 +1,8 @@
 package gateway.mqtt.sn;
 
+import gateway.mqtt.client.Device;
 import gateway.serial.SerialPortWriter;
 import gateway.mqtt.client.DeviceState;
-import gateway.mqtt.client.Client;
 import gateway.utils.log.Log;
 import gateway.utils.log.LogLevel;
 
@@ -11,24 +11,24 @@ import gateway.utils.log.LogLevel;
  */
 public class PingReq implements SnAction {
 
-	final Client client;
+	final Device device;
 	final byte[] msg;
 
-	public PingReq(final Client client, final byte[] msg) {
+	public PingReq(final Device device, final byte[] msg) {
 
-		Log.input(client, "ping request");
+		Log.input(device, "ping request");
 
-		this.client = client;
+		this.device = device;
 		this.msg = msg;
 	}
 
 	@Override
 	public void exec() {
-		client.setState(DeviceState.AWAKE);
+		device.setState(DeviceState.AWAKE);
 
 		Log.debug(LogLevel.ACTIVE,"PingReq", "exec", "begin send messages");
 
-		client.sendMqttMessages();
+		device.sendMqttMessages();
 
 		Log.debug(LogLevel.ACTIVE,"PingReq", "exec", "end send messages");
 
@@ -37,17 +37,17 @@ public class PingReq implements SnAction {
 
 	private void pingresp() {
 
-		Log.output(client, "ping response");
+		Log.output(device, "ping response");
 
 		byte[] ret = new byte[2];
 		ret[0] = (byte) 0x03;
 		ret[1] = (byte) 0x17;
 
-		SerialPortWriter.write(client, ret);
+		SerialPortWriter.write(device, ret);
 
-		if(client.state().equals(DeviceState.AWAKE)) {
-			client.setState(DeviceState.ASLEEP);
-			Log.debug(LogLevel.ACTIVE,"MultipleSender", "pingResp", client + " goes to sleep");
+		if(device.state().equals(DeviceState.AWAKE)) {
+			device.setState(DeviceState.ASLEEP);
+			Log.debug(LogLevel.ACTIVE,"MultipleSender", "pingResp", device + " goes to sleep");
 		}
 	}
 }

@@ -3,8 +3,8 @@ package gateway.serial;
 import gateway.mqtt.sn.*;
 import gateway.mqtt.address.Address16;
 import gateway.mqtt.address.Address64;
-import gateway.mqtt.client.Client;
-import gateway.mqtt.client.Clients;
+import gateway.mqtt.client.Device;
+import gateway.mqtt.client.Devices;
 import gateway.utils.log.Log;
 import gateway.utils.log.LogLevel;
 
@@ -66,60 +66,60 @@ enum RawDataParser {
 			message[i] = payload[2 + i];
 		}
 
-		Client client = Clients.list.search(new Address64(address64), new Address16(address16));
+		Device device = Devices.list.search(new Address64(address64), new Address16(address16));
 
 		switch (data_type) {
 			case 0x01:
 				// SEARCHGW
-				client.setAction(new SearchGateway(client, new Integer(payload[2])));
+				device.setAction(new SearchGateway(device, Integer.valueOf(payload[2]) ));
 				break;
 
 			case 0x04:
 				// CONNECT
-				client.setAction(new Connect(client, message));
+				device.setAction(new Connect(device, message));
 				break;
 
 			case 0x0A:
 				// REGISTER
-				client.setAction(new Register(client, message));
+				device.setAction(new Register(device, message));
 				break;
 
 			case 0x12:
 				// SUBSCRIBE
-				client.setAction(new Subscribe(client, message));
+				device.setAction(new Subscribe(device, message));
 				break;
 
 			case 0x18:
 				// DISCONNECT
-				client.setAction(new Disconnect(client, message));
+				device.setAction(new Disconnect(device, message));
 				break;
 
 			case 0x0C:
 				// PUBLISH
-				client.setAction(new Publish(client, message));
+				device.setAction(new Publish(device, message));
 				break;
 
 			case 0x16:
 				// PINGREQ
-				client.setAction(new PingReq(client, message));
+				device.setAction(new PingReq(device, message));
 				break;
 
 			case 0x07:
 				// WILLTOPIC
 				// @TODO not implemented yet
-				// client.setAction(new WillTopic(client, message));
+				// device.setAction(new WillTopic(device, message));
 				break;
 
 			case 0x09:
 				// WILLMESSAGE
 				// @TODO not implemented yet
-				// client.setAction(new WillMessage(client, message));
+				// device.setAction(new WillMessage(device, message));
 				break;
 
 			case 0x0D:
 				// PUBACK
 				// Only used with QoS level 1 and 2 - not used yet
-				// client.setAction(new Puback(client, message));
+				// device.setAction(new Puback(device, message));
 				break;
 		}
 	}

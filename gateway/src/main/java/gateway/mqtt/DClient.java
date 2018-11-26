@@ -1,28 +1,27 @@
 package gateway.mqtt;
 
+import gateway.mqtt.client.Device;
 import gateway.mqtt.sn.Prtcl;
 import gateway.utils.Config;
 import org.fusesource.mqtt.client.*;
 import gateway.utils.Time;
-import gateway.mqtt.client.Client;
 import gateway.utils.log.Log;
 import gateway.utils.log.LogLevel;
 
 import java.net.URISyntaxException;
-import java.util.concurrent.TimeoutException;
 
 import static gateway.mqtt.sn.Prtcl.PAYLOAD_LENGTH;
 
-public class MqttClient extends MQTT {
+@Deprecated
+public class DClient { // extends MQTT implements IClient {
 
-	private static final String HOST = Config.IP_SERVER;
+	private static final String HOST = "";
 	private static final Integer PORT = Config.PORT_SERVER;
 
 	private final long TIME_TO_WAIT = 500; // 0.5 seconds
 	private final short NB_TRY = 5;
 
-	private final BlockingConnection connection;
-	private Boolean isConnected = false;
+	// private final BlockingConnection connection;
 
 	class ThreadConnect extends Thread {
 
@@ -35,7 +34,7 @@ public class MqttClient extends MQTT {
 		public void run() {
 			try {
 				Log.debug(LogLevel.VERBOSE, "Inner class: ThreadConnect", "run", "starting a new connection to the gateway.mqtt broker");
-				connection.connect();
+				// connection.connect();
 				isConnected = true;
 				Log.debug(LogLevel.VERBOSE, "Inner class: ThreadConnect", "run", "connection to the gateway.mqtt broker activated");
 			} catch (Exception e) {
@@ -63,7 +62,7 @@ public class MqttClient extends MQTT {
 		public void run() {
 			try {
 				Log.debug(LogLevel.VERBOSE, "Inner class: ThreadSubscribe", "run", "start to subscribe the topic: " + topicName);
-				connection.subscribe(new Topic[]{new Topic(topicName, Prtcl.DEFAUlT_QOS)});
+				// connection.subscribe(new Topic[]{new Topic(topicName, Prtcl.DEFAUlT_QOS)});
 				isSubscribed = true;
 				Log.debug(LogLevel.VERBOSE, "Inner class: ThreadSubscribe", "run", "subscription ok");
 			} catch (Exception e) {
@@ -80,14 +79,15 @@ public class MqttClient extends MQTT {
 
 	class ThreadListenMessage extends Thread {
 
-		private final Client client;
+		private final Device device;
 
-		public ThreadListenMessage(final Client client) {
-			this.client = client;
+		public ThreadListenMessage(final Device device) {
+			this.device = device;
 		}
 
 		public void run() {
-			Message message = null;
+            /*
+			MqMessage message = null;
 			try {
 				while (true) {
 					message = connection.receive();
@@ -95,8 +95,8 @@ public class MqttClient extends MQTT {
 					Log.print("MQTT message received: " + payload + " on topic: " + message.getTopic());
 
 					if (payload.length() < PAYLOAD_LENGTH) {
-						MqttMessage mqttMessage = new MqttMessage(message.getTopic(), payload);
-						client.addMqttMessage(mqttMessage);
+						MqMessage message = new MqMessage(message.getTopic(), payload);
+						device.addMqttMessage(DMqMessage);
 					} else {
 						Log.error("MqttClient.ThreadListenMessage", "run", "payload too long");
 					}
@@ -105,21 +105,27 @@ public class MqttClient extends MQTT {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+			*/
+
+		    Log.error("DClient", "ThreadListenMessage inner class", "DEPRECATED");
 		}
 	}
 
-	public MqttClient() {
+	public DClient() {
+	    /*
 		try {
 			setHost(HOST, PORT);
+			setClientId("Test");
 		} catch (URISyntaxException e) {
 			Log.error("MqttClient", "constructor", "Impossible to set host: " + HOST + ":" + PORT);
 			Log.debug(LogLevel.VERBOSE, "MqttClient", "constructor", e.getMessage());
 		}
 		connection = this.blockingConnection();
+		*/
 	}
 
-	public void connect() throws TimeoutException {
-
+	public Boolean connect() {
+        /*
 		Log.debug(LogLevel.ACTIVE, "MqttClient", "connect", "try to connect to the gateway.mqtt broker");
 
 		ThreadConnect threadConnection = new ThreadConnect();
@@ -133,15 +139,18 @@ public class MqttClient extends MQTT {
 		if (!threadConnection.isConnected) {
 			Log.error("MqttClient", "connect", "time out - stop connection to gateway.mqtt server");
 			threadConnection.stopConnection();
-			TimeoutException e = new TimeoutException("impossible to reach the gateway.mqtt server");
-			throw e;
+			return false;
 		}
 
 		Log.debug(LogLevel.ACTIVE, "MqttClient", "connect", "connected to the gateway.mqtt broker");
 		isConnected = true;
+		return isConnected;
+		*/
+
+        return false;
 	}
 
-	public void subscribe(final Client client, final SnTopic topic) throws TimeoutException {
+	public Boolean subscribe(final Device device, final SnTopic topic) {
 
 		Log.debug(LogLevel.ACTIVE, "MqttClient", "subscribe", "try to subscribe to the topic: " + topic.name());
 
@@ -156,30 +165,35 @@ public class MqttClient extends MQTT {
 		if (!threadSubscribe.isSubscribed) {
 			Log.error("MqttClient", "subscribe", "time out - stop subscription to gateway.mqtt server");
 			threadSubscribe.stopSubscribe();
-			TimeoutException e = new TimeoutException("impossible to subscribe " + topic.name() + " to the gateway.mqtt server");
-			throw e;
+			return false;
 		}
 
 		Log.debug(LogLevel.ACTIVE, "MqttClient", "subscribe", "subscription to the gateway.mqtt broker OK");
 
-		ThreadListenMessage threadListenMessage = new ThreadListenMessage(client);
+		ThreadListenMessage threadListenMessage = new ThreadListenMessage(device);
 		threadListenMessage.start();
 		topic.setSubscribed();
+		return true;
 	}
 
-	public Boolean isConnected() {
-		return isConnected;
+    public Boolean publish(final SnTopic topic, final String message, final Boolean retain) {
+        /*
+	    try {
+            Log.debug(LogLevel.VERBOSE, "MqttClient", "publish", "Publish message: " + new String(message) + " on the topic: " + topic);
+            connection.publish(topic.name().toString(), message.getBytes(), Prtcl.DEFAUlT_QOS, retain);
+            return true;
+        } catch (Exception e) {
+            Log.error("MqttClient", "publish", "Impossible to publish the message: " + message);
+            Log.debug(LogLevel.VERBOSE, "MqttClient", "publish", e.getMessage());
+            return false;
+        }
+        */
+        return false;
+    }
+
+    public Boolean isConnected() {
+		// return isConnected;
+        return false;
 	}
 
-	public Boolean publish(final String topic, final byte[] message, final Boolean retain) {
-		try {
-			Log.debug(LogLevel.VERBOSE, "MqttClient", "publish", "Publish message: " + new String(message) + " on the topic: " + topic);
-			connection.publish(topic, message, Prtcl.DEFAUlT_QOS, retain);
-			return true;
-		} catch (Exception e) {
-			Log.error("MqttClient", "publish", "Impossible to publish the message: " + message);
-			Log.debug(LogLevel.VERBOSE, "MqttClient", "publish", e.getMessage());
-			return false;
-		}
-	}
 }

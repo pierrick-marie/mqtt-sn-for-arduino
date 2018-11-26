@@ -1,8 +1,8 @@
 package gateway.mqtt.sn;
 
+import gateway.mqtt.client.Device;
 import gateway.serial.SerialPortWriter;
 import gateway.mqtt.SnTopic;
-import gateway.mqtt.client.Client;
 import gateway.utils.log.Log;
 import gateway.utils.log.LogLevel;
 
@@ -11,14 +11,14 @@ import gateway.utils.log.LogLevel;
  */
 public class Publish implements SnAction {
 
-	private final Client client;
+	private final Device device;
 	private final byte[] msg;
 
-	public Publish(final Client client, final byte[] msg) {
+	public Publish(final Device device, final byte[] msg) {
 
-		Log.input(client, "publish");
+		Log.input(device, "publish");
 
-		this.client = client;
+		this.device = device;
 		this.msg = msg;
 	}
 
@@ -28,7 +28,6 @@ public class Publish implements SnAction {
 		byte flags = msg[0];
 		// @TODO not implemented yet
 		// QoS qos = Prtcl.DEFAUlT_QOS;
-		boolean retain = false;
 
 		int topicId = (msg[2] << 8) + (msg[1] & 0xFF);
 
@@ -36,8 +35,8 @@ public class Publish implements SnAction {
 		messageId[0] = msg[3];
 		messageId[1] = msg[4];
 
-		if (null == client.mqttClient() || !client.mqttClient().isConnected()) {
-			Log.error("Publish", "publish", client + "is not connected");
+		if (null == device.mqttClient() || !device.mqttClient().isConnected()) {
+			Log.error("Publish", "publish", device + "is not connected");
 			// @TODO not used until with QoS level 1 and 2 (not implemented)
 			// puback(topicId, messageId, Prtcl.REJECTED);
 			return;
@@ -48,11 +47,11 @@ public class Publish implements SnAction {
 			data[i] = msg[5 + i];
 		}
 
-		if (client.Topics.contains(topicId)) {
+		if (device.Topics.contains(topicId)) {
 
-			SnTopic topic = client.Topics.get(topicId);
+			SnTopic topic = device.Topics.get(topicId);
 
-			if( client.mqttClient().publish(topic.name().toString(), data, retain) ) {
+			if( device.mqttClient().publish(topic, new String(data), false) ) {
 				Log.debug(LogLevel.ACTIVE, "Publish", "publish", "published "
 													 + new String(data) + " on topic "
 													 + topic.name().toString() + " (id:" + topicId
@@ -76,7 +75,7 @@ public class Publish implements SnAction {
 
 	private void reRegister(final int topicId, final byte[] messageId) {
 
-		Log.output(client, "re register");
+		Log.output(device, "re register");
 
 		byte[] ret = new byte[7];
 		ret[0] = (byte) 0x07;
@@ -92,7 +91,7 @@ public class Publish implements SnAction {
 		ret[5] = messageId[1];
 		ret[6] = Prtcl.ACCEPTED;
 
-		SerialPortWriter.write(client, ret);
+		SerialPortWriter.write(device, ret);
 	}
 
 	/**
@@ -104,7 +103,7 @@ public class Publish implements SnAction {
 	 */
 	private void puback(final int topicId, final byte[] messageId, final int returnCode) {
 
-		Log.output(client, "pub ack");
+		Log.output(device, "pub ack");
 
 		byte[] ret = new byte[7];
 		ret[0] = (byte) 0x07;
@@ -120,6 +119,6 @@ public class Publish implements SnAction {
 		ret[5] = messageId[1];
 		ret[6] = (byte) returnCode;
 
-		SerialPortWriter.write(client, ret);
+		SerialPortWriter.write(device, ret);
 	}
 }

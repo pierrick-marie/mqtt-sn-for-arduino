@@ -1,6 +1,6 @@
 package gateway.mqtt.sn;
 
-import gateway.mqtt.client.Client;
+import gateway.mqtt.client.Device;
 import gateway.utils.log.Log;
 
 /**
@@ -10,22 +10,22 @@ import gateway.utils.log.Log;
  */
 public class WillMessageReq implements SnAction {
 
-	private final Client client;
+	private final Device device;
 
-	public WillMessageReq(final Client client) {
-		this.client = client;
+	public WillMessageReq(final Device device) {
+		this.device = device;
 	}
 
 	@Override
 	public void exec() {
 
-		Log.input(client, "Will MqttMessage Req");
+		Log.input(device, "Will DMqMessage Req");
 
 		byte[] ret = new byte[2];
 		ret[0] = (byte) 0x02;
 		ret[1] = (byte) 0x08;
 
-		// SerialPortWriter.write(client, ret);
+		// SerialPortWriter.write(device, ret);
 
 	}
 }

@@ -3,13 +3,14 @@ package gateway.mqtt;
 /**
  * Created by arnaudoglaza on 04/07/2017.
  */
-public class MqttMessage {
+@Deprecated
+public class DMqMessage {
 
 	private String topic;
 	private String body;
 	private volatile Integer messageId = 0;
 
-	public MqttMessage(final String topic, final String body) {
+	public DMqMessage(final String topic, final String body) {
 		this.body = body;
 		this.topic = topic;
 	}
@@ -18,7 +19,7 @@ public class MqttMessage {
 		return topic;
 	}
 
-	public synchronized MqttMessage setMessageId(final Integer messageId) {
+	public synchronized DMqMessage setMessageId(final Integer messageId) {
 		this.messageId = messageId;
 
 		return this;

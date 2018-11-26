@@ -30,6 +30,6 @@ public class SnTopic extends Topic {
 	}
 
 	public String toString() {
-		return "topic: " + name() + " - id: " + id;
+		return name().toString();
 	}
 }

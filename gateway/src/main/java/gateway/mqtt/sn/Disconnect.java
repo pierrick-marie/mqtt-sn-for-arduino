@@ -2,7 +2,7 @@ package gateway.mqtt.sn;
 
 import gateway.serial.SerialPortWriter;
 import gateway.mqtt.client.DeviceState;
-import gateway.mqtt.client.Client;
+import gateway.mqtt.client.Device;
 import gateway.utils.log.Log;
 import gateway.utils.log.LogLevel;
 
@@ -11,14 +11,14 @@ import gateway.utils.log.LogLevel;
  */
 public class Disconnect implements SnAction {
 
-	private final Client client;
+	private final Device device;
 	private final byte[] msg;
 
-	public Disconnect(final Client client, final byte[] msg) {
+	public Disconnect(final Device device, final byte[] msg) {
 
-		Log.input(client, "disconnect");
+		Log.input(device, "disconnect");
 
-		this.client = client;
+		this.device = device;
 		this.msg = msg;
 	}
 
@@ -30,26 +30,26 @@ public class Disconnect implements SnAction {
 
 			if (duration > 0) {
 
-				client.setState(DeviceState.ASLEEP).setDuration(duration);
+				device.setState(DeviceState.ASLEEP).setDuration(duration);
 
 				disconnectAck();
 
 				Log.debug(LogLevel.ACTIVE,"Disconnect", "diconnect", "Going into sleep");
 			}
 		} else {
-			client.setState(DeviceState.DISCONNECTED);
+			device.setState(DeviceState.DISCONNECTED);
 			disconnectAck();
 		}
 	}
 
 	private void disconnectAck() {
 
-		Log.input(client, "Disconnect Ack");
+		Log.input(device, "Disconnect Ack");
 
 		byte[] ret = new byte[2];
 		ret[0] = (byte) 0x02;
 		ret[1] = (byte) 0x18;
 
-		SerialPortWriter.write(client, ret);
+		SerialPortWriter.write(device, ret);
 	}
 }

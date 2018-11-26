@@ -1,7 +1,7 @@
 package gateway.mqtt;
 
+import gateway.mqtt.client.Device;
 import gateway.serial.SerialPortWriter;
-import gateway.mqtt.client.Client;
 import gateway.utils.log.Log;
 import gateway.utils.log.LogLevel;
 
@@ -10,31 +10,31 @@ import gateway.utils.log.LogLevel;
  */
 public class Sender {
 
-	private final Client client;
+	private final Device device;
 
 	private static volatile int messageId = 0;
 
-	public Sender(final Client client) {
+	public Sender(final Device device) {
 
-		this.client = client;
+		this.device = device;
 	}
 
-	public void send(final MqttMessage mqttMessage) {
+	public void send(final MqMessage message) {
 
-		byte[] serialMessage = new byte[7 + mqttMessage.body().length()];
-		byte[] data = mqttMessage.body().getBytes();
+		byte[] serialMessage = new byte[7 + message.getPayload().length];
+		byte[] data = message.getPayload();
 		int i;
 
-		// creating the serial mqttMessage to send
+		// creating the serial message to send
 
 		serialMessage[0] = (byte) serialMessage.length;
 		serialMessage[1] = (byte) 0x0C;
 		serialMessage[2] = (byte) 0x00;
 
-		Log.debug(LogLevel.ACTIVE,"Sender", "sendMessage", "topic = " + mqttMessage.topic());
+		Log.debug(LogLevel.ACTIVE,"Sender", "sendMessage", "topic = " + message.topic());
 
-		serialMessage[3] = getTopicId(mqttMessage.topic())[0];
-		serialMessage[4] = getTopicId(mqttMessage.topic())[1];
+		serialMessage[3] = getTopicId(message.topic())[0];
+		serialMessage[4] = getTopicId(message.topic())[1];
 
 		if (messageId > 255) {
 			serialMessage[5] = (byte) (messageId / 256);
@@ -44,18 +44,18 @@ public class Sender {
 			serialMessage[6] = (byte) messageId;
 		}
 
-		for (i = 0; i < mqttMessage.body().length(); i++) {
+		for (i = 0; i < message.getPayload().length; i++) {
 			serialMessage[7 + i] = data[i];
 		}
 
-		SerialPortWriter.write(client, serialMessage);
-		mqttMessage.setMessageId(messageId);
+		SerialPortWriter.write(device, serialMessage);
+		message.setId(messageId);
 	}
 
 	private byte[] getTopicId(final String name) {
 
 		byte[] ret = new byte[2];
-		int id = client.Topics.get(name).id();
+		int id = device.Topics.get(name).id();
 
 		if (id != -1) {
 			if (id > 255) {

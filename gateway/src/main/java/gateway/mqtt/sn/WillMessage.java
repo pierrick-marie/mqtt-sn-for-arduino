@@ -1,6 +1,6 @@
 package gateway.mqtt.sn;
 
-import gateway.mqtt.client.Client;
+import gateway.mqtt.client.Device;
 import gateway.utils.log.Log;
 
 import java.nio.charset.StandardCharsets;
@@ -12,26 +12,24 @@ import java.nio.charset.StandardCharsets;
  */
 public class WillMessage implements SnAction {
 
-	private Client client;
+	private Device device;
 	private byte[] msg;
 
-	public WillMessage(final Client client, final byte[] msg) {
+	public WillMessage(final Device device, final byte[] msg) {
 
-		Log.input(client, "Will message");
+		Log.input(device, "Will message");
 
-		this.client = client;
+		this.device = device;
 		this.msg = msg;
-	}
-
-	public void willmessage() {
-
-		String willmessage = new String(msg, StandardCharsets.UTF_8);
-
-		client.mqttClient().setWillMessage(willmessage);
 	}
 
 	@Override
 	public void exec() {
-		willmessage();
+		/*
+		String willmessage = new String(msg, StandardCharsets.UTF_8);
+		device.mqttClient().setWillMessage(willmessage);
+		*/
+
+        Log.error("WillMessage", "exec", "NOT IMPLEMENTED YET");
 	}
 }

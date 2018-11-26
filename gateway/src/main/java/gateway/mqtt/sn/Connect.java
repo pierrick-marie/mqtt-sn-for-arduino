@@ -1,9 +1,10 @@
 package gateway.mqtt.sn;
 
+import gateway.mqtt.Client;
+import gateway.mqtt.client.Device;
 import gateway.serial.SerialPortWriter;
-import gateway.mqtt.MqttClient;
+import gateway.mqtt.DClient;
 import gateway.mqtt.client.DeviceState;
-import gateway.mqtt.client.Client;
 import gateway.utils.log.Log;
 import gateway.utils.log.LogLevel;
 
@@ -18,14 +19,14 @@ import java.nio.charset.StandardCharsets;
  */
 public class Connect implements SnAction {
 
-	private final Client client;
+	private final Device device;
 	private final byte[] message;
 
-	public Connect(final Client client, final byte[] message) {
+	public Connect(final Device device, final byte[] message) {
 
-		Log.input(client, "connect");
+		Log.input(device, "connect");
 
-		this.client = client;
+		this.device = device;
 		this.message = message;
 	}
 
@@ -38,62 +39,46 @@ public class Connect implements SnAction {
 		// boolean will = (flags >> 3) == 1;
 		boolean cleanSession = (flags >> 2) == 1;
 
-		if (client.name().equals("")) {
+		if (device.name().equals("")) {
 			String name = getClientName();
-			Log.debug(LogLevel.ACTIVE, "Connect", "getClientName", "setup the client's name with " + name);
-			client.setClientName(name);
+			Log.debug(LogLevel.ACTIVE, "Connect", "getClientName", "setup the device's name with " + name);
+			device.setClientName(name);
 		}
 
-		Log.debug(LogLevel.ACTIVE, "Connect", "connect", client + " status is " + client.state());
+		Log.debug(LogLevel.ACTIVE, "Connect", "connect", device + " status is " + device.state());
 
-		if (client.state().equals(DeviceState.LOST) || client.state().equals(DeviceState.FIRSTCONNECT) || client.state().equals(DeviceState.DISCONNECTED)) {
-			if (connectToTheBroker(cleanSession, duration)) {
-				connack(Prtcl.ACCEPTED);
-				client.setState(DeviceState.ACTIVE);
-			} else {
-				connack(Prtcl.REJECTED);
-				client.setState(DeviceState.DISCONNECTED);
-			}
+		if (device.state().equals(DeviceState.LOST) || device.state().equals(DeviceState.FIRSTCONNECT) || device.state().equals(DeviceState.DISCONNECTED)) {
+
+            Client mqtt = new Client(device, cleanSession);
+
+            if(mqtt.connect()) {
+                Log.debug(LogLevel.ACTIVE, "Connect", "connectToTheBroker", "connected");
+                device.setMqttClient(mqtt);
+                device.setState(DeviceState.ACTIVE);
+                connack(Prtcl.ACCEPTED);
+            } else {
+                Log.debug(LogLevel.ACTIVE, "Connect", "connectToTheBroker", "device not connected");
+                device.setState(DeviceState.DISCONNECTED);
+                connack(Prtcl.REJECTED);
+            }
+
 		} else {
-			// client's state is ACTIVE or AWAKE
+			// device's state is ACTIVE or AWAKE
 			connack(Prtcl.ACCEPTED);
-			client.setState(DeviceState.ACTIVE);
+			device.setState(DeviceState.ACTIVE);
 		}
-	}
-
-	private Boolean connectToTheBroker(final Boolean cleanSession, final Short duration) {
-
-		Log.debug(LogLevel.ACTIVE, "Connect", "connectToTheBroker", "connecting to the gateway.mqtt broker");
-
-		MqttClient mqtt = new MqttClient();
-		mqtt.setClientId(client.name());
-		mqtt.setCleanSession(cleanSession);
-		mqtt.setKeepAlive(duration);
-
-		try {
-			mqtt.connect();
-		} catch (Exception e) {
-			Log.error("Connect", "connectToTheBroker", "gateway.mqtt client not connected");
-			Log.activeDebug(e.getMessage());
-
-			return false;
-		}
-		Log.debug(LogLevel.ACTIVE, "Connect", "connectToTheBroker", "connected");
-
-		client.setMqttClient(mqtt);
-		return true;
 	}
 
 	private void connack(final byte isConnected) {
 
-		Log.output(client, "connack: " + isConnected);
+		Log.output(device, "connack: " + isConnected);
 
 		byte[] serialMesasge = new byte[3];
 		serialMesasge[0] = (byte) 0x03;
 		serialMesasge[1] = (byte) 0x05;
 		serialMesasge[2] = isConnected;
 
-		SerialPortWriter.write(client, serialMesasge);
+		SerialPortWriter.write(device, serialMesasge);
 	}
 
 	private String getClientName() {

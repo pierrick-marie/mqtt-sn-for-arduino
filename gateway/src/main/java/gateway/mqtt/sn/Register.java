@@ -1,8 +1,8 @@
 package gateway.mqtt.sn;
 
+import gateway.mqtt.client.Device;
 import gateway.serial.SerialPortWriter;
 import gateway.mqtt.SnTopic;
-import gateway.mqtt.client.Client;
 import gateway.utils.log.Log;
 import gateway.utils.log.LogLevel;
 
@@ -13,14 +13,14 @@ import java.nio.charset.StandardCharsets;
  */
 public class Register implements SnAction {
 
-	private final Client client;
+	private final Device device;
 	private final byte[] message;
 
-	public Register(final Client client, final byte[] msg) {
+	public Register(final Device device, final byte[] msg) {
 
-		Log.input(client, "register");
+		Log.input(device, "register");
 
-		this.client = client;
+		this.device = device;
 		this.message = msg;
 	}
 
@@ -39,8 +39,8 @@ public class Register implements SnAction {
 		int i;
 		SnTopic topic;
 
-		if (null == client.mqttClient() || !client.mqttClient().isConnected()) {
-			Log.error("Register", "register", client + "is not connected");
+		if (null == device.mqttClient() || !device.mqttClient().isConnected()) {
+			Log.error("Register", "register", device + "is not connected");
 			// Error - topicId = -1
 			regack(-1, messageId, Prtcl.REJECTED);
 			return;
@@ -52,15 +52,15 @@ public class Register implements SnAction {
 
 		topicName = new String(name, StandardCharsets.UTF_8);
 
-		synchronized (client.Topics) {
+		synchronized (device.Topics) {
 
-			topic = client.Topics.get(topicName);
+			topic = device.Topics.get(topicName);
 
 			if (null != topic) {
 				Log.debug(LogLevel.ACTIVE, "Register", "register", "topic " + topic.name() + " (id:" + topic.id() + ") is already registered");
 			} else {
-				Log.debug(LogLevel.ACTIVE, "Register", "register", "topic " + topicName + " is NOT contained -> saving the topic with id: " + client.Topics.size());
-				topic = client.Topics.put(client.Topics.size(), topicName);
+				Log.debug(LogLevel.ACTIVE, "Register", "register", "topic " + topicName + " is NOT contained -> saving the topic with id: " + device.Topics.size());
+				topic = device.Topics.put(device.Topics.size(), topicName);
 			}
 			regack(topic.id(), messageId, Prtcl.ACCEPTED);
 		}
@@ -74,7 +74,7 @@ public class Register implements SnAction {
 	 */
 	private void regack(final int topicId, final byte[] messageId, final byte returnCode) {
 
-		Log.output(client, "reg ack");
+		Log.output(device, "reg ack");
 
 		// the message to send
 		byte[] message = new byte[7];
@@ -92,6 +92,6 @@ public class Register implements SnAction {
 		message[5] = messageId[1];
 		message[6] = returnCode;
 
-		SerialPortWriter.write(client, message);
+		SerialPortWriter.write(device, message);
 	}
 }

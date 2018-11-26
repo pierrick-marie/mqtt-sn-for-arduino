@@ -1,6 +1,6 @@
 package gateway.mqtt.sn;
 
-import gateway.mqtt.client.Client;
+import gateway.mqtt.client.Device;
 import gateway.utils.log.Log;
 import gateway.utils.log.LogLevel;
 
@@ -11,14 +11,14 @@ import gateway.utils.log.LogLevel;
  */
 public class Puback implements SnAction {
 
-	final Client client;
+	final Device device;
 	final byte[] msg;
 
-	public Puback(final Client client, final byte[] msg) {
+	public Puback(final Device device, final byte[] msg) {
 
-		Log.input(client, "pub ack");
+		Log.input(device, "pub ack");
 
-		this.client = client;
+		this.device = device;
 		this.msg = msg;
 	}
 
@@ -30,7 +30,7 @@ public class Puback implements SnAction {
 
 			Log.debug(LogLevel.ACTIVE, "PubAck", "puback","message id ack: " + msgID);
 
-			client.acquitMessage(msgID);
+			device.acquitMessage(msgID);
 		}
 	}
 

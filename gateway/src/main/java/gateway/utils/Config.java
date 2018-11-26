@@ -20,7 +20,7 @@ public enum Config {
 		} else {
 			SERIAL_PORT = args[0];
 			IP_SERVER = args[1];
-			PORT_SERVER = new Integer(args[2]);
+			PORT_SERVER = Integer.valueOf(args[2]);
 		}
 	}
 }

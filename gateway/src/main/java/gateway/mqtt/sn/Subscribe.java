@@ -2,7 +2,7 @@ package gateway.mqtt.sn;
 
 import gateway.serial.SerialPortWriter;
 import gateway.mqtt.SnTopic;
-import gateway.mqtt.client.Client;
+import gateway.mqtt.client.Device;
 import gateway.utils.log.Log;
 import gateway.utils.log.LogLevel;
 
@@ -14,14 +14,14 @@ import java.util.concurrent.TimeoutException;
  */
 public class Subscribe implements SnAction {
 
-	final Client client;
+	final Device device;
 	final byte[] msg;
 
-	public Subscribe(final Client client, final byte[] msg) {
+	public Subscribe(final Device device, final byte[] msg) {
 
-		Log.input(client, "subscribe");
+		Log.input(device, "subscribe");
 
-		this.client = client;
+		this.device = device;
 		this.msg = msg;
 	}
 
@@ -32,8 +32,8 @@ public class Subscribe implements SnAction {
 		messageId[0] = msg[1];
 		messageId[1] = msg[2];
 
-		if (null == client.mqttClient() || !client.mqttClient().isConnected()) {
-			Log.error("Subscribre", "subscribe", client + "is not connected");
+		if (null == device.mqttClient() || !device.mqttClient().isConnected()) {
+			Log.error("Subscribre", "subscribe", device + "is not connected");
 			suback(new byte[]{(byte)Prtcl.DEFAUlT_QOS.ordinal()}, messageId, 0, Prtcl.REJECTED);
 			return;
 		}
@@ -44,18 +44,16 @@ public class Subscribe implements SnAction {
 		}
 		String topicName = new String(name, StandardCharsets.UTF_8);
 
-		synchronized (client.Topics) {
+		synchronized (device.Topics) {
 
-			SnTopic topic = client.Topics.get(topicName);
+			SnTopic topic = device.Topics.get(topicName);
 
 			if (null != topic) {
 				if (!topic.isSubscribed()) {
-					try {
-						client.mqttClient().subscribe(client, topic);
+				    if(device.mqttClient().subscribe(topic)){
 						Log.debug(LogLevel.ACTIVE, "Subscribe", "subscribe", "subcription ok -> sending sub ack message");
-					} catch (TimeoutException e) {
+					} else {
 						Log.error("Subscribre", "subscribe", "imposible to subscribe to the topic: " + topicName);
-						Log.debug(LogLevel.VERBOSE, "Subscribre", "subscribe", e.getMessage());
 						suback(new byte[]{(byte) Prtcl.DEFAUlT_QOS.ordinal()}, messageId, topic.id(), Prtcl.REJECTED);
 						return;
 					}
@@ -63,7 +61,7 @@ public class Subscribe implements SnAction {
 				Log.debug(LogLevel.ACTIVE, "Subscribe", "subscribe", "Topics " + topicName + " is already registered with id: " + topic.id());
 				suback(new byte[]{(byte) Prtcl.DEFAUlT_QOS.ordinal()}, messageId, topic.id(), Prtcl.ACCEPTED);
 			} else {
-				Log.error("Subscribe", "subscribe", "Topics NOT registered " + client.Topics.get(1));
+				Log.error("Subscribe", "subscribe", "Topics NOT registered " + device.Topics.get(1));
 				// Error - topicId = -1
 				suback(new byte[]{(byte) Prtcl.DEFAUlT_QOS.ordinal()}, messageId, -1, Prtcl.REJECTED);
 			}
@@ -72,7 +70,7 @@ public class Subscribe implements SnAction {
 
 	private void suback(final byte[] qos, final byte[] messageId, final int topicId, final byte returnCode) {
 
-		Log.output(client, "sub ack");
+		Log.output(device, "sub ack");
 
 		byte[] ret = new byte[8];
 		ret[0] = (byte) 0x08;
@@ -89,7 +87,7 @@ public class Subscribe implements SnAction {
 		ret[6] = messageId[1];
 		ret[7] = returnCode;
 
-		SerialPortWriter.write(client, ret);
+		SerialPortWriter.write(device, ret);
 	}
 
 	@Override

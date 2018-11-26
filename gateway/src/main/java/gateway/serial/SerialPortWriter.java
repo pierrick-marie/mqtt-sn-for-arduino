@@ -1,13 +1,13 @@
 package gateway.serial;
 
+import gateway.mqtt.client.Device;
 import jssc.SerialPortException;
-import gateway.mqtt.client.Client;
 import gateway.utils.log.Log;
 import gateway.utils.log.LogLevel;
 
 public class SerialPortWriter {
 
-	public static void write(final Client client, final byte[] payload) {
+	public static void write(final Device device, final byte[] payload) {
 
 		Log.debug(LogLevel.VERBOSE, "SerialPortWriter", "write", "sending a message");
 
@@ -26,11 +26,11 @@ public class SerialPortWriter {
 		res[4] = 0x01;
 
 		for (int i = 0; i < 8; i++) {
-			res[5 + i] = client.address64.address[i];
+			res[5 + i] = device.address64.address[i];
 		}
 
 		for (int i = 0; i < 2; i++) {
-			res[13 + i] = client.address16.address[i];
+			res[13 + i] = device.address16.address[i];
 		}
 		res[15] = (byte) 0x0;
 		res[16] = (byte) 0x1;
