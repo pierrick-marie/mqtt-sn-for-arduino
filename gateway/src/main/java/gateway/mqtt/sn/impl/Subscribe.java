@@ -1,3 +1,10 @@
+/**
+ * BSD 3-Clause Licence
+ *
+ * Created by arnaudoglaza on 04/07/2017.
+ * Updated by pierrickmarie on 28/11/2018.
+ */
+
 package gateway.mqtt.sn.impl;
 
 import gateway.mqtt.sn.IAction;
@@ -9,9 +16,6 @@ import gateway.utils.log.LogLevel;
 
 import java.nio.charset.StandardCharsets;
 
-/**
- * Created by arnaudoglaza on 07/07/2017.
- */
 public class Subscribe implements IAction {
 
 	final Device device;

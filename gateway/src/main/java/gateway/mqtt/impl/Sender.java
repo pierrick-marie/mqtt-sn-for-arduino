@@ -1,3 +1,10 @@
+/**
+ * BSD 3-Clause Licence
+ *
+ * Created by arnaudoglaza on 04/07/2017.
+ * Updated by pierrickmarie on 28/11/2018.
+ */
+
 package gateway.mqtt.impl;
 
 import gateway.mqtt.client.Device;
@@ -5,9 +12,6 @@ import gateway.serial.SerialPortWriter;
 import gateway.utils.log.Log;
 import gateway.utils.log.LogLevel;
 
-/**
- * Created by arnaudoglaza on 04/07/2017.
- */
 public class Sender {
 
 	private final Device device;

@@ -1,3 +1,8 @@
+/**
+ * Created by arnaudoglaza on 07/07/2017.
+ * Updated by pierrickmarie on 28/11/2018.
+ */
+
 package gateway.mqtt.sn.impl;
 
 import gateway.mqtt.impl.Client;
@@ -10,13 +15,6 @@ import gateway.utils.log.LogLevel;
 
 import java.nio.charset.StandardCharsets;
 
-/**
- * Created by arnaudoglaza on 07/07/2017.
- */
-
-/**
- * This class is used to handle the connect message.
- */
 public class Connect implements IAction {
 
 	private final Device device;

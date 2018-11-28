@@ -1,3 +1,10 @@
+/**
+ * BSD 3-Clause Licence
+ *
+ * Created by arnaudoglaza on 04/07/2017.
+ * Updated by pierrickmarie on 28/11/2018.
+ */
+
 package gateway.mqtt.sn.impl;
 
 import gateway.mqtt.client.Device;
@@ -6,9 +13,7 @@ import gateway.utils.log.Log;
 import gateway.utils.log.LogLevel;
 
 /**
- * Created by arnaudoglaza on 07/07/2017.
- *
- * @TODO not used until with QoS level 1 and 2 (not implemented)
+ * @TODO not implemented yet
  */
 public class Puback implements IAction {
 

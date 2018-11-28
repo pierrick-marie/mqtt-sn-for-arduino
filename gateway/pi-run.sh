@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# BSD 3-Clause Licence
+# Updated by pierrickmarie on 28/11/2018.
+
 sleep 30
 
 killall java
@@ -8,9 +11,13 @@ echo "" >> /home/pi/Documents/java-log.txt
 echo "$(date) - REBOOT" >> /home/pi/Documents/java-log.txt
 echo "" >> /home/pi/Documents/java-log.txt
 
-cd /home/pi/Downloads/MQTT_SN/
+# the repository of the project
+cd /home/pi/Downloads/mqtt-sn/
 
-java -cp ./lib/jssc-2.8.0.jar:./lib/hawtbuf-1.10.jar:./lib/gateway.mqtt-device-1.12.jar:./lib/hawtdispatch-1.21.jar:./lib/hawtdispatch-transport-1.21.jar:./bin gateway.Main >> /home/pi/Documents/java-log.txt 2>> /home/pi/Documents/java-error.txt
+if [ ! -d "bin" ]; then
+    mkdir bin
+fi
 
+javac -d ./bin -sourcepath ./src/main/java -cp ./lib/jssc-2.8.0.jar:./lib/org.eclipse.paho.client.mqttv3-1.2.0.jar ./src/main/java/gateway/Main.java -Xlint:unchecked
 
-
+java -cp ./lib/jssc-2.8.0.jar:./lib/org.eclipse.paho.client.mqttv3-1.2.0.jar:./bin gateway.Main "$1" "$2" "$3"

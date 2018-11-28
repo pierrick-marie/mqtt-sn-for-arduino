@@ -1,15 +1,18 @@
+/**
+ * BSD 3-Clause Licence
+ *
+ * Created by arnaudoglaza on 04/07/2017.
+ * Updated by pierrickmarie on 28/11/2018.
+ */
+
 package gateway.serial;
 
-import gateway.Main;
 import gateway.utils.Config;
 import jssc.SerialPort;
 import jssc.SerialPortException;
 import gateway.utils.log.Log;
 import gateway.utils.log.LogLevel;
 
-/**
- * Created by arnaudoglaza on 03/07/2017.
- */
 enum XBeeSerialPort {
 
 	Instance;

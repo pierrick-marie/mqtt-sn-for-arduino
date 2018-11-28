@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# BSD 3-Clause Licence
+# Updated by pierrickmarie on 28/11/2018.
+
 if [ ! -d "bin" ]; then
     mkdir bin
 fi
