@@ -1,9 +1,9 @@
 /*
-mqttsn.h
-
 The MIT License (MIT)
 
 Copyright (C) 2014 John Donovan
+
+Modified 2018 Pierrick MARIE
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
