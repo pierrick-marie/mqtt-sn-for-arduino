@@ -7,7 +7,6 @@ import gateway.utils.log.Log;
 import gateway.utils.log.LogLevel;
 
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.TimeoutException;
 
 /**
  * Created by arnaudoglaza on 07/07/2017.
@@ -34,7 +33,7 @@ public class Subscribe implements SnAction {
 
 		if (null == device.mqttClient() || !device.mqttClient().isConnected()) {
 			Log.error("Subscribre", "subscribe", device + "is not connected");
-			suback(new byte[]{(byte)Prtcl.DEFAUlT_QOS.ordinal()}, messageId, 0, Prtcl.REJECTED);
+			suback(new byte[]{(byte) Prtcl.DEFAULT_QOS}, messageId, 0, Prtcl.REJECTED);
 			return;
 		}
 
@@ -54,16 +53,16 @@ public class Subscribe implements SnAction {
 						Log.debug(LogLevel.ACTIVE, "Subscribe", "subscribe", "subcription ok -> sending sub ack message");
 					} else {
 						Log.error("Subscribre", "subscribe", "imposible to subscribe to the topic: " + topicName);
-						suback(new byte[]{(byte) Prtcl.DEFAUlT_QOS.ordinal()}, messageId, topic.id(), Prtcl.REJECTED);
+						suback(new byte[]{(byte) Prtcl.DEFAULT_QOS}, messageId, topic.id(), Prtcl.REJECTED);
 						return;
 					}
 				}
 				Log.debug(LogLevel.ACTIVE, "Subscribe", "subscribe", "Topics " + topicName + " is already registered with id: " + topic.id());
-				suback(new byte[]{(byte) Prtcl.DEFAUlT_QOS.ordinal()}, messageId, topic.id(), Prtcl.ACCEPTED);
+				suback(new byte[]{(byte) Prtcl.DEFAULT_QOS}, messageId, topic.id(), Prtcl.ACCEPTED);
 			} else {
 				Log.error("Subscribe", "subscribe", "Topics NOT registered " + device.Topics.get(1));
 				// Error - topicId = -1
-				suback(new byte[]{(byte) Prtcl.DEFAUlT_QOS.ordinal()}, messageId, -1, Prtcl.REJECTED);
+				suback(new byte[]{(byte) Prtcl.DEFAULT_QOS}, messageId, -1, Prtcl.REJECTED);
 			}
 		}
 	}

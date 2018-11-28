@@ -21,7 +21,6 @@ public class Device extends Thread {
 	private boolean doAction = false;
 	private SnAction action = null;
 
-	private String name = "";
 	private Integer duration = 0;
 	private DeviceState state = DeviceState.DISCONNECTED;
 	private Client mqttClient = null;
@@ -100,23 +99,6 @@ public class Device extends Thread {
 		return messageFound;
 	}
 
-	public String name() {
-		return name;
-	}
-
-	public Device setClientName(final String name) {
-
-		if (null == name) {
-			Log.error("Device", "setName", "name is null");
-		}
-
-		this.name = name;
-
-		Log.debug(LogLevel.VERBOSE, "Device", "setName", "Register client's name with " + name);
-
-		return this;
-	}
-
 	public Client mqttClient() {
 		return mqttClient;
 	}
@@ -169,10 +151,10 @@ public class Device extends Thread {
 	}
 
 	public String toString() {
-		if ("" == name) {
+		if ("" == getName()) {
 			return address64.toString();
 		} else {
-			return name + " (" + address64.toString() + ")";
+			return getName() + " (" + address64.toString() + ")";
 		}
 	}
 

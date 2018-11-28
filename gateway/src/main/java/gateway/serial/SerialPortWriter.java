@@ -1,9 +1,9 @@
 package gateway.serial;
 
 import gateway.mqtt.client.Device;
-import jssc.SerialPortException;
 import gateway.utils.log.Log;
 import gateway.utils.log.LogLevel;
+import jssc.SerialPortException;
 
 public class SerialPortWriter {
 

@@ -1,11 +1,12 @@
 package gateway.mqtt.sn;
 
-import org.fusesource.mqtt.client.QoS;
 
 public class Prtcl {
 
 	public static final byte ACCEPTED = 0x00;
 	public static final byte REJECTED = 0x03;
+
+	public static final int DEFAULT_QOS = 0;
 
 	public static final int PAYLOAD_LENGTH = 35;
 
@@ -29,6 +30,4 @@ public class Prtcl {
 		}
 	}
 	*/
-
-	public static final QoS DEFAUlT_QOS = QoS.AT_MOST_ONCE;
 }

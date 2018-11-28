@@ -1,17 +1,14 @@
 package gateway.mqtt;
 
-import gateway.mqtt.sn.Prtcl;
-import org.fusesource.mqtt.client.Topic;
-
-public class SnTopic extends Topic {
+public class SnTopic {
 
 	private final Integer id;
-
+    private String name;
 	private Boolean subscribed;
 
 	public SnTopic(final Integer id, final String name) {
-		super(name, Prtcl.DEFAUlT_QOS);
 		this.id = id;
+		this.name = name;
 		subscribed = false;
 	}
 
@@ -23,11 +20,15 @@ public class SnTopic extends Topic {
 		return subscribed;
 	}
 
-	synchronized public Topic setSubscribed() {
+	synchronized public SnTopic setSubscribed() {
 		subscribed = true;
 
 		return this;
 	}
+
+	public String name() {
+	    return name;
+    }
 
 	public String toString() {
 		return name().toString();

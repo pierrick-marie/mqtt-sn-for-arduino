@@ -3,7 +3,6 @@ package gateway.mqtt.sn;
 import gateway.mqtt.Client;
 import gateway.mqtt.client.Device;
 import gateway.serial.SerialPortWriter;
-import gateway.mqtt.DClient;
 import gateway.mqtt.client.DeviceState;
 import gateway.utils.log.Log;
 import gateway.utils.log.LogLevel;
@@ -34,15 +33,15 @@ public class Connect implements SnAction {
 	public void exec() {
 
 		byte flags = message[0];
-		short duration = (short) (message[2] * 16 + message[3]);
 		// @Todo not implemented yet
-		// boolean will = (flags >> 3) == 1;
+        // short duration = (short) (message[2] * 16 + message[3]);
+        // boolean will = (flags >> 3) == 1;
 		boolean cleanSession = (flags >> 2) == 1;
 
-		if (device.name().equals("")) {
+		if (device.getName().equals("")) {
 			String name = getClientName();
 			Log.debug(LogLevel.ACTIVE, "Connect", "getClientName", "setup the device's name with " + name);
-			device.setClientName(name);
+			device.setName(name);
 		}
 
 		Log.debug(LogLevel.ACTIVE, "Connect", "connect", device + " status is " + device.state());

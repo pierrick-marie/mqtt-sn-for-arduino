@@ -51,7 +51,7 @@ public class Publish implements SnAction {
 
 			SnTopic topic = device.Topics.get(topicId);
 
-			if( device.mqttClient().publish(topic, new String(data), false) ) {
+			if( device.mqttClient().publish(topic, new String(data)) ) {
 				Log.debug(LogLevel.ACTIVE, "Publish", "publish", "published "
 													 + new String(data) + " on topic "
 													 + topic.name().toString() + " (id:" + topicId
