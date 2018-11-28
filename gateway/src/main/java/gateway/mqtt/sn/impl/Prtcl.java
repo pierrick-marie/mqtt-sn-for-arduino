@@ -1,4 +1,4 @@
-package gateway.mqtt.sn;
+package gateway.mqtt.sn.impl;
 
 
 public class Prtcl {

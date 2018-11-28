@@ -1,6 +1,7 @@
-package gateway.mqtt.sn;
+package gateway.mqtt.sn.impl;
 
 import gateway.mqtt.client.Device;
+import gateway.mqtt.sn.IAction;
 import gateway.utils.log.Log;
 import gateway.utils.log.LogLevel;
 
@@ -9,7 +10,7 @@ import gateway.utils.log.LogLevel;
  *
  * @TODO not used until with QoS level 1 and 2 (not implemented)
  */
-public class Puback implements SnAction {
+public class Puback implements IAction {
 
 	final Device device;
 	final byte[] msg;

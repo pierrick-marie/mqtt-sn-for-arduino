@@ -1,16 +1,15 @@
-package gateway.mqtt.sn;
+package gateway.mqtt.sn.impl;
 
 import gateway.mqtt.client.Device;
+import gateway.mqtt.sn.IAction;
 import gateway.utils.log.Log;
-
-import java.nio.charset.StandardCharsets;
 
 /**
  * Created by arnaudoglaza on 07/07/2017.
  *
  * @TODO not implemented yet
  */
-public class WillMessage implements SnAction {
+public class WillMessage implements IAction {
 
 	private Device device;
 	private byte[] msg;

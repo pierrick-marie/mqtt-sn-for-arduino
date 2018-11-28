@@ -1,14 +1,15 @@
-package gateway.mqtt;
+package gateway.mqtt.impl;
 
+import gateway.mqtt.IClient;
 import gateway.mqtt.client.Device;
-import gateway.mqtt.sn.Prtcl;
+import gateway.mqtt.sn.impl.Prtcl;
 import gateway.utils.Config;
 import gateway.utils.log.Log;
 import gateway.utils.log.LogLevel;
 import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
-import static gateway.mqtt.sn.Prtcl.PAYLOAD_LENGTH;
+import static gateway.mqtt.sn.impl.Prtcl.PAYLOAD_LENGTH;
 
 public class Client implements MqttCallback, IClient, Runnable {
 
@@ -85,7 +86,7 @@ public class Client implements MqttCallback, IClient, Runnable {
     }
 
     @Override
-    public Boolean subscribe(SnTopic topic) {
+    public Boolean subscribe(Topic topic) {
 
         if(!isStarted) {
             new Thread(this).start();
@@ -105,7 +106,7 @@ public class Client implements MqttCallback, IClient, Runnable {
     }
 
     @Override
-    public Boolean publish(SnTopic topic, String message) {
+    public Boolean publish(Topic topic, String message) {
 
         try {
             MqttMessage mqttMessage = new MqttMessage(message.getBytes());

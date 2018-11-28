@@ -1,8 +1,9 @@
-package gateway.mqtt.sn;
+package gateway.mqtt.sn.impl;
 
 import gateway.mqtt.client.Device;
+import gateway.mqtt.sn.IAction;
 import gateway.serial.SerialPortWriter;
-import gateway.mqtt.SnTopic;
+import gateway.mqtt.impl.Topic;
 import gateway.utils.log.Log;
 import gateway.utils.log.LogLevel;
 
@@ -11,7 +12,7 @@ import java.nio.charset.StandardCharsets;
 /**
  * Created by arnaudoglaza on 07/07/2017.
  */
-public class Register implements SnAction {
+public class Register implements IAction {
 
 	private final Device device;
 	private final byte[] message;
@@ -37,7 +38,7 @@ public class Register implements SnAction {
 		byte[] name = new byte[message.length - 4];
 		String topicName;
 		int i;
-		SnTopic topic;
+		Topic topic;
 
 		if (null == device.mqttClient() || !device.mqttClient().isConnected()) {
 			Log.error("Register", "register", device + "is not connected");

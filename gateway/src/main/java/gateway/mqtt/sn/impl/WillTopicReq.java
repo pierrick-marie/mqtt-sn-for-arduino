@@ -1,6 +1,7 @@
-package gateway.mqtt.sn;
+package gateway.mqtt.sn.impl;
 
 import gateway.mqtt.client.Device;
+import gateway.mqtt.sn.IAction;
 import gateway.utils.log.Log;
 
 /**
@@ -8,7 +9,7 @@ import gateway.utils.log.Log;
  *
  * @TODO not implemented yet
  */
-public class WillTopicReq implements SnAction {
+public class WillTopicReq implements IAction {
 
 
 	private final Device device;

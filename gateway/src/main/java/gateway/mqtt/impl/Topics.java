@@ -1,14 +1,14 @@
-package gateway.mqtt;
+package gateway.mqtt.impl;
 
 import java.util.*;
 
 public class Topics {
 
-	private final List<SnTopic> topics = Collections.synchronizedList(new ArrayList<>());
+	private final List<Topic> topics = Collections.synchronizedList(new ArrayList<>());
 
-	synchronized public SnTopic put(final Integer id, final String name) {
+	synchronized public Topic put(final Integer id, final String name) {
 
-		SnTopic ret = new SnTopic(id, name);
+		Topic ret = new Topic(id, name);
 		topics.add(ret);
 
 		return ret;
@@ -20,7 +20,7 @@ public class Topics {
 
 	synchronized public Boolean contains(final Integer id) {
 
-		for(SnTopic topic : topics) {
+		for(Topic topic : topics) {
 			if(topic.id().equals(id)){
 				return true;
 			}
@@ -31,7 +31,7 @@ public class Topics {
 
 	synchronized public Boolean contains(final String name) {
 
-		for(SnTopic topic : topics) {
+		for(Topic topic : topics) {
 			if(topic.name().toString().equals(name)){
 				return true;
 			}
@@ -40,9 +40,9 @@ public class Topics {
 		return false;
 	}
 
-	synchronized public SnTopic get(final String name) {
+	synchronized public Topic get(final String name) {
 
-		for(SnTopic topic : topics) {
+		for(Topic topic : topics) {
 			if(topic.name().toString().equals(name)){
 				return topic;
 			}
@@ -51,9 +51,9 @@ public class Topics {
 		return null;
 	}
 
-	synchronized public SnTopic get(final Integer id) {
+	synchronized public Topic get(final Integer id) {
 
-		for(SnTopic topic : topics) {
+		for(Topic topic : topics) {
 			if(topic.id().equals(id)){
 				return topic;
 			}

@@ -1,4 +1,4 @@
-package gateway.mqtt;
+package gateway.mqtt.impl;
 
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 

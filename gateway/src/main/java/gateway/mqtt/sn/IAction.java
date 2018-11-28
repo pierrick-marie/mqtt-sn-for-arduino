@@ -1,6 +1,6 @@
 package gateway.mqtt.sn;
 
-public interface SnAction {
+public interface IAction {
 
 	void exec();
 }

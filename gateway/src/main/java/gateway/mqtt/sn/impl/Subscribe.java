@@ -1,7 +1,8 @@
-package gateway.mqtt.sn;
+package gateway.mqtt.sn.impl;
 
+import gateway.mqtt.sn.IAction;
 import gateway.serial.SerialPortWriter;
-import gateway.mqtt.SnTopic;
+import gateway.mqtt.impl.Topic;
 import gateway.mqtt.client.Device;
 import gateway.utils.log.Log;
 import gateway.utils.log.LogLevel;
@@ -11,7 +12,7 @@ import java.nio.charset.StandardCharsets;
 /**
  * Created by arnaudoglaza on 07/07/2017.
  */
-public class Subscribe implements SnAction {
+public class Subscribe implements IAction {
 
 	final Device device;
 	final byte[] msg;
@@ -45,7 +46,7 @@ public class Subscribe implements SnAction {
 
 		synchronized (device.Topics) {
 
-			SnTopic topic = device.Topics.get(topicName);
+			Topic topic = device.Topics.get(topicName);
 
 			if (null != topic) {
 				if (!topic.isSubscribed()) {

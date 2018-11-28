@@ -1,12 +1,14 @@
 package gateway.mqtt;
 
+import gateway.mqtt.impl.Topic;
+
 public interface IClient {
 
     Boolean connect();
 
-    Boolean subscribe(final SnTopic topic);
+    Boolean subscribe(final Topic topic);
 
-    Boolean publish(final SnTopic topic, final String message);
+    Boolean publish(final Topic topic, final String message);
 
     Boolean isConnected();
 

@@ -1,15 +1,16 @@
-package gateway.mqtt.sn;
+package gateway.mqtt.sn.impl;
 
 import gateway.mqtt.client.Device;
+import gateway.mqtt.sn.IAction;
 import gateway.serial.SerialPortWriter;
-import gateway.mqtt.SnTopic;
+import gateway.mqtt.impl.Topic;
 import gateway.utils.log.Log;
 import gateway.utils.log.LogLevel;
 
 /**
  * Created by arnaudoglaza on 07/07/2017.
  */
-public class Publish implements SnAction {
+public class Publish implements IAction {
 
 	private final Device device;
 	private final byte[] msg;
@@ -49,7 +50,7 @@ public class Publish implements SnAction {
 
 		if (device.Topics.contains(topicId)) {
 
-			SnTopic topic = device.Topics.get(topicId);
+			Topic topic = device.Topics.get(topicId);
 
 			if( device.mqttClient().publish(topic, new String(data)) ) {
 				Log.debug(LogLevel.ACTIVE, "Publish", "publish", "published "

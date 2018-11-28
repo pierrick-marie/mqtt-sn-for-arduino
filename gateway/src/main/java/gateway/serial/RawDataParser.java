@@ -1,10 +1,10 @@
 package gateway.serial;
 
-import gateway.mqtt.sn.*;
 import gateway.mqtt.address.Address16;
 import gateway.mqtt.address.Address64;
 import gateway.mqtt.client.Device;
 import gateway.mqtt.client.Devices;
+import gateway.mqtt.sn.impl.*;
 import gateway.utils.log.Log;
 import gateway.utils.log.LogLevel;
 

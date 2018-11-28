@@ -1,7 +1,8 @@
-package gateway.mqtt.sn;
+package gateway.mqtt.sn.impl;
 
-import gateway.mqtt.Client;
+import gateway.mqtt.impl.Client;
 import gateway.mqtt.client.Device;
+import gateway.mqtt.sn.IAction;
 import gateway.serial.SerialPortWriter;
 import gateway.mqtt.client.DeviceState;
 import gateway.utils.log.Log;
@@ -16,7 +17,7 @@ import java.nio.charset.StandardCharsets;
 /**
  * This class is used to handle the connect message.
  */
-public class Connect implements SnAction {
+public class Connect implements IAction {
 
 	private final Device device;
 	private final byte[] message;
@@ -34,15 +35,13 @@ public class Connect implements SnAction {
 
 		byte flags = message[0];
 		// @Todo not implemented yet
-        // short duration = (short) (message[2] * 16 + message[3]);
-        // boolean will = (flags >> 3) == 1;
+       	// short duration = (short) (message[2] * 16 + message[3]);
+        	// boolean will = (flags >> 3) == 1;
 		boolean cleanSession = (flags >> 2) == 1;
 
-		if (device.getName().equals("")) {
-			String name = getClientName();
-			Log.debug(LogLevel.ACTIVE, "Connect", "getClientName", "setup the device's name with " + name);
-			device.setName(name);
-		}
+		String name = getClientName();
+		Log.debug(LogLevel.ACTIVE, "Connect", "getClientName", "setup the device's name with " + name);
+		device.setName(name);
 
 		Log.debug(LogLevel.ACTIVE, "Connect", "connect", device + " status is " + device.state());
 

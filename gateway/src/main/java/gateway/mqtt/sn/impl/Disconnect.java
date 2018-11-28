@@ -1,5 +1,6 @@
-package gateway.mqtt.sn;
+package gateway.mqtt.sn.impl;
 
+import gateway.mqtt.sn.IAction;
 import gateway.serial.SerialPortWriter;
 import gateway.mqtt.client.DeviceState;
 import gateway.mqtt.client.Device;
@@ -9,7 +10,7 @@ import gateway.utils.log.LogLevel;
 /**
  * Created by arnaudoglaza on 07/07/2017.
  */
-public class Disconnect implements SnAction {
+public class Disconnect implements IAction {
 
 	private final Device device;
 	private final byte[] msg;

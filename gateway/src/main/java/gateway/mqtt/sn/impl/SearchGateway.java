@@ -1,6 +1,7 @@
-package gateway.mqtt.sn;
+package gateway.mqtt.sn.impl;
 
 import gateway.Main;
+import gateway.mqtt.sn.IAction;
 import gateway.serial.SerialPortWriter;
 import gateway.mqtt.client.Device;
 import gateway.utils.log.Log;
@@ -8,7 +9,7 @@ import gateway.utils.log.Log;
 /**
  * Created by arnaudoglaza on 07/07/2017.
  */
-public class SearchGateway implements SnAction {
+public class SearchGateway implements IAction {
 
 	private final Device device;
 	private final Integer radius;

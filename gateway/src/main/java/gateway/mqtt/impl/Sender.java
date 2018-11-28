@@ -1,4 +1,4 @@
-package gateway.mqtt;
+package gateway.mqtt.impl;
 
 import gateway.mqtt.client.Device;
 import gateway.serial.SerialPortWriter;

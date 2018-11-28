@@ -1,7 +1,10 @@
 package gateway.mqtt.client;
 
-import gateway.mqtt.*;
-import gateway.mqtt.sn.SnAction;
+import gateway.mqtt.impl.Client;
+import gateway.mqtt.impl.MqMessage;
+import gateway.mqtt.impl.Sender;
+import gateway.mqtt.impl.Topics;
+import gateway.mqtt.sn.IAction;
 import gateway.utils.Time;
 import gateway.mqtt.address.Address16;
 import gateway.mqtt.address.Address64;
@@ -19,7 +22,7 @@ public class Device extends Thread {
 	private final short MAX_MESSAGES = 5;
 
 	private boolean doAction = false;
-	private SnAction action = null;
+	private IAction action = null;
 
 	private Integer duration = 0;
 	private DeviceState state = DeviceState.DISCONNECTED;
@@ -33,7 +36,7 @@ public class Device extends Thread {
 
 	private final List<MqMessage> messages = Collections.synchronizedList(new ArrayList<>());
 
-	public static final Topics Topics = new Topics();
+	public static final gateway.mqtt.impl.Topics Topics = new Topics();
 
 	public Device(final Address64 address64, final Address16 address16) {
 		this.address64 = address64;
@@ -151,11 +154,7 @@ public class Device extends Thread {
 	}
 
 	public String toString() {
-		if ("" == getName()) {
-			return address64.toString();
-		} else {
-			return getName() + " (" + address64.toString() + ")";
-		}
+		return getName() + " (" + address64.toString() + ")";
 	}
 
 	public void run() {
@@ -174,7 +173,7 @@ public class Device extends Thread {
 		action = null;
 	}
 
-	public Device setAction(SnAction action) {
+	public Device setAction(IAction action) {
 
 		if (null == action) {
 			Log.error("Device", "setAction", "action is null");

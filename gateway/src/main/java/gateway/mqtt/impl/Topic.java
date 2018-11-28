@@ -1,12 +1,12 @@
-package gateway.mqtt;
+package gateway.mqtt.impl;
 
-public class SnTopic {
+public class Topic {
 
 	private final Integer id;
-    private String name;
+    	private String name;
 	private Boolean subscribed;
 
-	public SnTopic(final Integer id, final String name) {
+	public Topic(final Integer id, final String name) {
 		this.id = id;
 		this.name = name;
 		subscribed = false;
@@ -20,7 +20,7 @@ public class SnTopic {
 		return subscribed;
 	}
 
-	synchronized public SnTopic setSubscribed() {
+	synchronized public Topic setSubscribed() {
 		subscribed = true;
 
 		return this;

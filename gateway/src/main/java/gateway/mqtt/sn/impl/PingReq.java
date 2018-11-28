@@ -1,6 +1,7 @@
-package gateway.mqtt.sn;
+package gateway.mqtt.sn.impl;
 
 import gateway.mqtt.client.Device;
+import gateway.mqtt.sn.IAction;
 import gateway.serial.SerialPortWriter;
 import gateway.mqtt.client.DeviceState;
 import gateway.utils.log.Log;
@@ -9,7 +10,7 @@ import gateway.utils.log.LogLevel;
 /**
  * Created by arnaudoglaza on 07/07/2017.
  */
-public class PingReq implements SnAction {
+public class PingReq implements IAction {
 
 	final Device device;
 	final byte[] msg;
