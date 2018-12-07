@@ -27,11 +27,11 @@ public class PingReq implements IAction {
 	public void exec() {
 		device.setState(DeviceState.AWAKE);
 
-		Log.debug(LogLevel.ACTIVE,"PingReq", "exec", "begin send messages");
+		Log.debug(LogLevel.ACTIVE, "PingReq", "exec", "begin send messages");
 
 		device.sendMqttMessages();
 
-		Log.debug(LogLevel.ACTIVE,"PingReq", "exec", "end send messages");
+		Log.debug(LogLevel.ACTIVE, "PingReq", "exec", "end send messages");
 
 		pingresp();
 	}
@@ -46,9 +46,9 @@ public class PingReq implements IAction {
 
 		SerialPortWriter.write(device, ret);
 
-		if(device.state().equals(DeviceState.AWAKE)) {
+		if (device.state().equals(DeviceState.AWAKE)) {
 			device.setState(DeviceState.ASLEEP);
-			Log.debug(LogLevel.ACTIVE,"MultipleSender", "pingResp", device + " goes to sleep");
+			Log.debug(LogLevel.ACTIVE, "MultipleSender", "pingResp", device + " goes to sleep");
 		}
 	}
 }

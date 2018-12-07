@@ -37,11 +37,12 @@ public class Log {
 
 	public static void print(final String message) {
 		Date date = new Date();
-		bBlue( " * [ INFO " + dateFormat.format(date) + " ] ");
+		bBlue(" * [ INFO " + dateFormat.format(date) + " ] ");
 		blue(message + "\n");
 	}
 
-	public static void debug(final gateway.utils.log.LogLevel level, final String className, final String methodeName, final String message) {
+	public static void debug(final gateway.utils.log.LogLevel level, final String className, final String methodeName,
+			final String message) {
 		if (LEVEL.ordinal() >= level.ordinal()) {
 
 			bYellow(" # [ " + level.name() + " ] ");

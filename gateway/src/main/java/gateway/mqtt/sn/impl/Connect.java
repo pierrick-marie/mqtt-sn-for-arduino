@@ -32,8 +32,8 @@ public class Connect implements IAction {
 
 		byte flags = message[0];
 		// @Todo not implemented yet
-       	// short duration = (short) (message[2] * 16 + message[3]);
-        	// boolean will = (flags >> 3) == 1;
+		// short duration = (short) (message[2] * 16 + message[3]);
+		// boolean will = (flags >> 3) == 1;
 		boolean cleanSession = (flags >> 2) == 1;
 
 		String name = getClientName();
@@ -42,19 +42,20 @@ public class Connect implements IAction {
 
 		Log.debug(LogLevel.ACTIVE, "Connect", "connect", device + " status is " + device.state());
 
-		if (device.state().equals(DeviceState.LOST) || device.state().equals(DeviceState.FIRSTCONNECT) || device.state().equals(DeviceState.DISCONNECTED)) {
+		if (device.state().equals(DeviceState.LOST) || device.state().equals(DeviceState.FIRSTCONNECT)
+				|| device.state().equals(DeviceState.DISCONNECTED)) {
 
-            device.initMqttClient(cleanSession);
+			device.initMqttClient(cleanSession);
 
-            if(device.connect()) {
-                Log.debug(LogLevel.ACTIVE, "Connect", "connectToTheBroker", "connected");
-                device.setState(DeviceState.ACTIVE);
-                connack(Prtcl.ACCEPTED);
-            } else {
-                Log.debug(LogLevel.ACTIVE, "Connect", "connectToTheBroker", "device not connected");
-                device.setState(DeviceState.DISCONNECTED);
-                connack(Prtcl.REJECTED);
-            }
+			if (device.connect()) {
+				Log.debug(LogLevel.ACTIVE, "Connect", "connectToTheBroker", "connected");
+				device.setState(DeviceState.ACTIVE);
+				connack(Prtcl.ACCEPTED);
+			} else {
+				Log.debug(LogLevel.ACTIVE, "Connect", "connectToTheBroker", "device not connected");
+				device.setState(DeviceState.DISCONNECTED);
+				connack(Prtcl.REJECTED);
+			}
 
 		} else {
 			// device's state is ACTIVE or AWAKE

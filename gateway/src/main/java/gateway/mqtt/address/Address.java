@@ -12,8 +12,8 @@ public abstract class Address {
 	public final String stringAddress;
 
 	public Address(final byte address[]) {
-			this.address = address;
-			stringAddress = addressToString(address);
+		this.address = address;
+		stringAddress = addressToString(address);
 	}
 
 	public String getStringAddress() {

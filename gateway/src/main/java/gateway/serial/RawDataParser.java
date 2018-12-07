@@ -76,58 +76,58 @@ enum RawDataParser {
 		Device device = Devices.list.search(new Address64(address64), new Address16(address16));
 
 		switch (data_type) {
-			case 0x01:
-				// SEARCHGW
-				device.setAction(new SearchGateway(device, Integer.valueOf(payload[2]) ));
-				break;
+		case 0x01:
+			// SEARCHGW
+			device.setAction(new SearchGateway(device, Integer.valueOf(payload[2])));
+			break;
 
-			case 0x04:
-				// CONNECT
-				device.setAction(new Connect(device, message));
-				break;
+		case 0x04:
+			// CONNECT
+			device.setAction(new Connect(device, message));
+			break;
 
-			case 0x0A:
-				// REGISTER
-				device.setAction(new Register(device, message));
-				break;
+		case 0x0A:
+			// REGISTER
+			device.setAction(new Register(device, message));
+			break;
 
-			case 0x12:
-				// SUBSCRIBE
-				device.setAction(new Subscribe(device, message));
-				break;
+		case 0x12:
+			// SUBSCRIBE
+			device.setAction(new Subscribe(device, message));
+			break;
 
-			case 0x18:
-				// DISCONNECT
-				device.setAction(new Disconnect(device, message));
-				break;
+		case 0x18:
+			// DISCONNECT
+			device.setAction(new Disconnect(device, message));
+			break;
 
-			case 0x0C:
-				// PUBLISH
-				device.setAction(new Publish(device, message));
-				break;
+		case 0x0C:
+			// PUBLISH
+			device.setAction(new Publish(device, message));
+			break;
 
-			case 0x16:
-				// PINGREQ
-				device.setAction(new PingReq(device, message));
-				break;
+		case 0x16:
+			// PINGREQ
+			device.setAction(new PingReq(device, message));
+			break;
 
-			case 0x07:
-				// WILLTOPIC
-				// @TODO not implemented yet
-				// device.setAction(new WillTopic(device, message));
-				break;
+		case 0x07:
+			// WILLTOPIC
+			// @TODO not implemented yet
+			// device.setAction(new WillTopic(device, message));
+			break;
 
-			case 0x09:
-				// WILLMESSAGE
-				// @TODO not implemented yet
-				// device.setAction(new WillMessage(device, message));
-				break;
+		case 0x09:
+			// WILLMESSAGE
+			// @TODO not implemented yet
+			// device.setAction(new WillMessage(device, message));
+			break;
 
-			case 0x0D:
-				// PUBACK
-				// Only used with QoS level 1 and 2 - not used yet
-				// device.setAction(new Puback(device, message));
-				break;
+		case 0x0D:
+			// PUBACK
+			// Only used with QoS level 1 and 2 - not used yet
+			// device.setAction(new Puback(device, message));
+			break;
 		}
 	}
 }

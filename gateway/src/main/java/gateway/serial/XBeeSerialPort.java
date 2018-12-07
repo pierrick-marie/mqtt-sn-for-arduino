@@ -29,16 +29,14 @@ enum XBeeSerialPort {
 
 		try {
 			serialPort.openPort();
-			serialPort.setParams(jssc.SerialPort.BAUDRATE_9600,
-				jssc.SerialPort.DATABITS_8,
-				jssc.SerialPort.STOPBITS_1,
-				jssc.SerialPort.PARITY_NONE);
+			serialPort.setParams(jssc.SerialPort.BAUDRATE_9600, jssc.SerialPort.DATABITS_8,
+					jssc.SerialPort.STOPBITS_1, jssc.SerialPort.PARITY_NONE);
 
 			int mask = jssc.SerialPort.MASK_RXCHAR + jssc.SerialPort.MASK_CTS + jssc.SerialPort.MASK_DSR;
 			serialPort.setEventsMask(mask);
 		} catch (SerialPortException e) {
 			Log.error("XBeeSerialPort", "getSerial", "Impossible to get the XBee module");
-			Log.debug(LogLevel.ACTIVE,"XBeeSerialPort", "getSerial", e.getMessage());
+			Log.debug(LogLevel.ACTIVE, "XBeeSerialPort", "getSerial", e.getMessage());
 		}
 	}
 }

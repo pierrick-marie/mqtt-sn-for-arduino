@@ -9,7 +9,7 @@ package gateway.mqtt.impl;
 public class Topic {
 
 	private final Integer id;
-    	private String name;
+	private String name;
 	private Boolean subscribed;
 
 	public Topic(final Integer id, final String name) {
@@ -33,8 +33,8 @@ public class Topic {
 	}
 
 	public String name() {
-	    return name;
-    }
+		return name;
+	}
 
 	public String toString() {
 		return name().toString();

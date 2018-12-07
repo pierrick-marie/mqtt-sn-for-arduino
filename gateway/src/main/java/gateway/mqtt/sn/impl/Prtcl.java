@@ -21,18 +21,10 @@ public class Prtcl {
 	 * @param qos
 	 * @return
 	 *
-	public static QoS getQoS(final int qos) {
-
-		switch(qos) {
-			case 0:
-				return QoS.AT_MOST_ONCE;
-			case 1:
-				return QoS.AT_LEAST_ONCE;
-			case 2:
-				return QoS.EXACTLY_ONCE;
-			default:
-				return QoS.AT_MOST_ONCE;
-		}
-	}
-	*/
+	 * 		public static QoS getQoS(final int qos) {
+	 * 
+	 *         switch(qos) { case 0: return QoS.AT_MOST_ONCE; case 1: return
+	 *         QoS.AT_LEAST_ONCE; case 2: return QoS.EXACTLY_ONCE; default: return
+	 *         QoS.AT_MOST_ONCE; } }
+	 */
 }
