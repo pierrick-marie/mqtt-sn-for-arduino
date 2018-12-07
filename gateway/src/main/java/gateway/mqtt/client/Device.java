@@ -248,6 +248,20 @@ public class Device extends Thread {
 		return getName() + " (" + address64.toString() + ")";
 	}
 
+	private synchronized Boolean unscribeAll() {
+		for (final Topic topic : Topics) {
+			try {
+				mqttClient.unsubscribe(topic.name());
+			} catch (final MqttException e) {
+				Log.error("Device", "unsubscribeAll", "Error while unscribe topic " + topic.name());
+				Log.verboseDebug(e.getMessage());
+				Log.verboseDebug(e.getCause().getMessage());
+				return false;
+			}
+		}
+		return true;
+	}
+
 	/**
 	 * @TODO not implemented yet Acquittals are only used with QoS level 1 and 2.
 	 *       This feature is not used in the current implementation of the client.
