@@ -18,7 +18,7 @@ public class SerialPortWriter {
 
 		Log.debug(LogLevel.VERBOSE, "SerialPortWriter", "write", "sending a message");
 
-		byte[] res = new byte[18 + payload.length];
+		final byte[] res = new byte[18 + payload.length];
 		res[0] = 0x7E;
 
 		if (payload.length > 255) {
@@ -33,11 +33,11 @@ public class SerialPortWriter {
 		res[4] = 0x01;
 
 		for (int i = 0; i < 8; i++) {
-			res[5 + i] = device.address64.address[i];
+			res[5 + i] = device.address64().address[i];
 		}
 
 		for (int i = 0; i < 2; i++) {
-			res[13 + i] = device.address16.address[i];
+			res[13 + i] = device.address16().address[i];
 		}
 		res[15] = (byte) 0x0;
 		res[16] = (byte) 0x1;
@@ -56,9 +56,9 @@ public class SerialPortWriter {
 
 		try {
 			XBeeSerialPort.Instance.serialPort.writeBytes(res);
-		} catch (SerialPortException e) {
+		} catch (final SerialPortException e) {
 			Log.error("XBeeSerialPort", "write", "");
-			Log.debug(LogLevel.ACTIVE,"XBeeSerialPort", "write", e.getMessage());
+			Log.debug(LogLevel.ACTIVE, "XBeeSerialPort", "write", e.getMessage());
 		}
 	}
 }

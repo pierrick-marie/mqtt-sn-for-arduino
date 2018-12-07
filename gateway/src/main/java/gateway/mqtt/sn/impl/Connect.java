@@ -5,7 +5,6 @@
 
 package gateway.mqtt.sn.impl;
 
-import gateway.mqtt.impl.Client;
 import gateway.mqtt.client.Device;
 import gateway.mqtt.sn.IAction;
 import gateway.serial.SerialPortWriter;
@@ -45,11 +44,10 @@ public class Connect implements IAction {
 
 		if (device.state().equals(DeviceState.LOST) || device.state().equals(DeviceState.FIRSTCONNECT) || device.state().equals(DeviceState.DISCONNECTED)) {
 
-            Client mqtt = new Client(device, cleanSession);
+            device.initMqttClient(cleanSession);
 
-            if(mqtt.connect()) {
+            if(device.connect()) {
                 Log.debug(LogLevel.ACTIVE, "Connect", "connectToTheBroker", "connected");
-                device.setMqttClient(mqtt);
                 device.setState(DeviceState.ACTIVE);
                 connack(Prtcl.ACCEPTED);
             } else {

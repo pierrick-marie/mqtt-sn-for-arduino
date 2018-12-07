@@ -14,19 +14,39 @@ import gateway.utils.log.LogLevel;
 
 public class Sender {
 
-	private final Device device;
-
 	private static volatile int messageId = 0;
+
+	private final Device device;
 
 	public Sender(final Device device) {
 
 		this.device = device;
 	}
 
+	private byte[] getTopicId(final String name) {
+
+		final byte[] ret = new byte[2];
+		final int id = device.getTopic(name).id();
+
+		if (id != -1) {
+			if (id > 255) {
+				ret[0] = (byte) (id / 255);
+				ret[1] = (byte) (id % 255);
+			} else {
+				ret[0] = (byte) 0x00;
+				ret[1] = (byte) id;
+			}
+		} else {
+			return null;
+		}
+
+		return ret;
+	}
+
 	public void send(final MqMessage message) {
 
-		byte[] serialMessage = new byte[7 + message.getPayload().length];
-		byte[] data = message.getPayload();
+		final byte[] serialMessage = new byte[7 + message.getPayload().length];
+		final byte[] data = message.getPayload();
 		int i;
 
 		// creating the serial message to send
@@ -35,7 +55,7 @@ public class Sender {
 		serialMessage[1] = (byte) 0x0C;
 		serialMessage[2] = (byte) 0x00;
 
-		Log.debug(LogLevel.ACTIVE,"Sender", "sendMessage", "topic = " + message.topic());
+		Log.debug(LogLevel.ACTIVE, "Sender", "sendMessage", "topic = " + message.topic());
 
 		serialMessage[3] = getTopicId(message.topic())[0];
 		serialMessage[4] = getTopicId(message.topic())[1];
@@ -54,25 +74,5 @@ public class Sender {
 
 		SerialPortWriter.write(device, serialMessage);
 		message.setId(messageId);
-	}
-
-	private byte[] getTopicId(final String name) {
-
-		byte[] ret = new byte[2];
-		int id = device.Topics.get(name).id();
-
-		if (id != -1) {
-			if (id > 255) {
-				ret[0] = (byte) (id / 255);
-				ret[1] = (byte) (id % 255);
-			} else {
-				ret[0] = (byte) 0x00;
-				ret[1] = (byte) id;
-			}
-		} else {
-			return null;
-		}
-
-		return ret;
 	}
 }

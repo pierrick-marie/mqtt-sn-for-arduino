@@ -6,20 +6,22 @@
 
 package gateway.mqtt.client;
 
-import gateway.mqtt.impl.Client;
-import gateway.mqtt.impl.MqMessage;
-import gateway.mqtt.impl.Sender;
-import gateway.mqtt.impl.Topics;
-import gateway.mqtt.sn.IAction;
-import gateway.utils.Time;
-import gateway.mqtt.address.Address16;
-import gateway.mqtt.address.Address64;
-import gateway.utils.log.Log;
-import gateway.utils.log.LogLevel;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import org.eclipse.paho.client.mqttv3.MqttException;
+
+import gateway.mqtt.address.Address16;
+import gateway.mqtt.address.Address64;
+import gateway.mqtt.impl.Client;
+import gateway.mqtt.impl.MqMessage;
+import gateway.mqtt.impl.Sender;
+import gateway.mqtt.impl.Topic;
+import gateway.mqtt.sn.IAction;
+import gateway.utils.Time;
+import gateway.utils.log.Log;
+import gateway.utils.log.LogLevel;
 
 public class Device extends Thread {
 
@@ -34,15 +36,12 @@ public class Device extends Thread {
 	private DeviceState state = DeviceState.DISCONNECTED;
 	private Client mqttClient = null;
 
-
-	public Address64 address64 = null;
-	public Address16 address16 = null;
-
+	private final Address64 address64;
+	private final Address16 address16;
 	private final Sender sender;
 
-	private final List<MqMessage> messages = Collections.synchronizedList(new ArrayList<>());
-
-	public static final gateway.mqtt.impl.Topics Topics = new Topics();
+	private final List<MqMessage> Messages = Collections.synchronizedList(new ArrayList<>());
+	private final List<Topic> Topics = Collections.synchronizedList(new ArrayList<>());
 
 	public Device(final Address64 address64, final Address16 address16) {
 		this.address64 = address64;
@@ -53,97 +52,156 @@ public class Device extends Thread {
 
 	public synchronized Boolean addMqttMessage(final MqMessage message) {
 
-		while (MAX_MESSAGES <= messages.size()) {
-			messages.remove(0);
-			Log.debug(LogLevel.VERBOSE, "Device", "addMqttMessage", "too many messages -> removing oldest message");
+		while (MAX_MESSAGES <= Messages.size()) {
+			Messages.remove(0);
+			Log.debug(LogLevel.VERBOSE, "Device", "addMqttMessage",
+					"too many messages -> removing oldest message");
 		}
 
 		Log.debug(LogLevel.VERBOSE, "Device", "addMqttMessage", "save message");
-		return messages.add(message);
+		return Messages.add(message);
 	}
 
-	public void sendMqttMessages() {
-
-		synchronized (messages) {
-			for (MqMessage message : messages) {
-
-				Log.debug(LogLevel.ACTIVE, "Device", "sendMqttMessages", "sending DMqMessage " + message.toString());
-				sender.send(message);
-
-				Log.debug(LogLevel.VERBOSE, "Device", "sendMqttMessages", "wait before sending next message");
-				Time.sleep(TIME_TO_WAIT_MESSAGE, "Device.sendMqttMessages(): fail waiting between two messages");
-			}
-			Log.debug(LogLevel.VERBOSE, "Device", "sendMqttMessages", "all messages have been sent");
-			messages.clear();
-		}
+	public Address16 address16() {
+		return address16;
 	}
 
-	/**
-	 * @TODO not implemented yet
-	 * Acquittals are only used with QoS level 1 and 2. This feature is not used in the current implementation of the client.
-	 *
-	 * @param messageId the id of the acquitted message
-	 * @return true if the message have been correctly acquitted
-	 */
-	public synchronized Boolean acquitMessage(final Integer messageId) {
-
-		int idMessageToDelete = 0;
-		boolean messageFound = false;
-
-		for (MqMessage message : messages) {
-			if (messageId.equals(message.getId())) {
-				messageFound = true;
-				break;
-			}
-			idMessageToDelete++;
-		}
-
-		if (messageFound) {
-			synchronized (messages) {
-				messages.remove(idMessageToDelete);
-			}
-			Log.debug(LogLevel.VERBOSE, "Device", "acquitMessage", "message " + messageId + " acquitted");
-		}
-
-		return messageFound;
+	public Address64 address64() {
+		return address64;
 	}
 
-	public Client mqttClient() {
-		return mqttClient;
+	synchronized public Topic addTopic(final Integer id, final String name) {
+
+		final Topic ret = new Topic(id, name);
+		Topics.add(ret);
+
+		return ret;
 	}
 
-	public Device setMqttClient(final Client mqttClient) {
-
+	public Boolean connect() {
 		if (null == mqttClient) {
-			Log.error("Device", "setMqttClient", "mqttClient is null");
+			Log.error("Device", "connect", "mqtt client is null");
 		}
-
-		this.mqttClient = mqttClient;
-
-		Log.debug(LogLevel.VERBOSE, "Device", "setMqttClient", "Register client's mqttClient with " + mqttClient);
-
-		return this;
+		return mqttClient.doConnect();
 	}
 
-	public DeviceState state() {
-		return state;
-	}
+	synchronized public Boolean containsTopic(final Integer id) {
 
-	public Device setState(final DeviceState state) {
-
-		if (null == state) {
-			Log.error("Device", "setState", "state is null");
+		for (final Topic topic : Topics) {
+			if (topic.id().equals(id)) {
+				return true;
+			}
 		}
 
-		this.state = state;
+		return false;
+	}
 
-		Log.debug(LogLevel.VERBOSE, "Device", "setState", "Register client's state with " + state);
+	synchronized public Boolean containsTopic(final String name) {
 
-		return this;
+		for (final Topic topic : Topics) {
+			if (topic.name().toString().equals(name)) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	public Integer duration() {
 		return duration;
+	}
+
+	synchronized public Topic getTopic(final Integer id) {
+
+		for (final Topic topic : Topics) {
+			if (topic.id().equals(id)) {
+				return topic;
+			}
+		}
+
+		return null;
+	}
+
+	synchronized public Topic getTopic(final String name) {
+
+		for (final Topic topic : Topics) {
+			if (topic.name().toString().equals(name)) {
+				return topic;
+			}
+		}
+
+		return null;
+	}
+
+	public Device initMqttClient(final Boolean cleanSeassion) {
+		try {
+			mqttClient = new Client(this, cleanSeassion);
+		} catch (final MqttException e) {
+			Log.error("Device", "initMqttClient", "Error while creating the Mqtt client");
+			Log.verboseDebug(e.getMessage());
+			Log.verboseDebug(e.getCause().getMessage());
+		}
+
+		return this;
+	}
+
+	public Boolean isConnected() {
+		return mqttClient.isConnected();
+	}
+
+	public Integer nbTopics() {
+		return Topics.size();
+	}
+
+	public Boolean publish(final Topic topic, final String message) {
+		return mqttClient.publish(topic, message);
+	}
+
+	private void resetAction() {
+		doAction = false;
+		action = null;
+	}
+
+	@Override
+	public void run() {
+
+		while (true) {
+			if (doAction) {
+				action.exec();
+				resetAction();
+			}
+			Time.sleep(TIME_TO_WAIT_ACTION, "Device.run(): fail to wait");
+		}
+	}
+
+	public void sendMqttMessages() {
+
+		synchronized (Messages) {
+			for (final MqMessage message : Messages) {
+
+				Log.debug(LogLevel.ACTIVE, "Device", "sendMqttMessages",
+						"sending DMqMessage " + message.toString());
+				sender.send(message);
+
+				Log.debug(LogLevel.VERBOSE, "Device", "sendMqttMessages", "wait before sending next message");
+				Time.sleep(TIME_TO_WAIT_MESSAGE,
+						"Device.sendMqttMessages(): fail waiting between two messages");
+			}
+			Log.debug(LogLevel.VERBOSE, "Device", "sendMqttMessages", "all messages have been sent");
+			Messages.clear();
+		}
+	}
+
+	public Device setAction(IAction action) {
+
+		if (null == action) {
+			Log.error("Device", "setAction", "action is null");
+		}
+
+		this.action = action;
+		doAction = true;
+
+		return this;
 	}
 
 	public Device setDuration(final Integer duration) {
@@ -159,35 +217,51 @@ public class Device extends Thread {
 		return this;
 	}
 
+	public Device setState(final DeviceState state) {
+
+		if (null == state) {
+			Log.error("Device", "setState", "state is null");
+		}
+
+		this.state = state;
+
+		Log.debug(LogLevel.VERBOSE, "Device", "setState", "Register client's state with " + state);
+
+		return this;
+	}
+
+	public DeviceState state() {
+		return state;
+	}
+
+	public Boolean subscribe(final Topic topic) {
+		return mqttClient.subscribe(topic);
+	}
+
+	@Override
 	public String toString() {
 		return getName() + " (" + address64.toString() + ")";
 	}
 
-	public void run() {
-
-		while (true) {
-			if (doAction) {
-				action.exec();
-				resetAction();
-			}
-			Time.sleep(TIME_TO_WAIT_ACTION, "Device.run(): fail to wait");
-		}
-	}
-
-	private void resetAction() {
-		doAction = false;
-		action = null;
-	}
-
-	public Device setAction(IAction action) {
-
-		if (null == action) {
-			Log.error("Device", "setAction", "action is null");
-		}
-
-		this.action = action;
-		doAction = true;
-
-		return this;
-	}
+	/**
+	 * @TODO not implemented yet Acquittals are only used with QoS level 1 and 2.
+	 *       This feature is not used in the current implementation of the client.
+	 *
+	 * @param messageId the id of the acquitted message
+	 * @return true if the message have been correctly acquitted
+	 *
+	 *         public synchronized Boolean acquitMessage(final Integer messageId) {
+	 *
+	 *         int idMessageToDelete = 0; boolean messageFound = false;
+	 *
+	 *         for (final MqMessage message : Messages) { if
+	 *         (messageId.equals(message.getId())) { messageFound = true; break; }
+	 *         idMessageToDelete++; }
+	 *
+	 *         if (messageFound) { synchronized (Messages) {
+	 *         Messages.remove(idMessageToDelete); } Log.debug(LogLevel.VERBOSE,
+	 *         "Device", "acquitMessage", "message " + messageId + " acquitted"); }
+	 *
+	 *         return messageFound; }
+	 */
 }

@@ -32,14 +32,13 @@ public class Puback implements IAction {
 	public void exec() {
 
 		if (msg[4] == (byte) 0x00) {
-			int msgID = (msg[3] << 8) + (msg[2] & 0xFF);
+			final int msgID = (msg[3] << 8) + (msg[2] & 0xFF);
 
-			Log.debug(LogLevel.ACTIVE, "PubAck", "puback","message id ack: " + msgID);
+			Log.debug(LogLevel.ACTIVE, "PubAck", "puback", "message id ack: " + msgID);
 
-			device.acquitMessage(msgID);
+			// NOT IMPLEMENTED YET (QoS)
+			// device.acquitMessage(msgID);
 		}
 	}
-
-
 
 }
