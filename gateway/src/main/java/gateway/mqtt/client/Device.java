@@ -70,9 +70,9 @@ public class Device extends Thread {
 		return address64;
 	}
 
-	synchronized public Topic addTopic(final Integer id, final String name) {
+	synchronized public Topic addTopic(final String name) {
 
-		final Topic ret = new Topic(id, name);
+		final Topic ret = new Topic(Topics.size(), name);
 		Topics.add(ret);
 
 		return ret;
@@ -235,7 +235,12 @@ public class Device extends Thread {
 	}
 
 	public Boolean subscribe(final Topic topic) {
-		return mqttClient.subscribe(topic);
+		if (mqttClient.subscribe(topic)) {
+			topic.setSubscribed();
+			return true;
+		}
+
+		return false;
 	}
 
 	@Override

@@ -66,7 +66,8 @@ public class Register implements IAction {
 		} else {
 			Log.debug(LogLevel.ACTIVE, "Register", "register", "topic " + topicName
 					+ " is NOT contained -> saving the topic with id: " + device.nbTopics());
-			topic = device.addTopic(device.nbTopics(), topicName);
+			topic = device.addTopic(topicName);
+			topic.setRegistered();
 		}
 		regack(topic.id(), messageId, Prtcl.ACCEPTED);
 	}
