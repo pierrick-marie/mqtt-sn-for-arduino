@@ -14,7 +14,6 @@ import gateway.mqtt.impl.Topic;
 import gateway.mqtt.sn.IAction;
 import gateway.serial.SerialPortWriter;
 import gateway.utils.log.Log;
-import gateway.utils.log.LogLevel;
 
 public class Subscribe implements IAction {
 
@@ -36,7 +35,7 @@ public class Subscribe implements IAction {
 
 	private void suback(final byte[] qos, final byte[] messageId, final int topicId, final byte returnCode) {
 
-		Log.output(device, "sub ack");
+		Log.output(device, "sub ack with return code: " + returnCode);
 
 		final byte[] ret = new byte[8];
 		ret[0] = (byte) 0x08;
@@ -76,25 +75,10 @@ public class Subscribe implements IAction {
 		}
 		final String topicName = new String(name, StandardCharsets.UTF_8);
 
-		final Topic topic = device.getTopic(topicName);
-
+		final Topic topic = device.subscribe(topicName);
 		if (null != topic) {
-			if (!topic.isSubscribed()) {
-				if (device.subscribe(topic)) {
-					Log.debug(LogLevel.ACTIVE, "Subscribe", "subscribe",
-							"subcription ok -> sending sub ack message");
-				} else {
-					Log.error("Subscribre", "subscribe", "imposible to subscribe to the topic: " + topicName);
-					suback(new byte[] { (byte) Prtcl.DEFAULT_QOS }, messageId, topic.id(), Prtcl.REJECTED);
-					return;
-				}
-			}
-			Log.debug(LogLevel.ACTIVE, "Subscribe", "subscribe",
-					"Topics " + topicName + " is already registered with id: " + topic.id());
 			suback(new byte[] { (byte) Prtcl.DEFAULT_QOS }, messageId, topic.id(), Prtcl.ACCEPTED);
 		} else {
-			Log.error("Subscribe", "subscribe", "Topics NOT registered " + device.getTopic(1));
-			// Error - topicId = -1
 			suback(new byte[] { (byte) Prtcl.DEFAULT_QOS }, messageId, -1, Prtcl.REJECTED);
 		}
 	}

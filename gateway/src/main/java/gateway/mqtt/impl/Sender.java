@@ -26,7 +26,7 @@ public class Sender {
 	private byte[] getTopicId(final String name) {
 
 		final byte[] ret = new byte[2];
-		final int id = device.getTopic(name).id();
+		final int id = device.getTopicId(name);
 
 		if (id != -1) {
 			if (id > 255) {
@@ -43,7 +43,7 @@ public class Sender {
 		return ret;
 	}
 
-	public void send(final MqMessage message) {
+	public void send(final SnMessage message) {
 
 		final byte[] serialMessage = new byte[7 + message.getPayload().length];
 		final byte[] data = message.getPayload();

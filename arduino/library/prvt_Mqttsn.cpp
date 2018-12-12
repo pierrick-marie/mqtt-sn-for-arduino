@@ -314,6 +314,10 @@ bool Mqttsn::checkSerial() {
 
 void Mqttsn::subAckHandler(msg_suback* msg) {
 
+	/*
+	 * @TODO register topic id in topicTable
+	 */
+
 	if (msg->return_code == ACCEPTED) {
 		logs.info("subscribe ok");
 	} else {

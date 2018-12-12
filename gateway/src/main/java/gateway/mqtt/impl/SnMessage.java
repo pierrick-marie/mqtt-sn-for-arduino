@@ -8,11 +8,11 @@ package gateway.mqtt.impl;
 
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
-public class MqMessage extends MqttMessage {
+public class SnMessage extends MqttMessage {
 
 	private String topic;
 
-	public MqMessage(final String topic, final String payload) {
+	public SnMessage(final String topic, final String payload) {
 		this.topic = topic;
 		setPayload(payload.getBytes());
 	}

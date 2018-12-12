@@ -8,6 +8,7 @@ package gateway.mqtt.client;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
@@ -15,24 +16,26 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import gateway.mqtt.address.Address16;
 import gateway.mqtt.address.Address64;
 import gateway.mqtt.impl.Client;
-import gateway.mqtt.impl.MqMessage;
 import gateway.mqtt.impl.Sender;
+import gateway.mqtt.impl.SnMessage;
 import gateway.mqtt.impl.Topic;
 import gateway.mqtt.sn.IAction;
+import gateway.mqtt.sn.impl.Prtcl;
 import gateway.utils.Time;
 import gateway.utils.log.Log;
 import gateway.utils.log.LogLevel;
 
 public class Device extends Thread {
 
-	private final long TIME_TO_WAIT_ACTION = 250; // milliseconds
-	private final long TIME_TO_WAIT_MESSAGE = 5000; // milliseconds - 1 second
+	private final long WAIT_NEXT_ACTION = 1000; // milliseconds - 1 second
+	private final long WAIT_SENDING_NEXT_MESSAGE = 5000; // milliseconds - 5 second
 	private final short MAX_MESSAGES = 5;
 
 	private boolean doAction = false;
 	private IAction action = null;
 
-	private Integer duration = 0;
+	private long lastUpdate = new Date().getTime();
+	private long duration = 60l; // 60 seconds
 	private DeviceState state = DeviceState.DISCONNECTED;
 	private Client mqttClient = null;
 
@@ -40,7 +43,7 @@ public class Device extends Thread {
 	private final Address16 address16;
 	private final Sender sender;
 
-	private final List<MqMessage> Messages = Collections.synchronizedList(new ArrayList<>());
+	private final List<SnMessage> Messages = Collections.synchronizedList(new ArrayList<>());
 	private final List<Topic> Topics = Collections.synchronizedList(new ArrayList<>());
 
 	public Device(final Address64 address64, final Address16 address16) {
@@ -50,7 +53,7 @@ public class Device extends Thread {
 		sender = new Sender(this);
 	}
 
-	public synchronized Boolean addMqttMessage(final MqMessage message) {
+	public synchronized Boolean addMqttMessage(final SnMessage message) {
 
 		while (MAX_MESSAGES <= Messages.size()) {
 			Messages.remove(0);
@@ -70,18 +73,13 @@ public class Device extends Thread {
 		return address64;
 	}
 
-	synchronized public Topic addTopic(final String name) {
-
-		final Topic ret = new Topic(Topics.size(), name);
-		Topics.add(ret);
-
-		return ret;
-	}
-
-	public Boolean connect() {
+	public Boolean connect(final int duration) {
 		if (null == mqttClient) {
 			Log.error("Device", "connect", "mqtt client is null");
 		}
+		Log.print(this + "Connected with a keep alive: " + duration);
+		this.duration = duration;
+
 		return mqttClient.doConnect();
 	}
 
@@ -107,7 +105,7 @@ public class Device extends Thread {
 		return false;
 	}
 
-	public Integer duration() {
+	public long duration() {
 		return duration;
 	}
 
@@ -122,7 +120,7 @@ public class Device extends Thread {
 		return null;
 	}
 
-	synchronized public Topic getTopic(final String name) {
+	synchronized private Topic getTopic(final String name) {
 
 		for (final Topic topic : Topics) {
 			if (topic.name().toString().equals(name)) {
@@ -131,6 +129,18 @@ public class Device extends Thread {
 		}
 
 		return null;
+	}
+
+	synchronized public Integer getTopicId(final String topicName) {
+
+		for (final Topic topic : Topics) {
+			if (topic.name().toString().equals(topicName)) {
+				return topic.id();
+			}
+		}
+
+		Log.error("Device", "getTopicId", "topic id " + topicName + " not found!");
+		return -1;
 	}
 
 	public Device initMqttClient(final Boolean cleanSeassion) {
@@ -157,6 +167,21 @@ public class Device extends Thread {
 		return mqttClient.publish(topic, message);
 	}
 
+	public Topic register(final String topicName) {
+
+		Topic ret = getTopic(topicName);
+		if (null == ret) {
+			ret = new Topic(Topics.size(), topicName);
+			if (!Topics.add(ret)) {
+				Log.debug(LogLevel.ACTIVE, "Device", "register", "Error during register topic");
+				return null;
+			}
+		}
+
+		Log.print(this + " Registered topic: " + topicName);
+		return ret.setRegistered();
+	}
+
 	private void resetAction() {
 		doAction = false;
 		action = null;
@@ -170,22 +195,26 @@ public class Device extends Thread {
 				action.exec();
 				resetAction();
 			}
-			Time.sleep(TIME_TO_WAIT_ACTION, "Device.run(): fail to wait");
+			// if the current date is upper than the last update + duration time
+			if (!Topics.isEmpty() && new Date().getTime() > lastUpdate + duration * 1000) {
+				unscribeAll();
+			}
+			Time.sleep(WAIT_NEXT_ACTION, "Device.run(): fail waiting next action");
 		}
 	}
 
 	public void sendMqttMessages() {
 
 		synchronized (Messages) {
-			for (final MqMessage message : Messages) {
+			for (final SnMessage message : Messages) {
 
 				Log.debug(LogLevel.ACTIVE, "Device", "sendMqttMessages",
 						"sending DMqMessage " + message.toString());
 				sender.send(message);
 
 				Log.debug(LogLevel.VERBOSE, "Device", "sendMqttMessages", "wait before sending next message");
-				Time.sleep(TIME_TO_WAIT_MESSAGE,
-						"Device.sendMqttMessages(): fail waiting between two messages");
+				Time.sleep(WAIT_SENDING_NEXT_MESSAGE,
+						"Device.sendMqttMessages(): fail waiting before sending next message");
 			}
 			Log.debug(LogLevel.VERBOSE, "Device", "sendMqttMessages", "all messages have been sent");
 			Messages.clear();
@@ -204,7 +233,7 @@ public class Device extends Thread {
 		return this;
 	}
 
-	public Device setDuration(final Integer duration) {
+	public Device setDuration(final Short duration) {
 
 		if (null == duration) {
 			Log.error("Device", "setDuration", "duration is null");
@@ -234,13 +263,24 @@ public class Device extends Thread {
 		return state;
 	}
 
-	public Boolean subscribe(final Topic topic) {
-		if (mqttClient.subscribe(topic)) {
-			topic.setSubscribed();
-			return true;
+	public Topic subscribe(final String topicName) {
+
+		Topic ret = getTopic(topicName);
+		if (null == ret) {
+			ret = new Topic(Topics.size(), topicName);
+			if (!Topics.add(ret)) {
+				Log.debug(LogLevel.ACTIVE, "Device", "subscribe", "Error during subscribe topic");
+				return null;
+			}
 		}
 
-		return false;
+		if (mqttClient.subscribe(topicName, Prtcl.DEFAULT_QOS)) {
+			Log.debug(LogLevel.ACTIVE, "Device", "register", "Mqtt client - error during register topic");
+			return null;
+		}
+
+		Log.print(this + " Subscribed topic: " + topicName);
+		return ret.setRegistered();
 	}
 
 	@Override
@@ -248,18 +288,33 @@ public class Device extends Thread {
 		return getName() + " (" + address64.toString() + ")";
 	}
 
-	private synchronized Boolean unscribeAll() {
+	private synchronized void unscribeAll() {
+
+		Log.print(this + " Time out: unsubscibe all topics");
+
 		for (final Topic topic : Topics) {
 			try {
+				/*
+				 * @TODO create a list of all topic name to unsubscribe and unsubscribe all in
+				 * one method call
+				 */
 				mqttClient.unsubscribe(topic.name());
 			} catch (final MqttException e) {
-				Log.error("Device", "unsubscribeAll", "Error while unscribe topic " + topic.name());
+				Log.error("Device", " unsubscribeAll", "Error while unscribe topic " + topic.name());
 				Log.verboseDebug(e.getMessage());
 				Log.verboseDebug(e.getCause().getMessage());
-				return false;
 			}
 		}
-		return true;
+		/*
+		 * @TODO change to an attribute that indicates whether subscribed topics are
+		 * unsubscribed or not
+		 */
+		Topics.clear();
+	}
+
+	public void updateTimer() {
+
+		lastUpdate = new Date().getTime();
 	}
 
 	/**

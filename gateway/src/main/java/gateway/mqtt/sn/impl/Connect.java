@@ -5,14 +5,14 @@
 
 package gateway.mqtt.sn.impl;
 
+import java.nio.charset.StandardCharsets;
+
 import gateway.mqtt.client.Device;
+import gateway.mqtt.client.DeviceState;
 import gateway.mqtt.sn.IAction;
 import gateway.serial.SerialPortWriter;
-import gateway.mqtt.client.DeviceState;
 import gateway.utils.log.Log;
 import gateway.utils.log.LogLevel;
-
-import java.nio.charset.StandardCharsets;
 
 public class Connect implements IAction {
 
@@ -27,16 +27,27 @@ public class Connect implements IAction {
 		this.message = message;
 	}
 
+	private void connack(final byte isConnected) {
+
+		Log.output(device, "connack: " + isConnected);
+
+		final byte[] serialMesasge = new byte[3];
+		serialMesasge[0] = (byte) 0x03;
+		serialMesasge[1] = (byte) 0x05;
+		serialMesasge[2] = isConnected;
+
+		SerialPortWriter.write(device, serialMesasge);
+	}
+
 	@Override
 	public void exec() {
 
-		byte flags = message[0];
-		// @Todo not implemented yet
-		// short duration = (short) (message[2] * 16 + message[3]);
+		final byte flags = message[0];
+		final short duration = (short) (message[2] * 16 + message[3]);
 		// boolean will = (flags >> 3) == 1;
-		boolean cleanSession = (flags >> 2) == 1;
+		final boolean cleanSession = flags >> 2 == 1;
 
-		String name = getClientName();
+		final String name = getClientName();
 		Log.debug(LogLevel.ACTIVE, "Connect", "getClientName", "setup the device's name with " + name);
 		device.setName(name);
 
@@ -47,7 +58,7 @@ public class Connect implements IAction {
 
 			device.initMqttClient(cleanSession);
 
-			if (device.connect()) {
+			if (device.connect(duration)) {
 				Log.debug(LogLevel.ACTIVE, "Connect", "connectToTheBroker", "connected");
 				device.setState(DeviceState.ACTIVE);
 				connack(Prtcl.ACCEPTED);
@@ -64,27 +75,15 @@ public class Connect implements IAction {
 		}
 	}
 
-	private void connack(final byte isConnected) {
-
-		Log.output(device, "connack: " + isConnected);
-
-		byte[] serialMesasge = new byte[3];
-		serialMesasge[0] = (byte) 0x03;
-		serialMesasge[1] = (byte) 0x05;
-		serialMesasge[2] = isConnected;
-
-		SerialPortWriter.write(device, serialMesasge);
-	}
-
 	private String getClientName() {
 
-		byte[] name = new byte[message.length - 4];
+		final byte[] name = new byte[message.length - 4];
 
 		for (int i = 0; i < name.length; i++) {
 			name[i] = message[4 + i];
 		}
 
-		String clientName = new String(name, StandardCharsets.UTF_8);
+		final String clientName = new String(name, StandardCharsets.UTF_8);
 
 		return clientName;
 	}

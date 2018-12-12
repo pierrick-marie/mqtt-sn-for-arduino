@@ -30,6 +30,11 @@ void loop() {
 
   mqttsn.subscribeTopic(TOPIC_SUB_1);
 
+  delay(30000);
+
+  /*
+  
+
   mqttsn.subscribeTopic(TOPIC_SUB_2);
     
   nbReceivedMessages = mqttsn.requestMessages();
@@ -40,6 +45,7 @@ void loop() {
   }
 
   mqttsn.publish(TOPIC_SUB_2, "Coucou ARDUINO");
+  */
 
   mqttsn.disconnect();
 

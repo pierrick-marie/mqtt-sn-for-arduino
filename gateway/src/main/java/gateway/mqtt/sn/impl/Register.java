@@ -14,7 +14,6 @@ import gateway.mqtt.impl.Topic;
 import gateway.mqtt.sn.IAction;
 import gateway.serial.SerialPortWriter;
 import gateway.utils.log.Log;
-import gateway.utils.log.LogLevel;
 
 public class Register implements IAction {
 
@@ -43,7 +42,7 @@ public class Register implements IAction {
 		final byte[] name = new byte[message.length - 4];
 		String topicName;
 		int i;
-		Topic topic;
+		final Topic topic;
 
 		if (!device.isConnected()) {
 			Log.error("Register", "register", device + "is not connected");
@@ -58,18 +57,12 @@ public class Register implements IAction {
 
 		topicName = new String(name, StandardCharsets.UTF_8);
 
-		topic = device.getTopic(topicName);
-
+		topic = device.register(topicName);
 		if (null != topic) {
-			Log.debug(LogLevel.ACTIVE, "Register", "register",
-					"topic " + topic.name() + " (id:" + topic.id() + ") is already registered");
+			regack(topic.id(), messageId, Prtcl.ACCEPTED);
 		} else {
-			Log.debug(LogLevel.ACTIVE, "Register", "register", "topic " + topicName
-					+ " is NOT contained -> saving the topic with id: " + device.nbTopics());
-			topic = device.addTopic(topicName);
-			topic.setRegistered();
+			regack(-1, messageId, Prtcl.REJECTED);
 		}
-		regack(topic.id(), messageId, Prtcl.ACCEPTED);
 	}
 
 	/**
@@ -80,7 +73,7 @@ public class Register implements IAction {
 	 */
 	private void regack(final int topicId, final byte[] messageId, final byte returnCode) {
 
-		Log.output(device, "reg ack");
+		Log.output(device, "reg ack with return code: " + returnCode);
 
 		// the message to send
 		final byte[] message = new byte[7];

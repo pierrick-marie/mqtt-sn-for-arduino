@@ -22,7 +22,11 @@ import gateway.utils.Config;
 import gateway.utils.log.Log;
 import gateway.utils.log.LogLevel;
 
-public class Client extends MqttClient implements MqttCallback, Runnable {
+/*
+ * @TODO remove extends parameter and add a real MqttClient attribute
+ */
+
+public class Client extends MqttClient implements MqttCallback { // , Runnable {
 
 	private final static String PRTCL = "tcp://";
 	private final Integer SLEEP_TIME = 5; // seconds
@@ -31,7 +35,7 @@ public class Client extends MqttClient implements MqttCallback, Runnable {
 	// NOT IMPLEMENTED YET
 	// private final Boolean cleanSession;
 
-	private Boolean isStarted = false;
+	private final Boolean isStarted = false;
 	// private MqttClient mqttClient;
 	private final MqttConnectOptions option;
 
@@ -42,6 +46,8 @@ public class Client extends MqttClient implements MqttCallback, Runnable {
 		// this.cleanSession = cleanSession;
 		option = new MqttConnectOptions();
 		option.setCleanSession(cleanSession);
+
+		super.setCallback(this);
 	}
 
 	@Override
@@ -101,7 +107,7 @@ public class Client extends MqttClient implements MqttCallback, Runnable {
 		if (message.getPayload().length < PAYLOAD_LENGTH) {
 			Log.debug(LogLevel.VERBOSE, "Client", "messageArrived",
 					"message: " + new String(message.getPayload()) + " on topic: " + topic);
-			device.addMqttMessage(new MqMessage(topic, new String(message.getPayload())));
+			device.addMqttMessage(new SnMessage(topic, new String(message.getPayload())));
 		} else {
 			Log.error("Client", "messageArrived", "payload too long");
 		}
@@ -124,36 +130,18 @@ public class Client extends MqttClient implements MqttCallback, Runnable {
 	}
 
 	@Override
-	public void run() {
-		// wait until receiving messages -> messageArrived
-		isStarted = true;
-		while (isConnected()) {
-			try {
-				Thread.sleep(SLEEP_TIME * 1000);
-			} catch (final InterruptedException e) {
-				Log.error("Client", "run", e.getMessage());
-			}
-		}
-		isStarted = false;
-	}
+	public Boolean subscribe(final String topicName) {
 
-	public Boolean subscribe(Topic topic) {
-
-		if (!isStarted) {
-			new Thread(this).start();
-		}
+		/*
+		 * if (!isStarted) { new Thread(this).start(); }
+		 */
 
 		try {
-			super.subscribe(topic.toString(), Prtcl.DEFAULT_QOS);
+			super.subscribe(topicName);
 			super.setCallback(this);
-			topic.setSubscribed();
-			Log.debug(LogLevel.VERBOSE, "Client", "subscribe",
-					device.getName() + " subscribed to " + topic.name());
+			Log.debug(LogLevel.VERBOSE, "Client", "subscribe", device.getName() + " subscribed to " + topicName);
 		} catch (final MqttException e) {
 			Log.error("Client", "subscribe", e.getMessage());
-			return false;
 		}
-
-		return true;
 	}
 }

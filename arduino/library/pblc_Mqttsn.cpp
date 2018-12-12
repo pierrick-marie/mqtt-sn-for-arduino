@@ -272,47 +272,44 @@ bool Mqttsn::subscribeTopic(const char* topicName) {
 		while(1);
 	}
 
-	// logs.debug("subscribeTopic", "searching topic id");
+	/*
+	 * @TODO
+	 * 1/ search topicName in topicTable
+	 * 2/ if topicTable exists -> set id = -1
+	 * 3/ if not -> register topicName with id = -1
+	 * 4/ send subscribe message
+	 * 5/ get id from gateway and register it in topicTable
+	 */
 
-	if(-1 == findTopicId(topicName)){
-		// logs.debug( "subscribeTopic", "topic is not already registered -> registerTopic()");
-		if( registerTopic(topicName) ){
-			// logs.debug("subscribeTopic", topicName);
 
-			++messageId;
-			msg_subscribe* msg = reinterpret_cast<msg_subscribe*>(messageBuffer);
+	// logs.debug("subscribeTopic", topicName);
 
-			// The -2 here is because we're unioning a 0-length member (topicName)
-			// with a uint16_t in the msg_subscribe struct.
-			msg->length = sizeof(msg_subscribe) + strlen(topicName) - 2;
-			msg->type = SUBSCRIBE;
-			msg->flags = (QOS_MASK & QOS_MASK) | FLAG_TOPIC_NAME;
-			msg->message_id = bitSwap(messageId);
-			strcpy(msg->topic_name, topicName);
+	++messageId;
+	msg_subscribe* msg = reinterpret_cast<msg_subscribe*>(messageBuffer);
 
-			// logs.debug("subscribeTopic", "sending message 'subscribe topic'");
+	// The -2 here is because we're unioning a 0-length member (topicName)
+	// with a uint16_t in the msg_subscribe struct.
+	msg->length = sizeof(msg_subscribe) + strlen(topicName) - 2;
+	msg->type = SUBSCRIBE;
+	msg->flags = (QOS_MASK & QOS_MASK) | FLAG_TOPIC_NAME;
+	msg->message_id = bitSwap(messageId);
+	strcpy(msg->topic_name, topicName);
 
-			sendMessage();
+	// logs.debug("subscribeTopic", "sending message 'subscribe topic'");
 
-			if( !checkSerial() ) {
-				// logs.debug("subscribe", "check serial rejected");
-				connected = REJECTED;
-				return false;
-			}
+	sendMessage();
 
-			// logs.debug("subscribe", "parsing response 'subscribe topic'");
-			parseData();
-
-			// logs.debug("subscribeTopic", "response from the gateway", subAckReturnCode);
-			return subAckReturnCode == ACCEPTED;
-		} else {
-			// logs.debug( "subscribeTopic", "registerTopic() not accepted");
-			return false;
-		}
+	if( !checkSerial() ) {
+		// logs.debug("subscribe", "check serial rejected");
+		connected = REJECTED;
+		return false;
 	}
 
-	// logs.debug("subscribeTopic", "topic is already subscribed");
-	return true;
+	// logs.debug("subscribe", "parsing response 'subscribe topic'");
+	parseData();
+
+	// logs.debug("subscribeTopic", "response from the gateway", subAckReturnCode);
+	return subAckReturnCode == ACCEPTED;
 }
 
 bool Mqttsn::registerTopic(const char* topicName) {

@@ -11,7 +11,13 @@ import gateway.mqtt.address.Address16;
 import gateway.mqtt.address.Address64;
 import gateway.mqtt.client.Device;
 import gateway.mqtt.client.Devices;
-import gateway.mqtt.sn.impl.*;
+import gateway.mqtt.sn.impl.Connect;
+import gateway.mqtt.sn.impl.Disconnect;
+import gateway.mqtt.sn.impl.PingReq;
+import gateway.mqtt.sn.impl.Publish;
+import gateway.mqtt.sn.impl.Register;
+import gateway.mqtt.sn.impl.SearchGateway;
+import gateway.mqtt.sn.impl.Subscribe;
 import gateway.utils.log.Log;
 import gateway.utils.log.LogLevel;
 
@@ -48,7 +54,7 @@ enum RawDataParser {
 		try {
 			// check the type of message
 			if (data[15] == 0x01) {
-				payload_length = (data[16] * 16) + data[17];
+				payload_length = data[16] * 16 + data[17];
 				data_type = data[18];
 				payload = new byte[payload_length];
 				for (i = 19; i < data.length; i++) {
@@ -62,7 +68,7 @@ enum RawDataParser {
 					payload[i] = data[15 + i];
 				}
 			}
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			Log.error("RawDataParser", "parse", "Error while reading incoming data");
 			Log.debug(LogLevel.VERBOSE, "RawDataParser", "parse", e.getMessage());
 		}
@@ -73,7 +79,8 @@ enum RawDataParser {
 			message[i] = payload[2 + i];
 		}
 
-		Device device = Devices.list.search(new Address64(address64), new Address16(address16));
+		final Device device = Devices.list.search(new Address64(address64), new Address16(address16));
+		device.updateTimer();
 
 		switch (data_type) {
 		case 0x01:
