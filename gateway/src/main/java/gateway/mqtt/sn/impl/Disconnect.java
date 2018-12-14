@@ -46,7 +46,8 @@ public class Disconnect implements IAction {
 
 				disconnectAck();
 
-				Log.debug(LogLevel.ACTIVE, "Disconnect", "diconnect", "Going into sleep");
+				Log.debug(LogLevel.ACTIVE, "Disconnect", "diconnect",
+						"Going into sleep with duration: " + duration);
 			}
 		} else {
 			device.setState(DeviceState.DISCONNECTED);

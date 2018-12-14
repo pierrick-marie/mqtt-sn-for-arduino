@@ -20,7 +20,6 @@ import gateway.mqtt.impl.Sender;
 import gateway.mqtt.impl.SnMessage;
 import gateway.mqtt.impl.Topic;
 import gateway.mqtt.sn.IAction;
-import gateway.mqtt.sn.impl.Prtcl;
 import gateway.utils.Time;
 import gateway.utils.log.Log;
 import gateway.utils.log.LogLevel;
@@ -31,17 +30,18 @@ public class Device extends Thread {
 	private final long WAIT_SENDING_NEXT_MESSAGE = 5000; // milliseconds - 5 second
 	private final short MAX_MESSAGES = 5;
 
+	private final Address64 address64;
+	private final Address16 address16;
+	private final Sender sender;
+
 	private boolean doAction = false;
+	private boolean doUnsubscribeAll = false;
 	private IAction action = null;
 
 	private long lastUpdate = new Date().getTime();
 	private long duration = 60l; // 60 seconds
 	private DeviceState state = DeviceState.DISCONNECTED;
 	private Client mqttClient = null;
-
-	private final Address64 address64;
-	private final Address16 address16;
-	private final Sender sender;
 
 	private final List<SnMessage> Messages = Collections.synchronizedList(new ArrayList<>());
 	private final List<Topic> Topics = Collections.synchronizedList(new ArrayList<>());
@@ -80,7 +80,7 @@ public class Device extends Thread {
 		Log.print(this + "Connected with a keep alive: " + duration);
 		this.duration = duration;
 
-		return mqttClient.doConnect();
+		return mqttClient.connect();
 	}
 
 	synchronized public Boolean containsTopic(final Integer id) {
@@ -164,7 +164,7 @@ public class Device extends Thread {
 	}
 
 	public Boolean publish(final Topic topic, final String message) {
-		return mqttClient.publish(topic, message);
+		return mqttClient.publish(topic.name(), message);
 	}
 
 	public Topic register(final String topicName) {
@@ -179,7 +179,7 @@ public class Device extends Thread {
 		}
 
 		Log.print(this + " Registered topic: " + topicName);
-		return ret.setRegistered();
+		return ret.setRegistered(true);
 	}
 
 	private void resetAction() {
@@ -196,7 +196,10 @@ public class Device extends Thread {
 				resetAction();
 			}
 			// if the current date is upper than the last update + duration time
-			if (!Topics.isEmpty() && new Date().getTime() > lastUpdate + duration * 1000) {
+			if (doUnsubscribeAll && new Date().getTime() > lastUpdate + duration * 1000) {
+				Log.error("Device", "run", "" + new Date().getTime());
+				Log.error("Device", "run", "" + lastUpdate);
+				Log.error("Device", "run", "        " + duration * 1000);
 				unscribeAll();
 			}
 			Time.sleep(WAIT_NEXT_ACTION, "Device.run(): fail waiting next action");
@@ -274,18 +277,24 @@ public class Device extends Thread {
 			}
 		}
 
-		if (mqttClient.subscribe(topicName, Prtcl.DEFAULT_QOS)) {
-			Log.debug(LogLevel.ACTIVE, "Device", "register", "Mqtt client - error during register topic");
+		if (!mqttClient.subscribe(topicName)) {
+			Log.debug(LogLevel.ACTIVE, "Device", "subscribe", "Mqtt client - error during register topic");
 			return null;
 		}
 
-		Log.print(this + " Subscribed topic: " + topicName);
-		return ret.setRegistered();
+		Log.print(this + " subscribed to " + topicName + " with id " + ret.id());
+		doUnsubscribeAll = true;
+		return ret.setRegistered(true);
 	}
 
 	@Override
 	public String toString() {
-		return getName() + " (" + address64.toString() + ")";
+
+		if (getName().startsWith("Thread")) {
+			return address64.toString();
+		} else {
+			return getName();
+		}
 	}
 
 	private synchronized void unscribeAll() {
@@ -293,28 +302,20 @@ public class Device extends Thread {
 		Log.print(this + " Time out: unsubscibe all topics");
 
 		for (final Topic topic : Topics) {
-			try {
-				/*
-				 * @TODO create a list of all topic name to unsubscribe and unsubscribe all in
-				 * one method call
-				 */
+
+			if (topic.isSubscribed()) {
 				mqttClient.unsubscribe(topic.name());
-			} catch (final MqttException e) {
-				Log.error("Device", " unsubscribeAll", "Error while unscribe topic " + topic.name());
-				Log.verboseDebug(e.getMessage());
-				Log.verboseDebug(e.getCause().getMessage());
+				topic.setRegistered(false);
 			}
 		}
-		/*
-		 * @TODO change to an attribute that indicates whether subscribed topics are
-		 * unsubscribed or not
-		 */
-		Topics.clear();
+		doUnsubscribeAll = false;
 	}
 
 	public void updateTimer() {
 
+		Log.debug(LogLevel.VERBOSE, "Device", "updateTimer", "");
 		lastUpdate = new Date().getTime();
+		Log.error("Device", "updateTimer", "" + lastUpdate);
 	}
 
 	/**

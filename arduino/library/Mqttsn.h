@@ -51,7 +51,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define API_START_DELIMITER  0x7E
 
 #define QOS_FLAG 0
-#define KEEP_ALIVE 15 // 60 secondes
+#define KEEP_ALIVE 60 // 60 secondes
 #define TIME_TO_SLEEP 30 // 30 seconds
 
 #define MAX_TRY 10
@@ -63,7 +63,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define BAUD_RATE 9600
 
 #define LONG_WAIT 2000 // 2000ms - 2s
-#define SHORT_WAIT 500 // 500ms - 0.s
+#define int_WAIT 500 // 500ms - 0.s
 
 class Mqttsn {
 
@@ -107,9 +107,9 @@ public:
 	 * @param topicName The name of the topic to search.
 	 * @return The index of the topic or -1 if not found.
 	 */
-	short findTopicId(const char* name) ;
+	int findTopicId(const char* name) ;
 
-	const char* findTopicName(short topicId) ;
+	const char* findTopicName(int topicId) ;
 
 	/**
 	 * @brief Mqttsn::registerTopic The function asks to the gateway to register a @topic_name.
@@ -226,7 +226,7 @@ private:
 
 	void disconnectHandler(msg_disconnect* msg);
 
-	void resetRegisteredTopicId(short topicId);
+	void resetRegisteredTopicId(int topicId);
 
 	void reRegisterHandler(msg_reregister* msg);
 
@@ -286,8 +286,9 @@ private:
 	int nbRegisteredTopic;
 	topic topicTable[MAX_TOPICS];
 
-	short connected;
+	int connected;
 	int messageId;
+	int lastSubscribedTopic;
 
 	uint8_t messageBuffer[MAX_BUFFER_SIZE];
 	uint8_t responseBuffer[MAX_BUFFER_SIZE];

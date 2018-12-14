@@ -29,8 +29,9 @@ void loop() {
   mqttsn.connect(MODULE_NAME);
 
   mqttsn.subscribeTopic(TOPIC_SUB_1);
+  mqttsn.subscribeTopic(TOPIC_SUB_2);
 
-  delay(30000);
+  // delay(30000);
 
   /*
   

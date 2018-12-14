@@ -37,16 +37,16 @@ public class Topic {
 		return name;
 	}
 
-	synchronized public Topic setRegistered() {
-		isRegisteredTopic = true;
-		isSubscribedTopic = false;
+	synchronized public Topic setRegistered(final Boolean value) {
+		isRegisteredTopic = value;
+		isSubscribedTopic = !value;
 
 		return this;
 	}
 
-	synchronized public Topic setSubscribed() {
-		isRegisteredTopic = false;
-		isSubscribedTopic = true;
+	synchronized public Topic setSubscribed(final Boolean value) {
+		isRegisteredTopic = !value;
+		isSubscribedTopic = value;
 
 		return this;
 	}

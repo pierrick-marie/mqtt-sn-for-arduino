@@ -48,6 +48,7 @@ Mqttsn::Mqttsn(SoftwareSerial* _xBee) {
 
 	messageId = 0;
 	gatewayId = 0;
+	lastSubscribedTopic = 0;
 	nbRegisteredTopic = 0;
 	nbReceivedMessage = 0;
 	connected = REJECTED;
@@ -115,7 +116,7 @@ void Mqttsn::disconnect() {
 	msg->type = DISCONNECT;
 
 	msg->length += sizeof(msg_disconnect);
-	msg->duration = bitSwap(TIME_TO_SLEEP);
+	msg->duration = bitSwap(TIME_TO_SLEEP + 20);
 	// logs.debug("diconnect", "sleep duration: ", sleepDuration);
 
 	sendMessage();
@@ -239,9 +240,9 @@ void Mqttsn::connect(const char* _moduleName) {
 	parseData();
 }
 
-short Mqttsn::findTopicId(const char* topicName) {
+int Mqttsn::findTopicId(const char* topicName) {
 
-	for (short i = 0; i < nbRegisteredTopic; i++) {
+	for (int i = 0; i < nbRegisteredTopic; i++) {
 		// logs.debug( "findTopicid", "id = ", (int)topicTable[i].id);
 		// logs.debug( "findTopicid", "name = ", topicTable[i].name);
 		if (topicTable[i].id != DEFAULT_TOPIC_ID && strcmp(topicTable[i].name, topicName) == 0) {
@@ -253,9 +254,9 @@ short Mqttsn::findTopicId(const char* topicName) {
 	return -1;
 }
 
-const char* Mqttsn::findTopicName(short topicId) {
+const char* Mqttsn::findTopicName(int topicId) {
 
-	for (short i = 0; i < nbRegisteredTopic; i++) {
+	for (int i = 0; i < nbRegisteredTopic; i++) {
 		if (topicTable[i].id != DEFAULT_TOPIC_ID && topicTable[i].id == topicId) {
 			return topicTable[i].name;
 		}
@@ -272,15 +273,32 @@ bool Mqttsn::subscribeTopic(const char* topicName) {
 		while(1);
 	}
 
-	/*
-	 * @TODO
-	 * 1/ search topicName in topicTable
-	 * 2/ if topicTable exists -> set id = -1
-	 * 3/ if not -> register topicName with id = -1
-	 * 4/ send subscribe message
-	 * 5/ get id from gateway and register it in topicTable
-	 */
+	// logs.debug("subscribeTopic", "topic: ", topicName);
 
+	if(nbRegisteredTopic >= MAX_TOPICS) {
+		// logs.debug("subscribeTopic", "nb > MAX_TOPICS");
+		return false;
+	}
+
+	int topicId = findTopicId(topicName);
+	if(topicId != -1) {
+		topicTable[topicId].id = DEFAULT_TOPIC_ID;
+		logs.debug("subscribeTopic", "reset topic id:", topicId);
+		lastSubscribedTopic = topicId;
+	} else {
+		// logs.debug("subscribeTopic", "id:", topicId);
+
+		// Fill in the next table entry, but we only increment the counter to
+		// the next topic when we get a REGACK from the broker. So don't issue
+		// another REGISTER until we have resolved this one.
+		// @name is save now because it will be lost at the end of this function.
+		strcpy(topicTable[nbRegisteredTopic].name, topicName);
+		// logs.debug("subscribeTopic", "name:", topicTable[nbRegisteredTopic].name);
+
+		// A magic number while the gateway respond: @see:regAckHandler()
+		topicTable[nbRegisteredTopic].id = DEFAULT_TOPIC_ID;
+		lastSubscribedTopic = nbRegisteredTopic;
+	}
 
 	// logs.debug("subscribeTopic", topicName);
 

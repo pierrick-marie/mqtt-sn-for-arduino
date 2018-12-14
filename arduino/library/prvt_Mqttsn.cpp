@@ -47,7 +47,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 bool Mqttsn::waitData() {
 
 	// @BUG waits 500ms seconds otherwise the module miss some answers from the gateway
-	delay(SHORT_WAIT);
+	delay(int_WAIT);
 
 	int i = 1;
 	while( xBee->available() <= 0 && i <= MAX_TRY ) {
@@ -314,22 +314,28 @@ bool Mqttsn::checkSerial() {
 
 void Mqttsn::subAckHandler(msg_suback* msg) {
 
-	/*
-	 * @TODO register topic id in topicTable
-	 */
+	if (msg->return_code == ACCEPTED && nbRegisteredTopic < MAX_TOPICS && bitSwap(msg->message_id) == messageId) {
+		logs.info("subscibe ok");
 
-	if (msg->return_code == ACCEPTED) {
-		logs.info("subscribe ok");
+		topicTable[lastSubscribedTopic].id = msg->topic_id;
+		regAckReturnCode = ACCEPTED;
+
+		logs.debug("subAckHandler", "Topic subscribed, id: ", msg->topic_id);
+		logs.debug("subAckHandler", "Topic subscribed, table id: ", topicTable[nbRegisteredTopic].id);
+		logs.debug("subAckHandler", "Topic subscribed, table name: ", topicTable[nbRegisteredTopic].name);
+
+		nbRegisteredTopic++;
 	} else {
-		logs.error("subscribe KO");
+		logs.error("subscibe KO");
+		regAckReturnCode = REJECTED;
 	}
-	subAckReturnCode = msg->return_code;
+
 }
 
 void Mqttsn::sendMessage() {
 
 	// logs.debug("sendMessage");
-	delay(SHORT_WAIT);
+	delay(int_WAIT);
 
 	if(waitingForResponse) {
 		// logs.debug("sendMessage", "the module is already waiting for a response");
@@ -356,7 +362,7 @@ void Mqttsn::sendMessage() {
 	}
 
 	// @BUG waits 500ms seconds otherwise the module miss some answers from the gateway
-	delay(SHORT_WAIT);
+	delay(int_WAIT);
 }
 
 bool Mqttsn::verifyChecksum(uint8_t frame_buffer[], int frame_size) {
@@ -490,9 +496,9 @@ void Mqttsn::regAckHandler(msg_regack* msg) {
 	}
 }
 
-void Mqttsn::resetRegisteredTopicId(short topicId) {
+void Mqttsn::resetRegisteredTopicId(int topicId) {
 
-	for (short i = 0; i < nbRegisteredTopic; i++) {
+	for (int i = 0; i < nbRegisteredTopic; i++) {
 		if (topicTable[i].id == topicId) {
 			// logs.debug("resetRegisteredTopicId", "topic id found");
 			topicTable[i].id = DEFAULT_TOPIC_ID;
@@ -768,7 +774,7 @@ void Mqttsn::pubComp() {
 void Mqttsn::registerHandler(msg_register* message) {
 
 	return_code_t ret = REJECTED_INVALID_TOPIC_ID;
-	short topic_id = findTopicId(message->topic_name);
+	int topic_id = findTopicId(message->topic_name);
 
 	// logs.debug("registerHandler", "received topic_name: ", message->topic_name);
 	// logs.debug("registerHandler", "found topic id: ", (int)topic_id);
