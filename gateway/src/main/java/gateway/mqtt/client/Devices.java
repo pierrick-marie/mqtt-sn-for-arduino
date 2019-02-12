@@ -21,6 +21,13 @@ public enum Devices {
 
 	private static final List<Device> DEVICES = Collections.synchronizedList(new ArrayList<>());
 
+	public synchronized Boolean remove(final Device device) {
+
+		Log.error("Devices", "remvove", "Removing a device : " + device);
+
+		return DEVICES.remove(device);
+	}
+
 	public synchronized Device search(final Address64 address64, final Address16 address16) {
 
 		Device device = null;

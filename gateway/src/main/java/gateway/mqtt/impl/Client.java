@@ -77,22 +77,21 @@ public class Client implements MqttCallback {
 			Log.debug(LogLevel.VERBOSE, "Client", "deliveryComplete", iMqttDeliveryToken.getMessage().toString());
 		} catch (final MqttException e) {
 			Log.error("Client", "deliveryComplete", e.getMessage());
+			Log.debug(LogLevel.ACTIVE, "Client", "deliveryComplete", "Error while delivering message");
 		}
 	}
 
 	public Boolean disconnect() {
 
-		/*
-		 * Do nothing (stay connected), otherwise the device will not receive any
-		 * message.
-		 *
-		 * isConnected = false; try { mqttClient.disconnect(); } catch (MqttException e)
-		 * { return false; }
-		 */
-
-		Log.debug(LogLevel.VERBOSE, "Client", "disconnect", device.getName() + " disconnected");
-
-		return true;
+		try {
+			mqttClient.disconnect();
+			Log.debug(LogLevel.VERBOSE, "Client", "disconnect", device.getName() + " disconnected");
+			return true;
+		} catch (final MqttException e) {
+			Log.error("Client", "disconnect", e.getMessage());
+			Log.debug(LogLevel.ACTIVE, "Client", "disconnect", "Impossible to disconnect the client");
+			return false;
+		}
 	}
 
 	public Boolean isConnected() {
@@ -130,7 +129,7 @@ public class Client implements MqttCallback {
 	public Boolean subscribe(final String topicName) {
 
 		try {
-			mqttClient.subscribe(topicName);
+			mqttClient.subscribe(topicName, Prtcl.DEFAULT_QOS);
 			Log.debug(LogLevel.VERBOSE, "Client", "subscribe", device.getName() + " subscribed to " + topicName);
 			return true;
 		} catch (final MqttException e) {

@@ -30,14 +30,14 @@ public class Device extends Thread {
 	private final long WAIT_SENDING_NEXT_MESSAGE = 5000; // milliseconds - 5 second
 	private final short MAX_MESSAGES = 5;
 
-	private final Address64 address64;
-	private final Address16 address16;
 	private final Sender sender;
 
 	private boolean doAction = false;
 	private boolean doUnsubscribeAll = false;
 	private IAction action = null;
 
+	private Address64 address64;
+	private Address16 address16;
 	private long lastUpdate = new Date().getTime();
 	private long duration = 60l; // 60 seconds
 	private DeviceState state = DeviceState.DISCONNECTED;
@@ -169,17 +169,17 @@ public class Device extends Thread {
 
 	public Topic register(final String topicName) {
 
-		Topic ret = getTopic(topicName);
-		if (null == ret) {
-			ret = new Topic(Topics.size(), topicName);
-			if (!Topics.add(ret)) {
+		Topic topic = getTopic(topicName);
+		if (null == topic) {
+			topic = new Topic(Topics.size(), topicName);
+			if (!Topics.add(topic)) {
 				Log.debug(LogLevel.ACTIVE, "Device", "register", "Error during register topic");
 				return null;
 			}
 		}
 
 		Log.print(this + " Registered topic: " + topicName);
-		return ret.setRegistered(true);
+		return topic.setRegistered(true);
 	}
 
 	private void resetAction() {
@@ -190,7 +190,9 @@ public class Device extends Thread {
 	@Override
 	public void run() {
 
-		while (true) {
+		boolean run = true;
+
+		while (run) {
 			if (doAction) {
 				action.exec();
 				resetAction();
@@ -200,7 +202,18 @@ public class Device extends Thread {
 				Log.error("Device", "run", "" + new Date().getTime());
 				Log.error("Device", "run", "" + lastUpdate);
 				Log.error("Device", "run", "        " + duration * 1000);
-				unscribeAll();
+				unsubscribeAll();
+			}
+			// if the current date is upper than the last update + 3 x duration time
+			if (new Date().getTime() > lastUpdate + duration * 3000) {
+				Topics.clear();
+				address16 = null;
+				address64 = null;
+				duration = 0;
+				mqttClient.disconnect();
+				Devices.list.remove(this);
+				setName("TO-REMOVE!");
+				run = false;
 			}
 			Time.sleep(WAIT_NEXT_ACTION, "Device.run(): fail waiting next action");
 		}
@@ -268,10 +281,10 @@ public class Device extends Thread {
 
 	public Topic subscribe(final String topicName) {
 
-		Topic ret = getTopic(topicName);
-		if (null == ret) {
-			ret = new Topic(Topics.size(), topicName);
-			if (!Topics.add(ret)) {
+		Topic topic = getTopic(topicName);
+		if (null == topic) {
+			topic = new Topic(Topics.size(), topicName);
+			if (!Topics.add(topic)) {
 				Log.debug(LogLevel.ACTIVE, "Device", "subscribe", "Error during subscribe topic");
 				return null;
 			}
@@ -282,9 +295,9 @@ public class Device extends Thread {
 			return null;
 		}
 
-		Log.print(this + " subscribed to " + topicName + " with id " + ret.id());
+		Log.print(this + " subscribed to " + topicName + " with id " + topic.id());
 		doUnsubscribeAll = true;
-		return ret.setRegistered(true);
+		return topic.setSubscribed(true);
 	}
 
 	@Override
@@ -297,11 +310,14 @@ public class Device extends Thread {
 		}
 	}
 
-	private synchronized void unscribeAll() {
+	private synchronized void unsubscribeAll() {
 
 		Log.print(this + " Time out: unsubscibe all topics");
 
 		for (final Topic topic : Topics) {
+
+			Log.error("Device", "unssubscribeAll",
+					topic.name() + " - " + topic.id() + " - " + topic.isSubscribed());
 
 			if (topic.isSubscribed()) {
 				mqttClient.unsubscribe(topic.name());
