@@ -28,7 +28,7 @@ public class SerialPortReader implements SerialPortEventListener {
 			XBeeSerialPort.Instance.serialPort.addEventListener(this);
 		} catch (SerialPortException e) {
 			Log.error("SerialPortReader", "constructor", "Serial port exception");
-			Log.debug(LogLevel.VERBOSE,"SerialPortReader", "constructor", e.getMessage());
+			Log.debug(LogLevel.VERBOSE, "SerialPortReader", "constructor", e.getMessage());
 		}
 
 		executorService = Executors.newFixedThreadPool(NB_THREAD_PARSER);

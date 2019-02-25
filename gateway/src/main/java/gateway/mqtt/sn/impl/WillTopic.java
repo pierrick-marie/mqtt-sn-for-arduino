@@ -16,43 +16,38 @@ import gateway.utils.log.Log;
  */
 public class WillTopic implements IAction {
 
-	private Device device;
-	private byte[] msg;
+	// private Device device;
+	// private byte[] msg;
 
 	public WillTopic(final Device device, final byte[] msg) {
 
 		Log.input(device, "Will topic");
 
-		this.device = device;
-		this.msg = msg;
+		// this.device = device;
+		// this.msg = msg;
 	}
 
 	@Override
 	public void exec() {
-	    /*
-        if (msg.length == 0) {
+		/*
+		 * if (msg.length == 0) {
+		 * 
+		 * device.mqttClient().setWillMessage(""); device.mqttClient().setWillTopic("");
+		 * 
+		 * } else {
+		 * 
+		 * byte flags = msg[0]; boolean will_retain = (flags & 0b00010000) == 1; byte[]
+		 * data = new byte[msg.length - 1];
+		 * 
+		 * for (int i = 0; i < msg.length - 1; i++) { data[i] = msg[i + 1]; }
+		 * 
+		 * String willtopic = new String(data, StandardCharsets.UTF_8);
+		 * 
+		 * device.mqttClient().setWillTopic(willtopic);
+		 * device.mqttClient().setWillQos(Prtcl.DEFAUlT_QOS);
+		 * device.mqttClient().setWillRetain(will_retain); }
+		 */
 
-            device.mqttClient().setWillMessage("");
-            device.mqttClient().setWillTopic("");
-
-        } else {
-
-            byte flags = msg[0];
-            boolean will_retain = (flags & 0b00010000) == 1;
-            byte[] data = new byte[msg.length - 1];
-
-            for (int i = 0; i < msg.length - 1; i++) {
-                data[i] = msg[i + 1];
-            }
-
-            String willtopic = new String(data, StandardCharsets.UTF_8);
-
-            device.mqttClient().setWillTopic(willtopic);
-            device.mqttClient().setWillQos(Prtcl.DEFAUlT_QOS);
-            device.mqttClient().setWillRetain(will_retain);
-        }
-        */
-
-	    Log.error("WillTopic", "exec", "NOT IMPLEMENTED YET");
+		Log.error("WillTopic", "exec", "NOT IMPLEMENTED YET");
 	}
 }

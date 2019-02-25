@@ -48,6 +48,7 @@ Mqttsn::Mqttsn(SoftwareSerial* _xBee) {
 
 	messageId = 0;
 	gatewayId = 0;
+	lastSubscribedTopic = 0;
 	nbRegisteredTopic = 0;
 	nbReceivedMessage = 0;
 	connected = REJECTED;
@@ -115,7 +116,7 @@ void Mqttsn::disconnect() {
 	msg->type = DISCONNECT;
 
 	msg->length += sizeof(msg_disconnect);
-	msg->duration = bitSwap(TIME_TO_SLEEP);
+	msg->duration = bitSwap(TIME_TO_SLEEP + 20);
 	// logs.debug("diconnect", "sleep duration: ", sleepDuration);
 
 	sendMessage();
@@ -239,9 +240,9 @@ void Mqttsn::connect(const char* _moduleName) {
 	parseData();
 }
 
-short Mqttsn::findTopicId(const char* topicName) {
+int Mqttsn::findTopicId(const char* topicName) {
 
-	for (short i = 0; i < nbRegisteredTopic; i++) {
+	for (int i = 0; i < nbRegisteredTopic; i++) {
 		// logs.debug( "findTopicid", "id = ", (int)topicTable[i].id);
 		// logs.debug( "findTopicid", "name = ", topicTable[i].name);
 		if (topicTable[i].id != DEFAULT_TOPIC_ID && strcmp(topicTable[i].name, topicName) == 0) {
@@ -253,9 +254,9 @@ short Mqttsn::findTopicId(const char* topicName) {
 	return -1;
 }
 
-const char* Mqttsn::findTopicName(short topicId) {
+const char* Mqttsn::findTopicName(int topicId) {
 
-	for (short i = 0; i < nbRegisteredTopic; i++) {
+	for (int i = 0; i < nbRegisteredTopic; i++) {
 		if (topicTable[i].id != DEFAULT_TOPIC_ID && topicTable[i].id == topicId) {
 			return topicTable[i].name;
 		}
@@ -272,47 +273,61 @@ bool Mqttsn::subscribeTopic(const char* topicName) {
 		while(1);
 	}
 
-	// logs.debug("subscribeTopic", "searching topic id");
+	// logs.debug("subscribeTopic", "topic: ", topicName);
 
-	if(-1 == findTopicId(topicName)){
-		// logs.debug( "subscribeTopic", "topic is not already registered -> registerTopic()");
-		if( registerTopic(topicName) ){
-			// logs.debug("subscribeTopic", topicName);
-
-			++messageId;
-			msg_subscribe* msg = reinterpret_cast<msg_subscribe*>(messageBuffer);
-
-			// The -2 here is because we're unioning a 0-length member (topicName)
-			// with a uint16_t in the msg_subscribe struct.
-			msg->length = sizeof(msg_subscribe) + strlen(topicName) - 2;
-			msg->type = SUBSCRIBE;
-			msg->flags = (QOS_MASK & QOS_MASK) | FLAG_TOPIC_NAME;
-			msg->message_id = bitSwap(messageId);
-			strcpy(msg->topic_name, topicName);
-
-			// logs.debug("subscribeTopic", "sending message 'subscribe topic'");
-
-			sendMessage();
-
-			if( !checkSerial() ) {
-				// logs.debug("subscribe", "check serial rejected");
-				connected = REJECTED;
-				return false;
-			}
-
-			// logs.debug("subscribe", "parsing response 'subscribe topic'");
-			parseData();
-
-			// logs.debug("subscribeTopic", "response from the gateway", subAckReturnCode);
-			return subAckReturnCode == ACCEPTED;
-		} else {
-			// logs.debug( "subscribeTopic", "registerTopic() not accepted");
-			return false;
-		}
+	if(nbRegisteredTopic >= MAX_TOPICS) {
+		// logs.debug("subscribeTopic", "nb > MAX_TOPICS");
+		return false;
 	}
 
-	// logs.debug("subscribeTopic", "topic is already subscribed");
-	return true;
+	int topicId = findTopicId(topicName);
+	if(topicId != -1) {
+		topicTable[topicId].id = DEFAULT_TOPIC_ID;
+		logs.debug("subscribeTopic", "reset topic id:", topicId);
+		lastSubscribedTopic = topicId;
+	} else {
+		// logs.debug("subscribeTopic", "id:", topicId);
+
+		// Fill in the next table entry, but we only increment the counter to
+		// the next topic when we get a REGACK from the broker. So don't issue
+		// another REGISTER until we have resolved this one.
+		// @name is save now because it will be lost at the end of this function.
+		strcpy(topicTable[nbRegisteredTopic].name, topicName);
+		// logs.debug("subscribeTopic", "name:", topicTable[nbRegisteredTopic].name);
+
+		// A magic number while the gateway respond: @see:regAckHandler()
+		topicTable[nbRegisteredTopic].id = DEFAULT_TOPIC_ID;
+		lastSubscribedTopic = nbRegisteredTopic;
+	}
+
+	// logs.debug("subscribeTopic", topicName);
+
+	++messageId;
+	msg_subscribe* msg = reinterpret_cast<msg_subscribe*>(messageBuffer);
+
+	// The -2 here is because we're unioning a 0-length member (topicName)
+	// with a uint16_t in the msg_subscribe struct.
+	msg->length = sizeof(msg_subscribe) + strlen(topicName) - 2;
+	msg->type = SUBSCRIBE;
+	msg->flags = (QOS_MASK & QOS_MASK) | FLAG_TOPIC_NAME;
+	msg->message_id = bitSwap(messageId);
+	strcpy(msg->topic_name, topicName);
+
+	// logs.debug("subscribeTopic", "sending message 'subscribe topic'");
+
+	sendMessage();
+
+	if( !checkSerial() ) {
+		// logs.debug("subscribe", "check serial rejected");
+		connected = REJECTED;
+		return false;
+	}
+
+	// logs.debug("subscribe", "parsing response 'subscribe topic'");
+	parseData();
+
+	// logs.debug("subscribeTopic", "response from the gateway", subAckReturnCode);
+	return subAckReturnCode == ACCEPTED;
 }
 
 bool Mqttsn::registerTopic(const char* topicName) {

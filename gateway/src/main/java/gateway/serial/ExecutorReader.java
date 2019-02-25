@@ -59,7 +59,7 @@ public class ExecutorReader implements Runnable {
 	 * @param data         The date to search into the @searchedByte.
 	 * @return The index of @searedByte or -1 if not found.
 	 */
-	private  int getFirstIndexforByte(final byte searchedByte, final byte[] data) {
+	private int getFirstIndexforByte(final byte searchedByte, final byte[] data) {
 
 		for (int i = 1; i < data.length; i++) {
 			if (data[i] == searchedByte) {
@@ -71,13 +71,13 @@ public class ExecutorReader implements Runnable {
 	}
 
 	/**
-	 * The function checks if the first byte of @data is equals to 0x7E else returns false.
-	 * If ok, the functions returns the result of @verifyChecksum()
+	 * The function checks if the first byte of @data is equals to 0x7E else returns
+	 * false. If ok, the functions returns the result of @verifyChecksum()
 	 *
 	 * @param data The data to verify.
 	 * @return True is the @data is OK, else false.
 	 */
-	private  boolean verifyData(final byte[] data) {
+	private boolean verifyData(final byte[] data) {
 
 		if (data[0] != (byte) 0x7E) {
 			return false;

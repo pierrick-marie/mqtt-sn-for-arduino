@@ -20,7 +20,8 @@ public class Address64 extends Address {
 
 	/**
 	 * Override the method to compare elements (used byt he hashmap of the clients).
-	 *z
+	 * z
+	 * 
 	 * @param compare the element to compare.
 	 * @return true is the addresses are equal.
 	 */

@@ -7,14 +7,13 @@
 
 package gateway.mqtt.sn.impl;
 
+import java.nio.charset.StandardCharsets;
+
 import gateway.mqtt.client.Device;
+import gateway.mqtt.impl.Topic;
 import gateway.mqtt.sn.IAction;
 import gateway.serial.SerialPortWriter;
-import gateway.mqtt.impl.Topic;
 import gateway.utils.log.Log;
-import gateway.utils.log.LogLevel;
-
-import java.nio.charset.StandardCharsets;
 
 public class Register implements IAction {
 
@@ -26,25 +25,26 @@ public class Register implements IAction {
 		Log.input(device, "register");
 
 		this.device = device;
-		this.message = msg;
+		message = msg;
 	}
 
 	/**
-	 * This method registers a topic name into the list of Topics @see:Main.TopicName
-	 * The method does not register the topic name to the bus.
+	 * This method registers a topic name into the list of
+	 * Topics @see:Main.TopicName The method does not register the topic name to the
+	 * bus.
 	 */
 	@Override
 	public void exec() {
 
-		byte[] messageId = new byte[2];
+		final byte[] messageId = new byte[2];
 		messageId[0] = message[2];
 		messageId[1] = message[3];
-		byte[] name = new byte[message.length - 4];
+		final byte[] name = new byte[message.length - 4];
 		String topicName;
 		int i;
-		Topic topic;
+		final Topic topic;
 
-		if (null == device.mqttClient() || !device.mqttClient().isConnected()) {
+		if (!device.isConnected()) {
 			Log.error("Register", "register", device + "is not connected");
 			// Error - topicId = -1
 			regack(-1, messageId, Prtcl.REJECTED);
@@ -57,17 +57,11 @@ public class Register implements IAction {
 
 		topicName = new String(name, StandardCharsets.UTF_8);
 
-		synchronized (device.Topics) {
-
-			topic = device.Topics.get(topicName);
-
-			if (null != topic) {
-				Log.debug(LogLevel.ACTIVE, "Register", "register", "topic " + topic.name() + " (id:" + topic.id() + ") is already registered");
-			} else {
-				Log.debug(LogLevel.ACTIVE, "Register", "register", "topic " + topicName + " is NOT contained -> saving the topic with id: " + device.Topics.size());
-				topic = device.Topics.put(device.Topics.size(), topicName);
-			}
+		topic = device.register(topicName);
+		if (null != topic) {
 			regack(topic.id(), messageId, Prtcl.ACCEPTED);
+		} else {
+			regack(-1, messageId, Prtcl.REJECTED);
 		}
 	}
 
@@ -79,10 +73,10 @@ public class Register implements IAction {
 	 */
 	private void regack(final int topicId, final byte[] messageId, final byte returnCode) {
 
-		Log.output(device, "reg ack");
+		Log.output(device, "reg ack with return code: " + returnCode);
 
 		// the message to send
-		byte[] message = new byte[7];
+		final byte[] message = new byte[7];
 
 		message[0] = (byte) 0x07;
 		message[1] = (byte) 0x0B;

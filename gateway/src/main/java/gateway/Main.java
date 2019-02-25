@@ -19,9 +19,9 @@ public class Main {
 
 		Config.instance.parseArgs(args);
 
-		Log.print("Starting the gateway \n * Serial: " + Config.SERIAL_PORT + "\n * IP server: " + Config.IP_SERVER + " \n * Port server: " + Config.PORT_SERVER);
+		Log.print("Starting the gateway \n * Serial: " + Config.SERIAL_PORT + "\n * IP server: " + Config.IP_SERVER
+				+ " \n * Port server: " + Config.PORT_SERVER);
 
 		new SerialPortReader();
 	}
 }
-

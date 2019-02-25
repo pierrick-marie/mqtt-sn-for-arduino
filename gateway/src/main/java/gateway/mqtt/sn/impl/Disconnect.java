@@ -1,9 +1,9 @@
 package gateway.mqtt.sn.impl;
 
+import gateway.mqtt.client.Device;
+import gateway.mqtt.client.DeviceState;
 import gateway.mqtt.sn.IAction;
 import gateway.serial.SerialPortWriter;
-import gateway.mqtt.client.DeviceState;
-import gateway.mqtt.client.Device;
 import gateway.utils.log.Log;
 import gateway.utils.log.LogLevel;
 
@@ -23,11 +23,22 @@ public class Disconnect implements IAction {
 		this.msg = msg;
 	}
 
+	private void disconnectAck() {
+
+		Log.input(device, "Disconnect Ack");
+
+		final byte[] ret = new byte[2];
+		ret[0] = (byte) 0x02;
+		ret[1] = (byte) 0x18;
+
+		SerialPortWriter.write(device, ret);
+	}
+
 	@Override
 	public void exec() {
 
 		if (msg.length == 4) {
-			int duration = (msg[0] << 8) + (msg[1] & 0xFF);
+			final short duration = (short) ((msg[0] << 8) + (msg[1] & 0xFF));
 
 			if (duration > 0) {
 
@@ -35,22 +46,12 @@ public class Disconnect implements IAction {
 
 				disconnectAck();
 
-				Log.debug(LogLevel.ACTIVE,"Disconnect", "diconnect", "Going into sleep");
+				Log.debug(LogLevel.ACTIVE, "Disconnect", "diconnect",
+						"Going into sleep with duration: " + duration);
 			}
 		} else {
 			device.setState(DeviceState.DISCONNECTED);
 			disconnectAck();
 		}
-	}
-
-	private void disconnectAck() {
-
-		Log.input(device, "Disconnect Ack");
-
-		byte[] ret = new byte[2];
-		ret[0] = (byte) 0x02;
-		ret[1] = (byte) 0x18;
-
-		SerialPortWriter.write(device, ret);
 	}
 }

@@ -16,7 +16,6 @@ import gateway.utils.log.Log;
  */
 public class WillTopicReq implements IAction {
 
-
 	private final Device device;
 
 	public WillTopicReq(final Device device) {

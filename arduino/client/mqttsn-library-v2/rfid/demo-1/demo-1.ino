@@ -21,7 +21,9 @@ void setup() {
   Serial.begin(9600);
   Rfid.begin(9600);
 
+  Serial.println("plop");
   mqttsn.start();
+  Serial.println("plop 2");
 }
 
 void loop() {
@@ -60,7 +62,7 @@ void loop() {
       Serial.print("Publish rfid: ");
       Serial.println(rfid);
 
-      mqttsn.publish(TOPIC_PUB, rfid);
+      mqttsn.publish(TOPIC_PUB, "rfid");
     }
   }
 

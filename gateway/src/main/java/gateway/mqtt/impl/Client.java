@@ -6,162 +6,148 @@
 
 package gateway.mqtt.impl;
 
-import gateway.mqtt.IClient;
+import static gateway.mqtt.sn.impl.Prtcl.PAYLOAD_LENGTH;
+
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.MqttCallback;
+import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+
 import gateway.mqtt.client.Device;
 import gateway.mqtt.sn.impl.Prtcl;
 import gateway.utils.Config;
 import gateway.utils.log.Log;
 import gateway.utils.log.LogLevel;
-import org.eclipse.paho.client.mqttv3.*;
-import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
-import static gateway.mqtt.sn.impl.Prtcl.PAYLOAD_LENGTH;
+public class Client implements MqttCallback {
 
-public class Client implements MqttCallback, IClient, Runnable {
+	private final static String PRTCL = "tcp://";
 
-    private final String PRTCL = "tcp://";
-    private final Integer SLEEP_TIME = 5; // seconds
+	// NOT IMPLEMENTED YET
+	// private final Boolean cleanSession;
 
-    private final Device device;
-    private final Boolean cleanSession;
+	private final Device device;
+	private final MqttClient mqttClient;
+	private final MqttConnectOptions option;
 
-    private Boolean isStarted = false;
-    private MqttClient mqttClient;
-    private MqttConnectOptions option;
+	public Client(final Device device, final Boolean cleanSession) throws MqttException {
+		mqttClient = new MqttClient(PRTCL + Config.IP_SERVER + ":" + Config.PORT_SERVER, device.getName(),
+				new MemoryPersistence());
 
-    public Client(final Device device, final Boolean cleanSession) {
+		this.device = device;
+		// this.cleanSession = cleanSession;
+		option = new MqttConnectOptions();
+		option.setCleanSession(cleanSession);
+		mqttClient.setCallback(this);
+	}
 
-        this.device = device;
-        this.cleanSession = cleanSession;
+	public Boolean connect() {
 
-        try {
-            mqttClient = new MqttClient(PRTCL + Config.IP_SERVER + ":" + Config.PORT_SERVER, device.getName(), new MemoryPersistence());
-            option = new MqttConnectOptions();
-            option.setCleanSession(cleanSession);
-        } catch (MqttException e) {
-            Log.error("Client", "constructor", e.getMessage());
-        }
-    }
+		Log.debug(LogLevel.VERBOSE, "Client", "connect", "try to connect to the gateway.mqtt broker");
 
-    @Override
-    public void connectionLost(Throwable throwable) {
+		if (mqttClient.isConnected()) {
+			return true;
+		}
 
-        Log.error("Client", "connectionLost", throwable.getMessage());
+		try {
+			mqttClient.connect();
+		} catch (final MqttException e) {
+			Log.error("Client", "connect", e.getMessage());
+			Log.error("Client", "connect", e.getCause().getMessage());
+		}
 
-    }
+		Log.debug(LogLevel.VERBOSE, "Client", "connect", device.getName() + " connected");
+		return mqttClient.isConnected();
+	}
 
-    @Override
-    public void messageArrived(String topic, MqttMessage message) {
+	@Override
+	public void connectionLost(Throwable throwable) {
 
-        if (message.getPayload().length < PAYLOAD_LENGTH) {
-            Log.debug(LogLevel.VERBOSE, "Client", "messageArrived", "message: " + new String(message.getPayload()) + " on topic: " + topic);
-            device.addMqttMessage(new MqMessage(topic, new String(message.getPayload())));
-        } else {
-            Log.error("Client", "messageArrived", "payload too long");
-        }
-    }
+		Log.error("Client", "connectionLost", throwable.getMessage());
 
-    @Override
-    public void deliveryComplete(IMqttDeliveryToken iMqttDeliveryToken) {
+	}
 
-        try {
-            Log.debug(LogLevel.VERBOSE,"Client", "deliveryComplete", iMqttDeliveryToken.getMessage().toString());
-        } catch (MqttException e) {
-            Log.error("Client", "deliveryComplete", e.getMessage());
-        }
-    }
+	@Override
+	public void deliveryComplete(IMqttDeliveryToken iMqttDeliveryToken) {
 
-    @Override
-    public Boolean connect() {
+		try {
+			Log.debug(LogLevel.VERBOSE, "Client", "deliveryComplete", iMqttDeliveryToken.getMessage().toString());
+		} catch (final MqttException e) {
+			Log.error("Client", "deliveryComplete", e.getMessage());
+			Log.debug(LogLevel.ACTIVE, "Client", "deliveryComplete", "Error while delivering message");
+		}
+	}
 
-        Log.debug(LogLevel.VERBOSE, "Client", "connect", "try to connect to the gateway.mqtt broker");
+	public Boolean disconnect() {
 
-        if(mqttClient.isConnected()) {
-            return true;
-        }
+		try {
+			mqttClient.disconnect();
+			Log.debug(LogLevel.VERBOSE, "Client", "disconnect", device.getName() + " disconnected");
+			return true;
+		} catch (final MqttException e) {
+			Log.error("Client", "disconnect", e.getMessage());
+			Log.debug(LogLevel.ACTIVE, "Client", "disconnect", "Impossible to disconnect the client");
+			return false;
+		}
+	}
 
-        try {
-            mqttClient.connect();
-        } catch (MqttException e) {
-            Log.error("Client", "connect", e.getMessage());
-            Log.error("Client", "connect", e.getCause().getMessage());
-        }
+	public Boolean isConnected() {
+		return mqttClient.isConnected();
+	}
 
-        Log.debug(LogLevel.VERBOSE, "Client", "connect", device.getName() + " connected");
-        return mqttClient.isConnected();
-    }
+	@Override
+	public void messageArrived(String topic, MqttMessage message) {
 
-    @Override
-    public Boolean subscribe(Topic topic) {
+		if (message.getPayload().length < PAYLOAD_LENGTH) {
+			Log.debug(LogLevel.VERBOSE, "Client", "messageArrived",
+					"message: " + new String(message.getPayload()) + " on topic: " + topic);
+			device.addMqttMessage(new SnMessage(topic, new String(message.getPayload())));
+		} else {
+			Log.error("Client", "messageArrived", "payload too long");
+		}
+	}
 
-        if(!isStarted) {
-            new Thread(this).start();
-        }
+	public Boolean publish(final String topicName, final String message) {
 
-        try {
-            mqttClient.subscribe(topic.toString(), Prtcl.DEFAULT_QOS);
-            mqttClient.setCallback(this);
-            topic.setSubscribed();
-            Log.debug(LogLevel.VERBOSE, "Client", "subscribe", device.getName() + " subscribed to " + topic.name());
-        } catch (MqttException e) {
-            Log.error("Client", "subscribe", e.getMessage());
-            return false;
-        }
+		try {
+			final MqttMessage mqttMessage = new MqttMessage(message.getBytes());
+			mqttMessage.setQos(Prtcl.DEFAULT_QOS);
+			mqttClient.publish(topicName, mqttMessage);
+			Log.debug(LogLevel.VERBOSE, "Client", "publish",
+					"Publish message: " + message + " on the topic: " + topicName);
+			return true;
+		} catch (final MqttException e) {
+			Log.error("Client", "publish", "Impossible to publish the message: " + message);
+			Log.debug(LogLevel.VERBOSE, "Client", "publish", e.getMessage());
+			return false;
+		}
+	}
 
-        return true;
-    }
+	public Boolean subscribe(final String topicName) {
 
-    @Override
-    public Boolean publish(Topic topic, String message) {
+		try {
+			mqttClient.subscribe(topicName, Prtcl.DEFAULT_QOS);
+			Log.debug(LogLevel.VERBOSE, "Client", "subscribe", device.getName() + " subscribed to " + topicName);
+			return true;
+		} catch (final MqttException e) {
+			Log.error("Client", "subscribe", e.getMessage());
+			return false;
+		}
+	}
 
-        try {
-            MqttMessage mqttMessage = new MqttMessage(message.getBytes());
-            mqttMessage.setQos(Prtcl.DEFAULT_QOS);
-            mqttClient.publish(topic.name(), mqttMessage);
-            Log.debug(LogLevel.VERBOSE, "Client", "publish", "Publish message: " + message + " on the topic: " + topic);
-            return true;
-        } catch (MqttException e) {
-            Log.error("Client", "publish", "Impossible to publish the message: " + message);
-            Log.debug(LogLevel.VERBOSE, "Client", "publish", e.getMessage());
-            return false;
-        }
-    }
+	public Boolean unsubscribe(final String topicName) {
 
-    @Override
-    public Boolean isConnected() {
-        return mqttClient.isConnected();
-    }
-
-    @Override
-    public Boolean disconnect() {
-
-        /*
-         * Do nothing (stay connected), otherwise the device will not receive any message.
-         *
-        isConnected = false;
-        try {
-            mqttClient.disconnect();
-        } catch (MqttException e) {
-            return false;
-        }
-        */
-
-        Log.debug(LogLevel.VERBOSE, "Client", "disconnect", device.getName() + " disconnected");
-
-        return true;
-    }
-
-    @Override
-    public void run() {
-        // wait until receiving messages -> messageArrived
-        isStarted = true;
-        while(mqttClient.isConnected()) {
-            try {
-                Thread.sleep(SLEEP_TIME * 1000);
-            } catch (InterruptedException e) {
-                Log.error("Client", "run", e.getMessage());
-            }
-        }
-        isStarted = false;
-    }
+		try {
+			mqttClient.unsubscribe(topicName);
+			Log.debug(LogLevel.VERBOSE, "Client", "unsubscribe",
+					device.getName() + " subscribed to " + topicName);
+			return true;
+		} catch (final MqttException e) {
+			Log.error("Client", "unsubscribe", e.getMessage());
+			return false;
+		}
+	}
 }
