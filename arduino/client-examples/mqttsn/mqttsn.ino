@@ -1,18 +1,24 @@
+/**
+ * L'exemple utilise lecteur de tag RFID pour fonctionner. 
+ * Il envoie sur le topic "TOPIC_PUB" l'identifiant du tag à chaque fois qu'il est approché du lecteur.
+ * Dans l'exemple le programme est abonné au topic "TOPIC_SUB" et affiche régulièrement les messages reçus sur ce topic.
+ **/
+
 #include <Mqttsn.h>
 
-#define MODULE_NAME "Arduino-RFID_1"
+#define MODULE_NAME "Arduino"
 
-#define TOPIC_SUB "RFID_1"
+#define TOPIC_SUB "TOPIC_SUB"
 
-#define TOPIC_PUB "RFID_2"
+#define TOPIC_PUB "TOPIC_PUB"
 
 String rfid = "";
 int nbReceivedMessages = 0;
 long time = 0;
 
-Logs logs ; // objet pour ecrire des logs dans la console
-SoftwareSerial XBee(5, 4); //objet qui permet d'appeler les méthodes pour envoyer des données via le module XBee
-Mqttsn mqttsn(&XBee) ; // objet qui permet d'appeler les methodes de la librairie mqttsn
+Logs logs; 	// objet pour ecrire des logs dans la console
+SoftwareSerial XBee(5, 4); 	//objet qui permet d'appeler les méthodes pour envoyer des données via le module XBee
+Mqttsn mqttsn(&XBee) ; 	// objet qui permet d'appeler les methodes de la librairie mqttsn
 
 SoftwareSerial Rfid(2, 3);
 
@@ -21,9 +27,7 @@ void setup() {
   Serial.begin(9600);
   Rfid.begin(9600);
 
-  Serial.println("plop");
   mqttsn.start();
-  Serial.println("plop 2");
 }
 
 void loop() {
