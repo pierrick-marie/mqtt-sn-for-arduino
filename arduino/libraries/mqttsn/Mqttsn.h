@@ -52,7 +52,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define QOS_FLAG 0
 #define KEEP_ALIVE 60 // 60 secondes
-#define TIME_TO_SLEEP 30 // 30 seconds
+#define TIME_TO_SLEEP 10 // 30 seconds
 
 #define MAX_TRY 10
 
@@ -63,7 +63,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define BAUD_RATE 9600
 
 #define LONG_WAIT 2000 // 2000ms - 2s
-#define int_WAIT 500 // 500ms - 0.s
 
 class Mqttsn {
 

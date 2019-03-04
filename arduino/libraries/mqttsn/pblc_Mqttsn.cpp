@@ -116,7 +116,7 @@ void Mqttsn::disconnect() {
 	msg->type = DISCONNECT;
 
 	msg->length += sizeof(msg_disconnect);
-	msg->duration = bitSwap(TIME_TO_SLEEP + 20);
+	msg->duration = bitSwap(TIME_TO_SLEEP);
 	// logs.debug("diconnect", "sleep duration: ", sleepDuration);
 
 	sendMessage();
@@ -283,7 +283,7 @@ bool Mqttsn::subscribeTopic(const char* topicName) {
 	int topicId = findTopicId(topicName);
 	if(topicId != -1) {
 		topicTable[topicId].id = DEFAULT_TOPIC_ID;
-		logs.debug("subscribeTopic", "reset topic id:", topicId);
+		// logs.debug("subscribeTopic", "reset topic id:", topicId);
 		lastSubscribedTopic = topicId;
 	} else {
 		// logs.debug("subscribeTopic", "id:", topicId);
@@ -298,6 +298,8 @@ bool Mqttsn::subscribeTopic(const char* topicName) {
 		// A magic number while the gateway respond: @see:regAckHandler()
 		topicTable[nbRegisteredTopic].id = DEFAULT_TOPIC_ID;
 		lastSubscribedTopic = nbRegisteredTopic;
+
+		nbRegisteredTopic++;
 	}
 
 	// logs.debug("subscribeTopic", topicName);

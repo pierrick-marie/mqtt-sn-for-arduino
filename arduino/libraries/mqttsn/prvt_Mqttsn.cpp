@@ -47,7 +47,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 bool Mqttsn::waitData() {
 
 	// @BUG waits 500ms seconds otherwise the module miss some answers from the gateway
-	delay(int_WAIT);
+	delay(LONG_WAIT);
 
 	int i = 1;
 	while( xBee->available() <= 0 && i <= MAX_TRY ) {
@@ -315,16 +315,14 @@ bool Mqttsn::checkSerial() {
 void Mqttsn::subAckHandler(msg_suback* msg) {
 
 	if (msg->return_code == ACCEPTED && nbRegisteredTopic < MAX_TOPICS && bitSwap(msg->message_id) == messageId) {
-		logs.info("subscibe ok");
-
 		topicTable[lastSubscribedTopic].id = msg->topic_id;
 		regAckReturnCode = ACCEPTED;
 
-		logs.debug("subAckHandler", "Topic subscribed, id: ", msg->topic_id);
-		logs.debug("subAckHandler", "Topic subscribed, table id: ", topicTable[nbRegisteredTopic].id);
-		logs.debug("subAckHandler", "Topic subscribed, table name: ", topicTable[nbRegisteredTopic].name);
+		// logs.debug("subAckHandler", "msg->id: ", msg->topic_id);
+		// logs.debug("subAckHandler", "table[id]: ", topicTable[lastSubscribedTopic].id);
+		// logs.debug("subAckHandler", "table[name]: ", topicTable[lastSubscribedTopic].name);
 
-		nbRegisteredTopic++;
+		logs.info("subscibe OK");
 	} else {
 		logs.error("subscibe KO");
 		regAckReturnCode = REJECTED;
@@ -335,7 +333,7 @@ void Mqttsn::subAckHandler(msg_suback* msg) {
 void Mqttsn::sendMessage() {
 
 	// logs.debug("sendMessage");
-	delay(int_WAIT);
+	delay(LONG_WAIT);
 
 	if(waitingForResponse) {
 		// logs.debug("sendMessage", "the module is already waiting for a response");
@@ -362,7 +360,7 @@ void Mqttsn::sendMessage() {
 	}
 
 	// @BUG waits 500ms seconds otherwise the module miss some answers from the gateway
-	delay(int_WAIT);
+	delay(LONG_WAIT);
 }
 
 bool Mqttsn::verifyChecksum(uint8_t frame_buffer[], int frame_size) {
@@ -480,7 +478,6 @@ void Mqttsn::searchGatewayHandler(msg_gwinfo* message) {
 void Mqttsn::regAckHandler(msg_regack* msg) {
 
 	if (msg->return_code == ACCEPTED && nbRegisteredTopic < MAX_TOPICS && bitSwap(msg->message_id) == messageId) {
-		logs.info("register ok");
 
 		topicTable[nbRegisteredTopic].id = msg->topic_id;
 		regAckReturnCode = ACCEPTED;
@@ -488,6 +485,7 @@ void Mqttsn::regAckHandler(msg_regack* msg) {
 		// logs.debug("regAckHandler", "Topic registered, id: ", msg->topic_id);
 		// logs.debug("regAckHandler", "Topic registered, table id: ", topicTable[nbRegisteredTopic].id);
 		// logs.debug("regAckHandler", "Topic registered, table name: ", topicTable[nbRegisteredTopic].name);
+		logs.info("register OK");
 
 		nbRegisteredTopic++;
 	} else {

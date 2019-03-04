@@ -18,7 +18,7 @@ long time = 0;
 
 Logs logs; 	// objet pour ecrire des logs dans la console
 SoftwareSerial XBee(5, 4); 	//objet qui permet d'appeler les méthodes pour envoyer des données via le module XBee
-Mqttsn mqttsn(&XBee) ; 	// objet qui permet d'appeler les methodes de la librairie mqttsn
+Mqttsn mqttsn(&XBee); 	// objet qui permet d'appeler les methodes de la librairie mqttsn
 
 SoftwareSerial Rfid(2, 3);
 
