@@ -8,10 +8,10 @@
 package gateway.serial;
 
 import gateway.utils.Config;
-import jssc.SerialPort;
-import jssc.SerialPortException;
 import gateway.utils.log.Log;
 import gateway.utils.log.LogLevel;
+import jssc.SerialPort;
+import jssc.SerialPortException;
 
 enum XBeeSerialPort {
 
@@ -32,9 +32,9 @@ enum XBeeSerialPort {
 			serialPort.setParams(jssc.SerialPort.BAUDRATE_9600, jssc.SerialPort.DATABITS_8,
 					jssc.SerialPort.STOPBITS_1, jssc.SerialPort.PARITY_NONE);
 
-			int mask = jssc.SerialPort.MASK_RXCHAR + jssc.SerialPort.MASK_CTS + jssc.SerialPort.MASK_DSR;
+			final int mask = jssc.SerialPort.MASK_RXCHAR + jssc.SerialPort.MASK_CTS + jssc.SerialPort.MASK_DSR;
 			serialPort.setEventsMask(mask);
-		} catch (SerialPortException e) {
+		} catch (final SerialPortException e) {
 			Log.error("XBeeSerialPort", "getSerial", "Impossible to get the XBee module");
 			Log.debug(LogLevel.ACTIVE, "XBeeSerialPort", "getSerial", e.getMessage());
 		}
