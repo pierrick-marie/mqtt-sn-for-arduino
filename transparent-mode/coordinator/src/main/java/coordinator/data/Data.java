@@ -20,8 +20,8 @@ import coordinator.utils.log.LogLevel;
 
 public class Data implements Runnable {
 
-	public static final int SLEEPING_TIME_MILLIS = 1000 * 10; // 10 seconds
-	public static final int EXPIRATION_TIME_MILLIS = 1000 * 30; // 30 seconds
+	public static final int SLEEPING_TIME_MILLIS = 1000 * 30; // 30 seconds
+	public static final int EXPIRATION_TIME_MILLIS = 1000 * 60 * 3; // 3 minutes
 
 	private final Map<Integer, Message> data = new ConcurrentHashMap<>();
 
