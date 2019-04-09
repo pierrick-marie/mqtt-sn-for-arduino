@@ -17,6 +17,8 @@ public class Main {
 
 	public static void main(String[] args) {
 
+		Log.COLOR = false;
+
 		Config.instance.parseArgs(args);
 
 		Log.print("Starting the gateway \n * Serial: " + Config.SERIAL_PORT + "\n * IP server: " + Config.IP_SERVER
