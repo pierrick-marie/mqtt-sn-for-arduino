@@ -90,6 +90,14 @@ public class Log {
 		print(device + " - " + OUTPUT + message);
 	}
 
+	public static void print(final byte[] data) {
+		activeDebug("Print buffer");
+		for (final int element : data) {
+			System.out.print(String.format("%02X ", element));
+		}
+		System.out.println("");
+	}
+
 	public static void print(final String message) {
 		final Date date = new Date();
 		bBlue(" * [ INFO " + dateFormat.format(date) + " ] ");

@@ -7,15 +7,15 @@
 
 package gateway.serial;
 
-import jssc.SerialPortEvent;
-import jssc.SerialPortEventListener;
-import jssc.SerialPortException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import gateway.utils.Time;
 import gateway.utils.log.Log;
 import gateway.utils.log.LogLevel;
-
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import jssc.SerialPortEvent;
+import jssc.SerialPortEventListener;
+import jssc.SerialPortException;
 
 public class SerialPortReader implements SerialPortEventListener {
 
@@ -26,7 +26,7 @@ public class SerialPortReader implements SerialPortEventListener {
 	public SerialPortReader() {
 		try {
 			XBeeSerialPort.Instance.serialPort.addEventListener(this);
-		} catch (SerialPortException e) {
+		} catch (final SerialPortException e) {
 			Log.error("SerialPortReader", "constructor", "Serial port exception");
 			Log.debug(LogLevel.VERBOSE, "SerialPortReader", "constructor", e.getMessage());
 		}
@@ -34,6 +34,7 @@ public class SerialPortReader implements SerialPortEventListener {
 		executorService = Executors.newFixedThreadPool(NB_THREAD_PARSER);
 	}
 
+	@Override
 	public void serialEvent(SerialPortEvent event) {
 
 		Log.debug(LogLevel.VERBOSE, "SerialPortReader", "serialEvent", "new event");
@@ -49,15 +50,14 @@ public class SerialPortReader implements SerialPortEventListener {
 					Time.sleep((long) 100, "SerialPortReader().serialEvent: error buffering message");
 					inputBufferSize = XBeeSerialPort.Instance.serialPort.getInputBufferBytesCount();
 				}
-				checkDuplicate(XBeeSerialPort.Instance.serialPort.readBytes(totalInputSize));
-			} catch (SerialPortException e) {
+
+				Log.debug(LogLevel.VERBOSE, "SerialPortReader", "serialEvent", "creating a new executor");
+				executorService.submit(
+						new ExecutorReader(XBeeSerialPort.Instance.serialPort.readBytes(totalInputSize)));
+			} catch (final SerialPortException e) {
 				Log.error("SerialPortReader", "serialEvent", "");
 				Log.debug(LogLevel.VERBOSE, "SerialPortReader", "serialEvent", e.getMessage());
 			}
 		}
-	}
-
-	private void checkDuplicate(final byte[] buffer) {
-		executorService.submit(new ExecutorReader(buffer));
 	}
 }

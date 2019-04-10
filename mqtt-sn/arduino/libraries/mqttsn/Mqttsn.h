@@ -229,6 +229,8 @@ private:
 
 	void reRegisterHandler(msg_reregister* msg);
 
+	void displayFrameBufferOut();
+
 	// @TODO not implemented yet
 	// void willTopicRespHandler(msg_willtopicresp* msg);
 	// void willMsgRespHandler(msg_willmsgresp* msg);

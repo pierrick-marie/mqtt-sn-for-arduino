@@ -184,7 +184,7 @@ void Mqttsn::publish(const char* topicName, String message){
 
 void Mqttsn::start() {
 
-	// logs.debug("searchGateway");
+	logs.debug("searchGateway");
 
 	waitingForResponse = false;
 	initOk = false;
@@ -195,10 +195,10 @@ void Mqttsn::start() {
 	msg->type = SEARCHGW;
 	msg->radius = RADIUS;
 
-	// logs.debug("searchGateway", "sending message");
+	logs.debug("searchGateway", "sending message");
 	sendMessage();
 
-	// logs.debug("searchGateway", "checking the response from the gateway");
+	logs.debug("searchGateway", "checking the response from the gateway");
 
 	// waiting next message
 	if( !checkSerial() ) {
