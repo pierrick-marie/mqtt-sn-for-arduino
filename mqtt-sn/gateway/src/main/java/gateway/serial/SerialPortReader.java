@@ -34,6 +34,19 @@ public class SerialPortReader implements SerialPortEventListener {
 		executorService = Executors.newFixedThreadPool(NB_THREAD_PARSER);
 	}
 
+	private byte[] cleanBuffer(final byte[] data) {
+
+		int plop;
+		int i = 0;
+		for (; i < data.length; i++) {
+			if (data[i] < 0) {
+				plop = (byte) (data[i] & 0x000000FF);
+				Log.error("SerialReader", "cleanBuffer", "" + String.format("%02X ", plop));
+			}
+		}
+		return data;
+	}
+
 	@Override
 	public void serialEvent(SerialPortEvent event) {
 
@@ -52,8 +65,12 @@ public class SerialPortReader implements SerialPortEventListener {
 				}
 
 				Log.debug(LogLevel.VERBOSE, "SerialPortReader", "serialEvent", "creating a new executor");
+				// TODO BEGIN DEBUG
+				// executorService.submit(new
+				// ExecutorReader(cleanBuffer(XBeeSerialPort.Instance.serialPort.readBytes(totalInputSize))));
 				executorService.submit(
 						new ExecutorReader(XBeeSerialPort.Instance.serialPort.readBytes(totalInputSize)));
+				// END DEBUG
 			} catch (final SerialPortException e) {
 				Log.error("SerialPortReader", "serialEvent", "");
 				Log.debug(LogLevel.VERBOSE, "SerialPortReader", "serialEvent", e.getMessage());
