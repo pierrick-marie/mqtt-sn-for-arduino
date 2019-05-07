@@ -17,7 +17,7 @@ public class Log {
 
 	public static Boolean COLOR = true;
 	public static final Boolean ERROR = true;
-	public static final gateway.utils.log.LogLevel LEVEL = gateway.utils.log.LogLevel.VERBOSE;
+	public static final gateway.utils.log.LogLevel LEVEL = gateway.utils.log.LogLevel.NONE;
 
 	private static final DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 
@@ -92,14 +92,16 @@ public class Log {
 
 	public static void print(final byte[] data) {
 
-		activeDebug("Print buffer");
-		System.out.println("");
+		if (LEVEL == LogLevel.VERBOSE) {
+			activeDebug("Print buffer");
+			System.out.println("");
 
-		for (final byte element : data) {
-			System.out.print(String.format("%02X ", element));
+			for (final byte element : data) {
+				System.out.print(String.format("%02X ", element));
+			}
+
+			System.out.println("");
 		}
-
-		System.out.println("");
 	}
 
 	public static void print(final String message) {

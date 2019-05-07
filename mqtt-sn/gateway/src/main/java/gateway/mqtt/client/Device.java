@@ -331,7 +331,7 @@ public class Device extends Thread {
 
 		Log.debug(LogLevel.VERBOSE, "Device", "updateTimer", "");
 		lastUpdate = new Date().getTime();
-		Log.error("Device", "updateTimer", "" + lastUpdate);
+		Log.debug(LogLevel.VERBOSE, "Device", "updateTimer", "" + lastUpdate);
 	}
 
 	/**

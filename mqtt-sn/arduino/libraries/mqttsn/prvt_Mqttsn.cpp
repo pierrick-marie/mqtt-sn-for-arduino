@@ -330,6 +330,7 @@ void Mqttsn::subAckHandler(msg_suback* msg) {
 
 }
 
+/*
 void Mqttsn::displayFrameBufferOut() {
 	int i = 0;
 	logs.debug("Print frameBufferOut");
@@ -339,14 +340,15 @@ void Mqttsn::displayFrameBufferOut() {
 	}
 	Serial.println("");
 }
+*/
 
 void Mqttsn::sendMessage() {
 
-	logs.debug("sendMessage");
+	// logs.debug("sendMessage");
 	delay(LONG_WAIT);
 
 	if(waitingForResponse) {
-		logs.debug("sendMessage", "the module is already waiting for a response");
+		// logs.debug("sendMessage", "the module is already waiting for a response");
 		return;
 	}
 	waitingForResponse = true;
@@ -362,13 +364,12 @@ void Mqttsn::sendMessage() {
 		xBee->listen();
 		while(!xBee->isListening()) { } // infinite loop to wait xBee module
 
-		// @DEBUG
-		displayFrameBufferOut();
+		// displayFrameBufferOut();
 		xBee->write(frameBufferOut, length);
 		xBee->flush();
-		logs.debug("sendMessage", "message sent");
+		// logs.debug("sendMessage", "message sent");
 	} else {
-		logs.debug("sendMessage", "message not sent");
+		// logs.debug("sendMessage", "message not sent");
 	}
 
 	// @BUG waits 500ms seconds otherwise the module miss some answers from the gateway
@@ -446,11 +447,6 @@ int Mqttsn::createFrame(int header_lenght) {
 	}
 
 	checksum = 0XFF - checksum;
-	// <BEGIN> @DEBUG
-	logs.debug("createFrame", "header lenght = ", header_lenght);
-	logs.debug("createFrame", "checksum = ", checksum);
-	Serial.println(checksum, HEX);
-	// <END> @DEBUG
 	frameBufferOut[17 + header_lenght] = checksum;
 
 	return 17 + header_lenght + 1;

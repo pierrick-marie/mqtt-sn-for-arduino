@@ -16,7 +16,7 @@ public class ExecutorReader implements Runnable {
 	private byte[] buffer;
 
 	ExecutorReader(final byte[] buffer) {
-		Log.debug(LogLevel.VERBOSE, "ExecutorReader", "constructor", "" + buffer);
+		Log.debug(LogLevel.VERBOSE, "ExecutorReader", "constructor", "");
 		Log.print(buffer);
 		this.buffer = buffer;
 	}

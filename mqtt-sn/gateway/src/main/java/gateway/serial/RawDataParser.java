@@ -39,7 +39,7 @@ enum RawDataParser {
 			return;
 		}
 
-		// for loop
+		// for loops
 		int i;
 
 		for (i = 0; i < MessageStructure.ADDRESS_64_SIZE; i++) {
