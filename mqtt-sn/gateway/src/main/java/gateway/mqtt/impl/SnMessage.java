@@ -10,7 +10,7 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 public class SnMessage extends MqttMessage {
 
-	private String topic;
+	private final String topic;
 
 	public SnMessage(final String topic, final String payload) {
 		this.topic = topic;
@@ -21,7 +21,8 @@ public class SnMessage extends MqttMessage {
 		return topic;
 	}
 
+	@Override
 	public String toString() {
-		return getPayload().toString();
+		return "SnMessage topic: " + topic + " payload: " + getPayload();
 	}
 }

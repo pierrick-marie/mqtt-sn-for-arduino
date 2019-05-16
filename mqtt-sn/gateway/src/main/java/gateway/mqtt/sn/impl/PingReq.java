@@ -1,9 +1,9 @@
 package gateway.mqtt.sn.impl;
 
 import gateway.mqtt.client.Device;
+import gateway.mqtt.client.DeviceState;
 import gateway.mqtt.sn.IAction;
 import gateway.serial.SerialPortWriter;
-import gateway.mqtt.client.DeviceState;
 import gateway.utils.log.Log;
 import gateway.utils.log.LogLevel;
 
@@ -29,18 +29,19 @@ public class PingReq implements IAction {
 
 		Log.debug(LogLevel.ACTIVE, "PingReq", "exec", "begin send messages");
 
-		device.sendMqttMessages();
+		// If send messages have not been interrupted, send pingresp
+		if (device.sendMqttMessages()) {
+			Log.debug(LogLevel.ACTIVE, "PingReq", "exec", "end send messages");
 
-		Log.debug(LogLevel.ACTIVE, "PingReq", "exec", "end send messages");
-
-		pingresp();
+			pingresp();
+		}
 	}
 
 	private void pingresp() {
 
 		Log.output(device, "ping response");
 
-		byte[] ret = new byte[2];
+		final byte[] ret = new byte[2];
 		ret[0] = (byte) 0x03;
 		ret[1] = (byte) 0x17;
 

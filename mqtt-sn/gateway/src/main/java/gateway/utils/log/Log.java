@@ -17,7 +17,7 @@ public class Log {
 
 	public static Boolean COLOR = true;
 	public static final Boolean ERROR = true;
-	public static final gateway.utils.log.LogLevel LEVEL = gateway.utils.log.LogLevel.NONE;
+	public static final gateway.utils.log.LogLevel LEVEL = gateway.utils.log.LogLevel.VERBOSE;
 
 	private static final DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 

@@ -91,7 +91,17 @@ enum RawDataParser {
 
 		switch (data_type) {
 		case MessageType.SEARCHGW:
+			device.resetAction();
+			Log.print("JHDKJFHDJFH");
+			while (device.isAlive() && !device.isInterrupted()) {
+				Log.print("?????????");
+				device.interrupt();
+			}
+			Log.print("JHDKJFHDJFHqsdqsdqsd");
+			Log.print("JHDKJFHDJFHqsdqsdqsdqsdqsdqsd");
+			Log.debug(LogLevel.VERBOSE, "RawDataParser", "parse", "Device - start & stop");
 			device.setAction(new SearchGateway(device, Integer.valueOf(message[MessageStructure.RADIUS])));
+			device.start();
 			break;
 
 		case MessageType.CONNECT:

@@ -51,8 +51,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define API_START_DELIMITER  0x7E
 
 #define QOS_FLAG 0
-#define KEEP_ALIVE 60 // 60 secondes
-#define TIME_TO_SLEEP 10 // 30 seconds
+#define DURATION_TIME 60 // 60 seconds
+#define SLEEP_TIME 10 // 10 seconds
 
 #define MAX_TRY 10
 

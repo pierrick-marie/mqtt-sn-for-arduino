@@ -74,7 +74,7 @@ int Mqttsn::requestMessages() {
 		while(1);
 	}
 
-	logs.info("request");
+	// logs.info("request");
 
 	msg_pingreq* msg = reinterpret_cast<msg_pingreq*>(messageBuffer);
 	msg->length = sizeof(msg_pingreq) + strlen(moduleName);
@@ -106,7 +106,7 @@ int Mqttsn::requestMessages() {
 void Mqttsn::disconnect() {
 
 	if(connected != ACCEPTED) {
-		logs.notConnected();
+		// logs.notConnected();
 		while(1);
 	}
 
@@ -116,7 +116,7 @@ void Mqttsn::disconnect() {
 	msg->type = DISCONNECT;
 
 	msg->length += sizeof(msg_disconnect);
-	msg->duration = bitSwap(TIME_TO_SLEEP);
+	msg->duration = bitSwap(DURATION_TIME);
 	// logs.debug("diconnect", "sleep duration: ", sleepDuration);
 
 	sendMessage();
@@ -134,7 +134,7 @@ void Mqttsn::disconnect() {
 void Mqttsn::publish(const char* topicName, String message){
 
 	if(connected != ACCEPTED) {
-		logs.notConnected();
+		// logs.notConnected();
 		while(1);
 	}
 
@@ -165,7 +165,7 @@ void Mqttsn::publish(const char* topicName, String message){
 		msg->message_id = bitSwap(messageId);
 		strcpy(msg->data, message.c_str());
 
-		logs.info("publish msg");
+		// logs.info("publish msg");
 
 		// logs.debug("publish", "id:", msg->topic_id);
 		// logs.debug("publish", "msg: ", msg->data);
@@ -202,7 +202,7 @@ void Mqttsn::start() {
 
 	// waiting next message
 	if( !checkSerial() ) {
-		logs.error("not started: stop");
+		// logs.error("not started: stop");
 		while(1);
 	}
 	parseData();
@@ -211,7 +211,7 @@ void Mqttsn::start() {
 void Mqttsn::connect(const char* _moduleName) {
 
 	if(!initOk) {
-		logs.notConnected();
+		// logs.notConnected();
 		while(1);
 	}
 
@@ -225,7 +225,7 @@ void Mqttsn::connect(const char* _moduleName) {
 	msg->type = CONNECT;
 	msg->flags = QOS_FLAG;
 	msg->protocol_id = PROTOCOL_ID;
-	msg->duration = bitSwap(KEEP_ALIVE);
+	msg->duration = bitSwap(DURATION_TIME);
 	strcpy(msg->client_id, moduleName);
 
 	// logs.debug( "connect", "send a connect message", msg->client_id);
@@ -269,7 +269,7 @@ const char* Mqttsn::findTopicName(int topicId) {
 bool Mqttsn::subscribeTopic(const char* topicName) {
 
 	if(connected != ACCEPTED) {
-		logs.notConnected();
+		// logs.notConnected();
 		while(1);
 	}
 
@@ -335,7 +335,7 @@ bool Mqttsn::subscribeTopic(const char* topicName) {
 bool Mqttsn::registerTopic(const char* topicName) {
 
 	if(connected != ACCEPTED) {
-		logs.notConnected();
+		// logs.notConnected();
 		while(1);
 	}
 

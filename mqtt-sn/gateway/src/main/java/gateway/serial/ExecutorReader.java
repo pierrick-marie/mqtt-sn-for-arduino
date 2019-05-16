@@ -17,7 +17,8 @@ public class ExecutorReader implements Runnable {
 
 	ExecutorReader(final byte[] buffer) {
 		Log.debug(LogLevel.VERBOSE, "ExecutorReader", "constructor", "");
-		Log.print(buffer);
+		// For only hard bugs
+		// Log.print(buffer);
 		this.buffer = buffer;
 	}
 
@@ -41,6 +42,9 @@ public class ExecutorReader implements Runnable {
 
 	@Override
 	public void run() {
+
+		Log.debug(LogLevel.VERBOSE, "ExecutorReader", "run", "Start parsing message");
+
 		int indexOfByte = getFirstIndexforByte((byte) 0X7E, buffer);
 
 		if (indexOfByte == -1) {

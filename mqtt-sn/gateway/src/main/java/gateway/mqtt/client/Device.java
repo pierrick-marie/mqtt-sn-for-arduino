@@ -20,7 +20,6 @@ import gateway.mqtt.impl.Sender;
 import gateway.mqtt.impl.SnMessage;
 import gateway.mqtt.impl.Topic;
 import gateway.mqtt.sn.IAction;
-import gateway.utils.Time;
 import gateway.utils.log.Log;
 import gateway.utils.log.LogLevel;
 
@@ -32,7 +31,7 @@ public class Device extends Thread {
 
 	private final Sender sender;
 
-	private boolean doAction = false;
+	private volatile boolean doAction = false;
 	private boolean doUnsubscribeAll = false;
 	private IAction action = null;
 
@@ -77,7 +76,7 @@ public class Device extends Thread {
 		if (null == mqttClient) {
 			Log.error("Device", "connect", "mqtt client is null");
 		}
-		Log.print(this + "Connected with a keep alive: " + duration);
+		Log.print(this + " - connected with a keep alive: " + duration);
 		this.duration = duration;
 
 		return mqttClient.connect();
@@ -178,11 +177,11 @@ public class Device extends Thread {
 			}
 		}
 
-		Log.print(this + " Registered topic: " + topicName);
+		Log.print(this + " - registered topic: " + topicName);
 		return topic.setRegistered(true);
 	}
 
-	private void resetAction() {
+	public void resetAction() {
 		doAction = false;
 		action = null;
 	}
@@ -199,13 +198,14 @@ public class Device extends Thread {
 			}
 			// if the current date is upper than the last update + duration time
 			if (doUnsubscribeAll && new Date().getTime() > lastUpdate + duration * 1000) {
-				Log.error("Device", "run", "" + new Date().getTime());
-				Log.error("Device", "run", "" + lastUpdate);
-				Log.error("Device", "run", "        " + duration * 1000);
+				Log.print(this + " - timeout: unsubscribe topics");
+
 				unsubscribeAll();
 			}
 			// if the current date is upper than the last update + 3 x duration time
 			if (new Date().getTime() > lastUpdate + duration * 3000) {
+				Log.print(this + " - timeout: remove device");
+
 				Topics.clear();
 				address16 = null;
 				address64 = null;
@@ -215,25 +215,46 @@ public class Device extends Thread {
 				setName("TO-REMOVE!");
 				run = false;
 			}
-			Time.sleep(WAIT_NEXT_ACTION, "Device.run(): fail waiting next action");
+
+			try {
+				sleep(WAIT_NEXT_ACTION);
+			} catch (final Exception e) {
+				Log.error("Device", "run", "fail waiting next action");
+				Log.debug(LogLevel.VERBOSE, "Device", "run", e.getMessage());
+			}
 		}
 	}
 
-	public void sendMqttMessages() {
+	public Boolean sendMqttMessages() {
 
 		synchronized (Messages) {
 			for (final SnMessage message : Messages) {
 
-				Log.debug(LogLevel.ACTIVE, "Device", "sendMqttMessages",
-						"sending DMqMessage " + message.toString());
-				sender.send(message);
+				/*
+				 * While doAction is true, send messages. Sometimes the device is reset (new
+				 * connection @see RawDataParser switch case MessageType.SEARCHGW) while it's
+				 * waiting to send the next message. In that case, we have to quit the function.
+				 */
+				if (doAction) {
+					Log.debug(LogLevel.ACTIVE, "Device", "sendMqttMessages",
+							"sending message for topic: " + message.topic());
+					sender.send(message);
 
-				Log.debug(LogLevel.VERBOSE, "Device", "sendMqttMessages", "wait before sending next message");
-				Time.sleep(WAIT_SENDING_NEXT_MESSAGE,
-						"Device.sendMqttMessages(): fail waiting before sending next message");
+					Log.debug(LogLevel.VERBOSE, "Device", "sendMqttMessages",
+							"wait before sending next message");
+					try {
+						sleep(WAIT_SENDING_NEXT_MESSAGE);
+					} catch (final Exception e) {
+						Log.error("Device", "sendMqttMessages", "fail waiting before sending next message");
+						Log.debug(LogLevel.VERBOSE, "Device", "sendMqttMessages", e.getMessage());
+						return false;
+					}
+				}
 			}
 			Log.debug(LogLevel.VERBOSE, "Device", "sendMqttMessages", "all messages have been sent");
 			Messages.clear();
+
+			return doAction;
 		}
 	}
 
@@ -295,7 +316,7 @@ public class Device extends Thread {
 			return null;
 		}
 
-		Log.print(this + " subscribed to " + topicName + " with id " + topic.id());
+		Log.print(this + " - subscribed to " + topicName + " with id " + topic.id());
 		doUnsubscribeAll = true;
 		return topic.setSubscribed(true);
 	}

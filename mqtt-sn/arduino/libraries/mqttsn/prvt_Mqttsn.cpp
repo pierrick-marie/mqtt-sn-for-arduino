@@ -218,7 +218,7 @@ uint16_t Mqttsn::bitSwap(uint16_t value) {
 void Mqttsn::publishHandler(msg_publish* msg) {
 
 	if(nbReceivedMessage < MAX_MESSAGES) {
-		logs.info("msg received");
+		// logs.info("msg received");
 		receivedMessages[nbReceivedMessage].topic_id = bitSwap(msg->topic_id);
 		strcpy(receivedMessages[nbReceivedMessage].data, msg->data);
 		nbReceivedMessage++;
@@ -322,9 +322,9 @@ void Mqttsn::subAckHandler(msg_suback* msg) {
 		// logs.debug("subAckHandler", "table[id]: ", topicTable[lastSubscribedTopic].id);
 		// logs.debug("subAckHandler", "table[name]: ", topicTable[lastSubscribedTopic].name);
 
-		logs.info("subscibe OK");
+		// logs.info("subscibe OK");
 	} else {
-		logs.error("subscibe KO");
+		// logs.error("subscibe KO");
 		regAckReturnCode = REJECTED;
 	}
 
@@ -456,10 +456,10 @@ void Mqttsn::connAckHandler(msg_connack* msg) {
 
 	if(msg->return_code == ACCEPTED) {
 		connected = ACCEPTED;
-		logs.info("connected");
+		// logs.info("connected");
 	} else {
 		connected = REJECTED;
-		logs.notConnected();
+		// logs.notConnected();
 		while(1);
 	}
 }
@@ -468,20 +468,20 @@ void Mqttsn::disconnectHandler(msg_disconnect* msg) {
 
 	connected = REJECTED;
 
-	logs.info("slepping");
+	// logs.info("slepping");
 
-	delay(TIME_TO_SLEEP*1000); // time in seconds to milliseconds
+	delay(SLEEP_TIME * 1000); // 10 seconds (10000 milliseconds)
 
-	logs.info("awake");
+	// logs.info("awake");
 }
 
 void Mqttsn::searchGatewayHandler(msg_gwinfo* message) {
 
 	if(message->gw_id == GATEWAY_ID) {
-		logs.info("started");
+		// logs.info("started");
 		initOk = true;
 	} else {
-		logs.error("not started: stop");
+		// logs.error("not started: stop");
 		initOk = false;
 		while(1);
 	}
@@ -497,11 +497,11 @@ void Mqttsn::regAckHandler(msg_regack* msg) {
 		// logs.debug("regAckHandler", "Topic registered, id: ", msg->topic_id);
 		// logs.debug("regAckHandler", "Topic registered, table id: ", topicTable[nbRegisteredTopic].id);
 		// logs.debug("regAckHandler", "Topic registered, table name: ", topicTable[nbRegisteredTopic].name);
-		logs.info("register OK");
+		// logs.info("register OK");
 
 		nbRegisteredTopic++;
 	} else {
-		logs.error("register KO");
+		// logs.error("register KO");
 		regAckReturnCode = REJECTED;
 	}
 }

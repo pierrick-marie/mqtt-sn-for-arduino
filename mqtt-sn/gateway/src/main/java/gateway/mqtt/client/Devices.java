@@ -46,7 +46,8 @@ public enum Devices {
 
 			device = new Device(address64, address16);
 			DEVICES.add(device);
-			device.start();
+			// Doing this in RawDataParser switch case MessageType.SEARCHGW
+			// device.start();
 		} else {
 			Log.debug(LogLevel.VERBOSE, "Devices", "search", "device " + device + " is already registered");
 		}
