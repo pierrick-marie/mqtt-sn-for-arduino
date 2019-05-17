@@ -14,7 +14,7 @@ import jssc.SerialPortException;
 
 public class SerialPortWriter {
 
-	public static void write(final Device device, final byte[] payload) {
+	public synchronized static void write(final Device device, final byte[] payload) {
 
 		Log.debug(LogLevel.VERBOSE, "SerialPortWriter", "write", "sending a message");
 
@@ -55,7 +55,7 @@ public class SerialPortWriter {
 		res[res.length - 1] = (byte) checksum;
 
 		try {
-			XBeeSerialPort.Instance.serialPort.writeBytes(res);
+			XBeeSerialPort.Instance.serialPort().writeBytes(res);
 		} catch (final SerialPortException e) {
 			Log.error("XBeeSerialPort", "write", "");
 			Log.debug(LogLevel.ACTIVE, "XBeeSerialPort", "write", e.getMessage());

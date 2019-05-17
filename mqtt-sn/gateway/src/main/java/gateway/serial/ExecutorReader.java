@@ -43,7 +43,7 @@ public class ExecutorReader implements Runnable {
 	@Override
 	public void run() {
 
-		Log.debug(LogLevel.VERBOSE, "ExecutorReader", "run", "Start parsing message");
+		Log.debug(LogLevel.VERBOSE, "ExecutorReader", "run", "Start the executor reader");
 
 		int indexOfByte = getFirstIndexforByte((byte) 0X7E, buffer);
 

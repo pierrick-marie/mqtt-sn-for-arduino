@@ -225,6 +225,12 @@ public class Device extends Thread {
 		}
 	}
 
+	/**
+	 * The function is call after a PingReq. If it returns "false", pingreq have to
+	 * stop the rest of its instructions -> the device have been reset.
+	 *
+	 * @return false if the device have been reset, true otherwise.
+	 */
 	synchronized public Boolean sendMqttMessages() {
 
 		for (final SnMessage message : Messages) {
@@ -247,6 +253,8 @@ public class Device extends Thread {
 					Log.debug(LogLevel.VERBOSE, "Device", "sendMqttMessages", e.getMessage());
 					return false;
 				}
+			} else {
+				return false;
 			}
 		}
 		Log.debug(LogLevel.VERBOSE, "Device", "sendMqttMessages", "all messages have been sent");

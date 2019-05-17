@@ -25,7 +25,7 @@ public class SerialPortReader implements SerialPortEventListener {
 
 	public SerialPortReader() {
 		try {
-			XBeeSerialPort.Instance.serialPort.addEventListener(this);
+			XBeeSerialPort.Instance.serialPort().addEventListener(this);
 		} catch (final SerialPortException e) {
 			Log.error("SerialPortReader", "constructor", "Serial port exception");
 			Log.debug(LogLevel.VERBOSE, "SerialPortReader", "constructor", e.getMessage());
@@ -48,7 +48,7 @@ public class SerialPortReader implements SerialPortEventListener {
 	}
 
 	@Override
-	public void serialEvent(SerialPortEvent event) {
+	public synchronized void serialEvent(SerialPortEvent event) {
 
 		Log.debug(LogLevel.VERBOSE, "SerialPortReader", "serialEvent", "new event");
 
@@ -57,20 +57,19 @@ public class SerialPortReader implements SerialPortEventListener {
 
 		if (event.isRXCHAR()) {
 			try {
-				inputBufferSize = XBeeSerialPort.Instance.serialPort.getInputBufferBytesCount();
+				inputBufferSize = XBeeSerialPort.Instance.serialPort().getInputBufferBytesCount();
 				while (inputBufferSize > totalInputSize) {
 					totalInputSize = inputBufferSize;
 					Time.sleep((long) 100, "SerialPortReader().serialEvent: error buffering message");
-					inputBufferSize = XBeeSerialPort.Instance.serialPort.getInputBufferBytesCount();
+					inputBufferSize = XBeeSerialPort.Instance.serialPort().getInputBufferBytesCount();
 				}
 
 				Log.debug(LogLevel.VERBOSE, "SerialPortReader", "serialEvent", "creating a new executor");
-				// TODO BEGIN DEBUG
-				// executorService.submit(new
-				// ExecutorReader(cleanBuffer(XBeeSerialPort.Instance.serialPort.readBytes(totalInputSize))));
+				/*
+				 * Got the bytes in the buffer -> ready to parse the message
+				 */
 				executorService.submit(
-						new ExecutorReader(XBeeSerialPort.Instance.serialPort.readBytes(totalInputSize)));
-				// END DEBUG
+						new ExecutorReader(XBeeSerialPort.Instance.serialPort().readBytes(totalInputSize)));
 			} catch (final SerialPortException e) {
 				Log.error("SerialPortReader", "serialEvent", "");
 				Log.debug(LogLevel.VERBOSE, "SerialPortReader", "serialEvent", e.getMessage());

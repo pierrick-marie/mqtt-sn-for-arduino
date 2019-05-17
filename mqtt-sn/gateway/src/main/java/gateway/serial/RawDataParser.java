@@ -33,7 +33,7 @@ enum RawDataParser {
 	private final byte address16[] = new byte[MessageStructure.ADDRESS_16_SIZE];
 	private final byte address64[] = new byte[MessageStructure.ADDRESS_64_SIZE];
 
-	public void parse(final byte[] data) {
+	public synchronized void parse(final byte[] data) {
 
 		if (data[MessageStructure.FRAME_TYPE] == (byte) MessageType.FRAME_TYPE_ERROR) {
 			return;
@@ -51,27 +51,6 @@ enum RawDataParser {
 		}
 
 		try {
-			// TODO BEGIN DEBUG 07/05/2019 14:30
-			//
-			// check the type of message
-			// if (data[15] == 0x01) {
-			// payload_length = (byte) (data[16] * 16 + data[17]);
-			// data_type = data[18];
-			// payload = new byte[payload_length];
-			// for (i = 19; i < data.length; i++) {
-			// payload[i] = data[i];
-			// }
-			// } else {
-			// payload_length = data[15] & 0xFF;
-			// data_type = data[16] & 0xFF;
-			// payload = new byte[payload_length];
-			// for (i = 0; i < payload_length; i++) {
-			// payload[i] = data[15 + i];
-			// }
-			// }
-			//
-			// END DEBUG
-
 			payload_length = data[MessageStructure.PAYLOAD_LENGTH];
 			data_type = data[MessageStructure.DATA_TYPE];
 
@@ -92,13 +71,9 @@ enum RawDataParser {
 		switch (data_type) {
 		case MessageType.SEARCHGW:
 			device.resetAction();
-			Log.print("JHDKJFHDJFH");
 			while (device.isAlive() && !device.isInterrupted()) {
-				Log.print("?????????");
 				device.interrupt();
 			}
-			Log.print("JHDKJFHDJFHqsdqsdqsd");
-			Log.print("JHDKJFHDJFHqsdqsdqsdqsdqsdqsd");
 			Log.debug(LogLevel.VERBOSE, "RawDataParser", "parse", "Device - start & stop");
 			device.setAction(new SearchGateway(device, Integer.valueOf(message[MessageStructure.RADIUS])));
 			device.start();

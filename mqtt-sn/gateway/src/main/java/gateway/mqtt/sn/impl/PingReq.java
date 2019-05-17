@@ -33,23 +33,18 @@ public class PingReq implements IAction {
 		if (device.sendMqttMessages()) {
 			Log.debug(LogLevel.ACTIVE, "PingReq", "exec", "end send messages");
 
-			pingresp();
-		}
-	}
+			Log.output(device, "ping response");
 
-	private void pingresp() {
+			final byte[] ret = new byte[2];
+			ret[0] = (byte) 0x03;
+			ret[1] = (byte) 0x17;
 
-		Log.output(device, "ping response");
+			SerialPortWriter.write(device, ret);
 
-		final byte[] ret = new byte[2];
-		ret[0] = (byte) 0x03;
-		ret[1] = (byte) 0x17;
-
-		SerialPortWriter.write(device, ret);
-
-		if (device.state().equals(DeviceState.AWAKE)) {
-			device.setState(DeviceState.ASLEEP);
-			Log.debug(LogLevel.ACTIVE, "MultipleSender", "pingResp", device + " goes to sleep");
+			if (device.state().equals(DeviceState.AWAKE)) {
+				device.setState(DeviceState.ASLEEP);
+				Log.debug(LogLevel.ACTIVE, "MultipleSender", "pingResp", device + " goes to sleep");
+			}
 		}
 	}
 }

@@ -19,7 +19,7 @@ enum XBeeSerialPort {
 
 	final String SERIAL_PORT = Config.SERIAL_PORT;
 
-	final SerialPort serialPort;
+	private final SerialPort serialPort;
 
 	XBeeSerialPort() {
 
@@ -28,15 +28,19 @@ enum XBeeSerialPort {
 		serialPort = new jssc.SerialPort(SERIAL_PORT);
 
 		try {
-			serialPort.openPort();
-			serialPort.setParams(jssc.SerialPort.BAUDRATE_9600, jssc.SerialPort.DATABITS_8,
+			serialPort().openPort();
+			serialPort().setParams(jssc.SerialPort.BAUDRATE_9600, jssc.SerialPort.DATABITS_8,
 					jssc.SerialPort.STOPBITS_1, jssc.SerialPort.PARITY_NONE);
 
 			final int mask = jssc.SerialPort.MASK_RXCHAR + jssc.SerialPort.MASK_CTS + jssc.SerialPort.MASK_DSR;
-			serialPort.setEventsMask(mask);
+			serialPort().setEventsMask(mask);
 		} catch (final SerialPortException e) {
 			Log.error("XBeeSerialPort", "getSerial", "Impossible to get the XBee module");
 			Log.debug(LogLevel.ACTIVE, "XBeeSerialPort", "getSerial", e.getMessage());
 		}
+	}
+
+	public synchronized SerialPort serialPort() {
+		return serialPort;
 	}
 }
