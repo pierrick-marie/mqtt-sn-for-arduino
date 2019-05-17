@@ -52,7 +52,7 @@ public class Device extends Thread {
 		sender = new Sender(this);
 	}
 
-	public synchronized Boolean addMqttMessage(final SnMessage message) {
+	synchronized public Boolean addMqttMessage(final SnMessage message) {
 
 		while (MAX_MESSAGES <= Messages.size()) {
 			Messages.remove(0);
@@ -72,7 +72,7 @@ public class Device extends Thread {
 		return address64;
 	}
 
-	public Boolean connect(final int duration) {
+	synchronized public Boolean connect(final int duration) {
 		if (null == mqttClient) {
 			Log.error("Device", "connect", "mqtt client is null");
 		}
@@ -142,7 +142,7 @@ public class Device extends Thread {
 		return -1;
 	}
 
-	public Device initMqttClient(final Boolean cleanSeassion) {
+	synchronized public Device initMqttClient(final Boolean cleanSeassion) {
 		try {
 			mqttClient = new Client(this, cleanSeassion);
 		} catch (final MqttException e) {
@@ -162,11 +162,11 @@ public class Device extends Thread {
 		return Topics.size();
 	}
 
-	public Boolean publish(final Topic topic, final String message) {
+	synchronized public Boolean publish(final Topic topic, final String message) {
 		return mqttClient.publish(topic.name(), message);
 	}
 
-	public Topic register(final String topicName) {
+	synchronized public Topic register(final String topicName) {
 
 		Topic topic = getTopic(topicName);
 		if (null == topic) {
@@ -181,7 +181,7 @@ public class Device extends Thread {
 		return topic.setRegistered(true);
 	}
 
-	public void resetAction() {
+	synchronized public void resetAction() {
 		doAction = false;
 		action = null;
 	}
@@ -225,40 +225,37 @@ public class Device extends Thread {
 		}
 	}
 
-	public Boolean sendMqttMessages() {
+	synchronized public Boolean sendMqttMessages() {
 
-		synchronized (Messages) {
-			for (final SnMessage message : Messages) {
+		for (final SnMessage message : Messages) {
 
-				/*
-				 * While doAction is true, send messages. Sometimes the device is reset (new
-				 * connection @see RawDataParser switch case MessageType.SEARCHGW) while it's
-				 * waiting to send the next message. In that case, we have to quit the function.
-				 */
-				if (doAction) {
-					Log.debug(LogLevel.ACTIVE, "Device", "sendMqttMessages",
-							"sending message for topic: " + message.topic());
-					sender.send(message);
+			/*
+			 * While doAction is true, send messages. Sometimes the device is reset (new
+			 * connection @see RawDataParser switch case MessageType.SEARCHGW) while it's
+			 * waiting to send the next message. In that case, we have to quit the function.
+			 */
+			if (doAction) {
+				Log.debug(LogLevel.ACTIVE, "Device", "sendMqttMessages",
+						"sending message for topic: " + message.topic());
+				sender.send(message);
 
-					Log.debug(LogLevel.VERBOSE, "Device", "sendMqttMessages",
-							"wait before sending next message");
-					try {
-						sleep(WAIT_SENDING_NEXT_MESSAGE);
-					} catch (final Exception e) {
-						Log.error("Device", "sendMqttMessages", "fail waiting before sending next message");
-						Log.debug(LogLevel.VERBOSE, "Device", "sendMqttMessages", e.getMessage());
-						return false;
-					}
+				Log.debug(LogLevel.VERBOSE, "Device", "sendMqttMessages", "wait before sending next message");
+				try {
+					sleep(WAIT_SENDING_NEXT_MESSAGE);
+				} catch (final Exception e) {
+					Log.error("Device", "sendMqttMessages", "fail waiting before sending next message");
+					Log.debug(LogLevel.VERBOSE, "Device", "sendMqttMessages", e.getMessage());
+					return false;
 				}
 			}
-			Log.debug(LogLevel.VERBOSE, "Device", "sendMqttMessages", "all messages have been sent");
-			Messages.clear();
-
-			return doAction;
 		}
+		Log.debug(LogLevel.VERBOSE, "Device", "sendMqttMessages", "all messages have been sent");
+		Messages.clear();
+
+		return doAction;
 	}
 
-	public Device setAction(IAction action) {
+	synchronized public Device setAction(IAction action) {
 
 		if (null == action) {
 			Log.error("Device", "setAction", "action is null");
@@ -270,7 +267,7 @@ public class Device extends Thread {
 		return this;
 	}
 
-	public Device setDuration(final Short duration) {
+	synchronized public Device setDuration(final Short duration) {
 
 		if (null == duration) {
 			Log.error("Device", "setDuration", "duration is null");
@@ -283,7 +280,7 @@ public class Device extends Thread {
 		return this;
 	}
 
-	public Device setState(final DeviceState state) {
+	synchronized public Device setState(final DeviceState state) {
 
 		if (null == state) {
 			Log.error("Device", "setState", "state is null");
@@ -300,7 +297,7 @@ public class Device extends Thread {
 		return state;
 	}
 
-	public Topic subscribe(final String topicName) {
+	synchronized public Topic subscribe(final String topicName) {
 
 		Topic topic = getTopic(topicName);
 		if (null == topic) {
@@ -331,7 +328,7 @@ public class Device extends Thread {
 		}
 	}
 
-	private synchronized void unsubscribeAll() {
+	synchronized private void unsubscribeAll() {
 
 		Log.print(this + " Time out: unsubscibe all topics");
 
@@ -348,7 +345,7 @@ public class Device extends Thread {
 		doUnsubscribeAll = false;
 	}
 
-	public void updateTimer() {
+	synchronized public void updateTimer() {
 
 		Log.debug(LogLevel.VERBOSE, "Device", "updateTimer", "");
 		lastUpdate = new Date().getTime();
