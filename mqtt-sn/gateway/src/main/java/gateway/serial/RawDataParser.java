@@ -8,7 +8,8 @@
 package gateway.serial;
 
 import gateway.mqtt.MessageStructure;
-import gateway.mqtt.MessageType;
+import gateway.mqtt.MqttSNMessageType;
+import gateway.mqtt.XBeeMessageType;
 import gateway.mqtt.address.Address16;
 import gateway.mqtt.address.Address64;
 import gateway.mqtt.client.Device;
@@ -23,101 +24,189 @@ import gateway.mqtt.sn.impl.Subscribe;
 import gateway.utils.log.Log;
 import gateway.utils.log.LogLevel;
 
-enum RawDataParser {
+public class RawDataParser implements Runnable {
 
-	Instance;
-
-	private byte[] message;
+	private final byte[] buffer;
 	private int payload_length;
 	private int data_type;
 	private final byte address16[] = new byte[MessageStructure.ADDRESS_16_SIZE];
 	private final byte address64[] = new byte[MessageStructure.ADDRESS_64_SIZE];
 
-	public synchronized void parse(final byte[] data) {
+	public RawDataParser(final byte[] buffer) {
+		this.buffer = buffer;
+	}
 
-		if (data[MessageStructure.FRAME_TYPE] == (byte) MessageType.FRAME_TYPE_ERROR) {
+	/**
+	 * The function returns the index of @searchedByte into @data.
+	 *
+	 * @param searchedByte The byte to search.
+	 * @param buffer       The date to search into the @searchedByte.
+	 * @return The index of @searedByte or -1 if not found.
+	 */
+	private int getFirstIndexforByte(final byte searchedByte, final byte[] buffer) {
+
+		for (int i = 1; i < buffer.length; i++) {
+			if (buffer[i] == searchedByte) {
+				return i;
+			}
+		}
+
+		return -1;
+	}
+
+	private synchronized void parse(final byte[] buffer) {
+
+		if (buffer[MessageStructure.FRAME_TYPE] == (byte) XBeeMessageType.TRANSMIT_STATUS) {
+			Log.error("RawDataParser", "parse", "MessageStructure.FRAME_TYPE == MessageType.FRAME_TYPE_ERROR -> "
+					+ String.format("%02X ", buffer[MessageStructure.FRAME_TYPE]));
+			Log.print(buffer);
+			Log.print(buffer);
 			return;
 		}
 
 		// for loops
 		int i;
 
+		Log.debug(LogLevel.VERBOSE, "RawDataParser", "parse", "Get 64b address");
+
 		for (i = 0; i < MessageStructure.ADDRESS_64_SIZE; i++) {
-			address64[i] = data[MessageStructure.ADDRESS_64_START + i];
+			address64[i] = buffer[MessageStructure.RECEIVE_ADDRESS_64_START + i];
 		}
+
+		Log.debug(LogLevel.VERBOSE, "RawDataParser", "parse", "Get 16b address");
 
 		for (i = 0; i < MessageStructure.ADDRESS_16_SIZE; i++) {
-			address16[i] = data[MessageStructure.ADDRESS_16_START + i];
+			address16[i] = buffer[MessageStructure.RECEIVE_ADDRESS_16_START + i];
 		}
 
-		try {
-			payload_length = data[MessageStructure.PAYLOAD_LENGTH];
-			data_type = data[MessageStructure.DATA_TYPE];
+		Log.debug(LogLevel.VERBOSE, "RawDataParser", "parse", "Get payload");
 
+		try {
+			payload_length = buffer[MessageStructure.PAYLOAD_LENGTH];
+			data_type = buffer[MessageStructure.DATA_TYPE];
 		} catch (final Exception e) {
 			Log.error("RawDataParser", "parse", "Error while reading incoming data");
 			Log.debug(LogLevel.VERBOSE, "RawDataParser", "parse", e.getMessage());
 		}
 
 		// Compute the message for each case of the following switch
-		message = new byte[payload_length - MessageStructure.CHECKSUM_SIZE];
-		for (i = 0; i < message.length; i++) {
-			message[i] = data[MessageStructure.PAYLOAD_START + i];
+		final byte[] data = new byte[payload_length - MessageStructure.CHECKSUM_SIZE];
+		for (i = 0; i < data.length; i++) {
+			data[i] = buffer[MessageStructure.RECEIVE_PAYLOAD_START + i];
 		}
+
+		Log.debug(LogLevel.VERBOSE, "RawDataParser", "parse", "Get device");
 
 		final Device device = Devices.list.search(new Address64(address64), new Address16(address16));
 		device.updateTimer();
 
+		Log.debug(LogLevel.VERBOSE, "RawDataParser", "parse", "Exec message");
+
 		switch (data_type) {
-		case MessageType.SEARCHGW:
+		case MqttSNMessageType.SEARCHGW:
 			device.resetAction();
 			while (device.isAlive() && !device.isInterrupted()) {
 				device.interrupt();
 			}
 			Log.debug(LogLevel.VERBOSE, "RawDataParser", "parse", "Device - start & stop");
-			device.setAction(new SearchGateway(device, Integer.valueOf(message[MessageStructure.RADIUS])));
+			device.setAction(new SearchGateway(device, Integer.valueOf(data[MessageStructure.RECEIVE_RADIUS])));
 			device.start();
 			break;
 
-		case MessageType.CONNECT:
-			device.setAction(new Connect(device, message));
+		case MqttSNMessageType.CONNECT:
+			device.setAction(new Connect(device, data));
 			break;
 
-		case MessageType.REGISTER:
-			device.setAction(new Register(device, message));
+		case MqttSNMessageType.REGISTER:
+			device.setAction(new Register(device, data));
 			break;
 
-		case MessageType.SUBSCRIBE:
-			device.setAction(new Subscribe(device, message));
+		case MqttSNMessageType.SUBSCRIBE:
+			device.setAction(new Subscribe(device, data));
 			break;
 
-		case MessageType.DISCONNECT:
-			device.setAction(new Disconnect(device, message));
+		case MqttSNMessageType.DISCONNECT:
+			device.setAction(new Disconnect(device, data));
 			break;
 
-		case MessageType.PUBLISH:
-			device.setAction(new Publish(device, message));
+		case MqttSNMessageType.PUBLISH:
+			device.setAction(new Publish(device, data));
 			break;
 
-		case MessageType.PINGREQ:
-			device.setAction(new PingReq(device, message));
+		case MqttSNMessageType.PINGREQ:
+			device.setAction(new PingReq(device, data));
 			break;
 
-		case MessageType.WILLTOPIC:
+		case MqttSNMessageType.WILLTOPIC:
 			// @TODO not implemented yet
 			// device.setAction(new WillTopic(device, message));
 			break;
 
-		case MessageType.WILLMSG:
+		case MqttSNMessageType.WILLMSG:
 			// @TODO not implemented yet
 			// device.setAction(new WillMessage(device, message));
 			break;
 
-		case MessageType.PUBACK:
+		case MqttSNMessageType.PUBACK:
 			// PUBACK
 			// Only used with QoS level 1 and 2 - not used yet
 			// device.setAction(new Puback(device, message));
 			break;
 		}
+	}
+
+	@Override
+	public synchronized void run() {
+
+		Log.debug(LogLevel.VERBOSE, "RawDataParser", "run", "Start the executor reader");
+
+		final int indexOfByte = getFirstIndexforByte((byte) 0X7E, buffer);
+
+		if (indexOfByte == -1) {
+			if (verifyData(buffer)) {
+				Log.debug(LogLevel.VERBOSE, "RawDataParser", "run", "Parse the buffer");
+				parse(buffer);
+			}
+			return;
+		}
+	}
+
+	/**
+	 * The function verifies the checksum of the @data.
+	 *
+	 * @param buffer The data to verify the checksum.
+	 * @return True if the checksum is ok, else false.
+	 */
+	private boolean verifyChecksum(final byte[] buffer) {
+
+		int checksum = 0;
+
+		// 3 magic number
+		for (int i = 3; i < buffer.length; i++) {
+			checksum += buffer[i] & 0xFF;
+		}
+		checksum = checksum & 0xFF;
+
+		if (checksum == 0xFF) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	/**
+	 * The function checks if the first byte of @data is equals to 0x7E else returns
+	 * false. If ok, the functions returns the result of @verifyChecksum()
+	 *
+	 * @param buffer The data to verify.
+	 * @return True is the @data is OK, else false.
+	 */
+	private boolean verifyData(final byte[] buffer) {
+
+		if (buffer[0] != (byte) 0x7E) {
+			return false;
+		}
+
+		return verifyChecksum(buffer);
 	}
 }

@@ -7,6 +7,8 @@
 
 package gateway.serial;
 
+import gateway.mqtt.MessageStructure;
+import gateway.mqtt.XBeeMessageType;
 import gateway.mqtt.client.Device;
 import gateway.utils.log.Log;
 import gateway.utils.log.LogLevel;
@@ -18,40 +20,41 @@ public class SerialPortWriter {
 
 		Log.debug(LogLevel.VERBOSE, "SerialPortWriter", "write", "sending a message");
 
-		final byte[] res = new byte[18 + payload.length];
-		res[0] = 0x7E;
+		final byte[] res = new byte[MessageStructure.TRANSMIT_LENGHT + payload.length];
+		res[MessageStructure.START_DELIMITER] = XBeeMessageType.START_DELIMITER;
 
 		if (payload.length > 255) {
-			res[1] = (byte) (res.length / 255);
-			res[2] = (byte) (res.length % 255);
+			res[MessageStructure.LENGTH_START] = (byte) (res.length / 255);
+			res[MessageStructure.LENGTH_START + 1] = (byte) (res.length % 255);
 		} else {
-			res[1] = 0;
-			res[2] = (byte) (res.length - 4);
+			res[MessageStructure.LENGTH_START] = 0;
+			res[MessageStructure.LENGTH_START + 1] = (byte) (res.length - 4);
 		}
 
-		res[3] = 0x10;
-		res[4] = 0x01;
+		res[MessageStructure.FRAME_TYPE] = XBeeMessageType.FRAME_TYPE_TRANSMIT_REQUEST;
+		res[MessageStructure.FRAME_ID] = XBeeMessageType.FRAME_ID_WITHOUT_ACK;
 
-		for (int i = 0; i < 8; i++) {
-			res[5 + i] = device.address64().address[i];
+		for (int i = 0; i < MessageStructure.ADDRESS_64_SIZE; i++) {
+			res[MessageStructure.TRANSMIT_ADDRESS_64_START + i] = device.address64().address[i];
 		}
 
-		for (int i = 0; i < 2; i++) {
-			res[13 + i] = device.address16().address[i];
+		for (int i = 0; i < MessageStructure.ADDRESS_16_SIZE; i++) {
+			res[MessageStructure.TRANSMIT_ADDRESS_16_START + i] = device.address16().address[i];
 		}
-		res[15] = (byte) 0x0;
-		res[16] = (byte) 0x1;
+		res[MessageStructure.TRANSMIT_BROADCAST] = (byte) XBeeMessageType.BROADCAST_RADIUS_ZERO;
+		res[MessageStructure.TRANSMIT_OPTION] = (byte) XBeeMessageType.OPTION_DISABLE_RETRIES;
 
 		for (int i = 0; i < payload.length; i++) {
-			res[17 + i] = payload[i];
+			res[MessageStructure.TRANSMIT_PAYLOAD_START + i] = payload[i];
 		}
 
 		int checksum = 0;
-		for (int i = 3; i < 17 + payload.length; i++) {
+		// 3 magic number
+		for (int i = 3; i < MessageStructure.TRANSMIT_PAYLOAD_START + payload.length; i++) {
 			checksum += res[i];
 		}
-		checksum = checksum & 0xFF;
-		checksum = 0xFF - checksum;
+		checksum = checksum & XBeeMessageType.CHECKSUM_VALUE;
+		checksum = XBeeMessageType.CHECKSUM_VALUE - checksum;
 		res[res.length - 1] = (byte) checksum;
 
 		try {

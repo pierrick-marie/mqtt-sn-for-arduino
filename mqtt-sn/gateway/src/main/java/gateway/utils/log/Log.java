@@ -94,7 +94,6 @@ public class Log {
 
 		if (LEVEL == LogLevel.VERBOSE) {
 			activeDebug("Print buffer");
-			System.out.println("");
 
 			for (final byte element : data) {
 				System.out.print(String.format("%02X ", element));

@@ -69,7 +69,7 @@ public class SerialPortReader implements SerialPortEventListener {
 				 * Got the bytes in the buffer -> ready to parse the message
 				 */
 				executorService.submit(
-						new ExecutorReader(XBeeSerialPort.Instance.serialPort().readBytes(totalInputSize)));
+						new RawDataParser(XBeeSerialPort.Instance.serialPort().readBytes(totalInputSize)));
 			} catch (final SerialPortException e) {
 				Log.error("SerialPortReader", "serialEvent", "");
 				Log.debug(LogLevel.VERBOSE, "SerialPortReader", "serialEvent", e.getMessage());

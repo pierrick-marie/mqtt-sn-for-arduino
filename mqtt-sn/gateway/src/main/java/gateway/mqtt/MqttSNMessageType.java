@@ -1,6 +1,6 @@
 package gateway.mqtt;
 
-public class MessageType {
+public class MqttSNMessageType {
 
 	public static final int ADVERTISE = 0x00;
 	public static final int SEARCHGW = 0x01;
@@ -30,6 +30,4 @@ public class MessageType {
 	public static final int WILLMSGRESP = 0x1D;
 	public static final int UNSUBSCRIBE = 0x14;
 	public static final int UNSUBACK = 0x15;
-
-	public static final int FRAME_TYPE_ERROR = 0x8B;
 }
