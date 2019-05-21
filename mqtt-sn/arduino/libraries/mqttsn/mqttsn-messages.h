@@ -41,10 +41,10 @@ THE SOFTWARE.
 
 #define FLAG_TOPIC_NAME 0x00
 #define FLAG_TOPIC_PREDEFINED_ID 0x01
-#define FLAG_TOPIC_int_NAME 0x02
+#define FLAG_TOPIC_INT_NAME 0x02
 
 #define QOS_MASK (FLAG_QOS_0 | FLAG_QOS_1 | FLAG_QOS_2 | FLAG_QOS_M1)
-#define TOPIC_MASK (FLAG_TOPIC_NAME | FLAG_TOPIC_PREDEFINED_ID | FLAG_TOPIC_int_NAME)
+#define TOPIC_MASK (FLAG_TOPIC_NAME | FLAG_TOPIC_PREDEFINED_ID | FLAG_TOPIC_INT_NAME)
 
 // Recommended values for timers and counters. All timers are in seconds.
 // #define T_ADV 960

@@ -28,6 +28,7 @@ void setup() {
 
 void loop() {
 
+/*
   Serial.println("Connect");
 
   mqttsn.connect(MODULE_NAME);
@@ -60,5 +61,7 @@ void loop() {
   Serial.println("Disconnect");
 
   mqttsn.disconnect();
+
+  */
 
 }

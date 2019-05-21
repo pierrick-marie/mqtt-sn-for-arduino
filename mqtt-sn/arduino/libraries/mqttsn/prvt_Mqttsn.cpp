@@ -47,12 +47,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 bool Mqttsn::waitData() {
 
 	// @BUG waits 500ms seconds otherwise the module miss some answers from the gateway
-	delay(LONG_WAIT);
+	delay(100);
 
 	int i = 1;
 	while( xBee->available() <= 0 && i <= MAX_TRY ) {
 		// waiting for incoming data longer during 1 second (1000ms)
-		delay(LONG_WAIT);
+		delay(100);
 		i++;
 	}
 	if( i >= MAX_TRY ) {
@@ -84,12 +84,12 @@ void Mqttsn::parseData() {
 		// Serial.println(payload[i]);
 	}
 
-	// logs.debug("parseData", "data have been parsed");
+	logs.debug("parseData", "data have been parsed");
 
 	memset(responseBuffer, 0, MAX_BUFFER_SIZE);
 	memcpy(responseBuffer, (void*)payload, payload_lenght);
 
-	// logs.debug( "parseStream", "Stream is ready -> dispatch");
+	logs.debug( "parseStream", "Stream is ready -> dispatch");
 
 	dispatch();
 
@@ -147,7 +147,7 @@ void Mqttsn::dispatch() {
 		break;
 
 	default:
-		// logs.debug("dispatch", "DEFAULT");
+		logs.debug("dispatch", "DEFAULT");
 		return;
 
 		// @TODO not implemented yet
@@ -218,7 +218,7 @@ uint16_t Mqttsn::bitSwap(uint16_t value) {
 void Mqttsn::publishHandler(msg_publish* msg) {
 
 	if(nbReceivedMessage < MAX_MESSAGES) {
-		// logs.info("msg received");
+		logs.info("#log: msg received");
 		receivedMessages[nbReceivedMessage].topic_id = bitSwap(msg->topic_id);
 		strcpy(receivedMessages[nbReceivedMessage].data, msg->data);
 		nbReceivedMessage++;
@@ -250,18 +250,20 @@ void Mqttsn::publishHandler(msg_publish* msg) {
  **/
 bool Mqttsn::checkSerial() {
 
+	logs.debug("checkSerial", "");
+
 	int i, frame_size;
 	uint8_t delimiter, length1, length2;
 
 	// no data is available
 	if(!waitData()) {
-		// logs.debug("checkSerial", "no data available -> timeout");
+		logs.debug("checkSerial", "no data available -> timeout");
 		return false;
 	}
 	delimiter = xBee->read();
 
 	if(delimiter != 0x7E) {
-		// logs.debug("checkSerial", "delimiter KO!");
+		logs.debug("checkSerial", "delimiter KO!");
 		return checkSerial();
 	}
 
@@ -284,7 +286,7 @@ bool Mqttsn::checkSerial() {
 			}
 
 			if(frameBufferIn[0] == 139) {
-				// logs.debug("checkSerial", "a transmit status (XBEE acquitall) -> get next message!");
+				logs.debug("checkSerial", "a transmit status (XBEE acquitall) -> get next message!");
 				return checkSerial();
 			}
 
@@ -373,7 +375,7 @@ void Mqttsn::sendMessage() {
 	}
 
 	// @BUG waits 500ms seconds otherwise the module miss some answers from the gateway
-	delay(LONG_WAIT);
+	delay(100);
 }
 
 bool Mqttsn::verifyChecksum(uint8_t frame_buffer[], int frame_size) {
@@ -419,10 +421,10 @@ int Mqttsn::createFrame(int header_lenght) {
 
 	// frame Type: Transmit Request
 	checksum = 0;
-	checksum += frameBufferOut[3] = 16;
+	checksum += frameBufferOut[3] = FRAME_TYPE_TRANSMIT_REQUEST;
 
 	// frame id
-	checksum += frameBufferOut[4] = frameId++;
+	checksum += frameBufferOut[4] = FRAME_ID_WITHOUT_ACK;
 
 	// 64-bit address
 	checksum += frameBufferOut[5] = gatewayAddress[0];
@@ -437,8 +439,12 @@ int Mqttsn::createFrame(int header_lenght) {
 	// 16-bit address
 	checksum += frameBufferOut[13] = 0;
 	checksum += frameBufferOut[14] = 0;
-	checksum += frameBufferOut[15] = 0;
-	checksum += frameBufferOut[16] = 0;
+
+	// broadcast radius
+	checksum += frameBufferOut[15] = BROADCAST_RADIUS_ZERO;
+
+	// options
+	checksum += frameBufferOut[16] = OPTION_DISABLE_RETRIES;
 
 
 	/* The data */

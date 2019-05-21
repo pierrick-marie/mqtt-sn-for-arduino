@@ -210,7 +210,9 @@ public class Device extends Thread {
 				address16 = null;
 				address64 = null;
 				duration = 0;
-				mqttClient.disconnect();
+				if (null != mqttClient) {
+					mqttClient.disconnect();
+				}
 				Devices.list.remove(this);
 				setName("TO-REMOVE!");
 				run = false;
