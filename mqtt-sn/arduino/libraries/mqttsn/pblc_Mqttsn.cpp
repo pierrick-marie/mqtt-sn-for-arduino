@@ -74,7 +74,7 @@ int Mqttsn::requestMessages() {
 		while(1);
 	}
 
-	// logs.info("request");
+	logs.info("request");
 
 	msg_pingreq* msg = reinterpret_cast<msg_pingreq*>(messageBuffer);
 	msg->length = sizeof(msg_pingreq) + strlen(moduleName);
@@ -165,7 +165,7 @@ void Mqttsn::publish(const char* topicName, String message){
 		msg->message_id = bitSwap(messageId);
 		strcpy(msg->data, message.c_str());
 
-		// logs.info("publish msg");
+		logs.info("publish msg");
 
 		// logs.debug("publish", "id:", msg->topic_id);
 		// logs.debug("publish", "msg: ", msg->data);
@@ -182,9 +182,9 @@ void Mqttsn::publish(const char* topicName, String message){
 	}
 }
 
-void Mqttsn::start() {
+bool Mqttsn::start() {
 
-	logs.debug("searchGateway");
+	logs.info("start mqttsn");
 
 	waitingForResponse = false;
 	initOk = false;
@@ -195,17 +195,27 @@ void Mqttsn::start() {
 	msg->type = SEARCHGW;
 	msg->radius = RADIUS;
 
-	logs.debug("searchGateway", "sending message");
+	// logs.debug("searchGateway", "sending message");
 	sendMessage();
 
-	logs.debug("searchGateway", "checking the response from the gateway");
+	// logs.debug("searchGateway", "checking the response from the gateway");
 
-	// waiting next message
-	if( !checkSerial() ) {
-		logs.error("not started: stop");
-		while(1);
+	int i = 0;
+	while(false == initOk && i <= MAX_TRY) {
+		logs.debug("BEGIN WHILE LOOP");
+
+		// waiting next message
+		if( !checkSerial() ) {
+			logs.error("not started: stop");
+			while(1);
+		}
+		parseData();
+
+		i++;
+		logs.debug("END WHILE LOOP");
 	}
-	parseData();
+
+	return initOk;
 }
 
 void Mqttsn::connect(const char* _moduleName) {
@@ -215,9 +225,8 @@ void Mqttsn::connect(const char* _moduleName) {
 		while(1);
 	}
 
-	logs.debug( "connect", "save module name", strlen(_moduleName));
+	// logs.debug( "connect", "save module name", strlen(_moduleName));
 	strcpy(moduleName, _moduleName);
-	logs.debug( "connect", "send a connect message", moduleName);
 
 	msg_connect* msg = reinterpret_cast<msg_connect*>(messageBuffer);
 
@@ -233,7 +242,7 @@ void Mqttsn::connect(const char* _moduleName) {
 	sendMessage();
 
 	if( !checkSerial() ) {
-		logs.debug( "connect", "check serial rejected");
+		// logs.debug( "connect", "check serial rejected");
 		connected = REJECTED;
 		return;
 	}

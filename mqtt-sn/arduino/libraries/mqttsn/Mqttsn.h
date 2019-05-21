@@ -68,7 +68,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define BAUD_RATE 9600
 
-#define LONG_WAIT 2000 // 2000ms - 2s
+#define LONG_WAIT 500 // 500ms (0.5 second)
 
 class Mqttsn {
 
@@ -98,7 +98,7 @@ public:
 	 * @brief ABSTRCT_init The init function searches a gateway with a radius = 0.
 	 * @return ACCEPTED if a correct response is received, else REJECTED.
 	 **/
-	void start() ;
+	bool start() ;
 
 	/**
 	 * @brief ABSTRCT_connect The funtion tries to connect the module to the gateway.

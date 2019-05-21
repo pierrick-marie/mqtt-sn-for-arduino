@@ -23,24 +23,18 @@ void setup() {
 
   Serial.begin(9600);
 
-  mqttsn.start();
+  while(!mqttsn.start());
 }
 
 void loop() {
-
-/*
-  Serial.println("Connect");
 
   mqttsn.connect(MODULE_NAME);
 
   if (mqttsn.subscribeTopic(TOPIC_SUB)) {
 
-    Serial.println("Get messages");
-
     nbReceivedMessages = mqttsn.requestMessages();
 
     Serial.print(nbReceivedMessages);
-    Serial.println(" messages received");
 
     msg_publish* msg = mqttsn.getReceivedMessages();
 
@@ -55,13 +49,8 @@ void loop() {
     Serial.println("\n!!! Subscribe KO !!!");
   }
 
-  Serial.println("Publish messages");
   mqttsn.publish(TOPIC_PUB, "rfid");
 
-  Serial.println("Disconnect");
-
   mqttsn.disconnect();
-
-  */
 
 }

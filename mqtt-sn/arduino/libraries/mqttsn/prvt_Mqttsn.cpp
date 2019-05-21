@@ -46,13 +46,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 bool Mqttsn::waitData() {
 
-	// @BUG waits 500ms seconds otherwise the module miss some answers from the gateway
-	delay(100);
+	delay(LONG_WAIT);
 
-	int i = 1;
-	while( xBee->available() <= 0 && i <= MAX_TRY ) {
+	int i = 0;
+	xBee->listen();
+	while(xBee->isListening() && xBee->available() <= 0 && i <= MAX_TRY ) {
 		// waiting for incoming data longer during 1 second (1000ms)
-		delay(100);
+		delay(LONG_WAIT);
 		i++;
 	}
 	if( i >= MAX_TRY ) {
@@ -70,26 +70,16 @@ void Mqttsn::parseData() {
 	int payload_lenght = frameBufferIn[12];
 	uint8_t payload[payload_lenght];
 
-	// for(int i = 0; i <= 12; i++) {
-	// Serial.print(i);
-	// Serial.print(" : ");
-	// Serial.println(frameBufferIn[12+i]);
-	// }
-	// Serial.println("--------");
-
 	for(i = 0; i < payload_lenght; i++){
 		payload[i] = frameBufferIn[12+i];
-		// Serial.print(i + 12);
-		// Serial.print(" : ");
-		// Serial.println(payload[i]);
 	}
 
-	logs.debug("parseData", "data have been parsed");
+	logs.debug("parseData", "data have been collected");
 
 	memset(responseBuffer, 0, MAX_BUFFER_SIZE);
 	memcpy(responseBuffer, (void*)payload, payload_lenght);
 
-	logs.debug( "parseStream", "Stream is ready -> dispatch");
+	logs.debug("parseData", "-> dispatch");
 
 	dispatch();
 
@@ -101,18 +91,18 @@ void Mqttsn::dispatch() {
 	waitingForResponse = false;
 	message_header* response_message = (message_header*)responseBuffer;
 
-	// logs.debug("dispatch", "response type:", response_message->type);
+	logs.debug("dispatch", "response type:", response_message->type);
 	// logs.debug("dispatch", "response length:", response_message->length);
 
 	switch (response_message->type) {
 
 	case GWINFO:
-		// logs.debug("dispatch", "GWINFO");
+		logs.debug("dispatch", "GWINFO");
 		searchGatewayHandler((msg_gwinfo*)responseBuffer);
 		break;
 
 	case CONNACK:
-		// logs.debug("dispatch", "CONNACK");
+		logs.debug("dispatch", "CONNACK");
 		connAckHandler((msg_connack*)responseBuffer);
 		break;
 
@@ -122,7 +112,7 @@ void Mqttsn::dispatch() {
 		break;
 
 	case PUBLISH:
-		// logs.debug("dispatch", "PUBLISH");
+		logs.debug("dispatch", "PUBLISH");
 		publishHandler((msg_publish*)responseBuffer);
 		break;
 
@@ -132,7 +122,7 @@ void Mqttsn::dispatch() {
 		break;
 
 	case PINGRESP:
-		// logs.debug("dispatch", "PINGRESP");
+		logs.debug("dispatch", "PINGRESP");
 		pingRespHandler();
 		break;
 
@@ -147,7 +137,7 @@ void Mqttsn::dispatch() {
 		break;
 
 	default:
-		logs.debug("dispatch", "DEFAULT");
+		// logs.debug("dispatch", "DEFAULT");
 		return;
 
 		// @TODO not implemented yet
@@ -250,64 +240,60 @@ void Mqttsn::publishHandler(msg_publish* msg) {
  **/
 bool Mqttsn::checkSerial() {
 
-	logs.debug("checkSerial", "");
+	// logs.debug("checkSerial", "");
 
 	int i, frame_size;
 	uint8_t delimiter, length1, length2;
 
 	// no data is available
 	if(!waitData()) {
-		logs.debug("checkSerial", "no data available -> timeout");
+		// logs.debug("checkSerial", "no data available -> timeout");
 		return false;
 	}
 	delimiter = xBee->read();
 
 	if(delimiter != 0x7E) {
-		logs.debug("checkSerial", "delimiter KO!");
+		// logs.debug("checkSerial", "delimiter KO!");
 		return checkSerial();
 	}
 
-	xBee->listen();
-	if(xBee->isListening()) {
-		if(xBee->available() > 0) {
-			length1 = xBee->read();
-			length2 = xBee->read();
-			frame_size = (length1*16)+length2+1;
+	length1 = xBee->read();
+	length2 = xBee->read();
+	frame_size = (length1*16)+length2+1;
 
-			// store the data in @frameBuffer
-			for(i = 0; i < frame_size; i++){
-				delay(10);
-				frameBufferIn[i] = xBee->read();
-			}
-
-			if(!verifyChecksum(frameBufferIn, frame_size)) {
-				// logs.debug("checkSerial", "checksum KO!");
-				return checkSerial();
-			}
-
-			if(frameBufferIn[0] == 139) {
-				logs.debug("checkSerial", "a transmit status (XBEE acquitall) -> get next message!");
-				return checkSerial();
-			}
-
-			if(frameBufferIn[0] == 144) {
-				// this is a data packet, copy the gateway address
-				if(gatewayAddress[0]==0 && gatewayAddress[1]==0 && gatewayAddress[2]==0 && gatewayAddress[3]==0){
-					gatewayAddress[0] = frameBufferIn[1];
-					gatewayAddress[1] = frameBufferIn[2];
-					gatewayAddress[2] = frameBufferIn[3];
-					gatewayAddress[3] = frameBufferIn[4];
-					gatewayAddress[4] = frameBufferIn[5];
-					gatewayAddress[5] = frameBufferIn[6];
-					gatewayAddress[6] = frameBufferIn[7];
-					gatewayAddress[7] = frameBufferIn[8];
-				}
-				// all data have been store in @frameBufferIn
-				// logs.debug("checkSerial", "correct data received");
-				return true;
-			}
-		}
+	// store the data in @frameBuffer
+	for(i = 0; i < frame_size; i++){
+		delay(10);
+		frameBufferIn[i] = xBee->read();
 	}
+
+	if(!verifyChecksum(frameBufferIn, frame_size)) {
+		// logs.debug("checkSerial", "checksum KO!");
+		return checkSerial();
+	}
+
+	if(frameBufferIn[0] == 139) {
+		// logs.debug("checkSerial", "a transmit status (XBEE acquitall) -> get next message!");
+		return checkSerial();
+	}
+
+	if(frameBufferIn[0] == 144) {
+		// this is a data packet, copy the gateway address
+		if(0 == gatewayAddress[0] && 0 == gatewayAddress[1] && 0 == gatewayAddress[2] && 0 == gatewayAddress[3]){
+			gatewayAddress[0] = frameBufferIn[1];
+			gatewayAddress[1] = frameBufferIn[2];
+			gatewayAddress[2] = frameBufferIn[3];
+			gatewayAddress[3] = frameBufferIn[4];
+			gatewayAddress[4] = frameBufferIn[5];
+			gatewayAddress[5] = frameBufferIn[6];
+			gatewayAddress[6] = frameBufferIn[7];
+			gatewayAddress[7] = frameBufferIn[8];
+		}
+		// all data have been store in @frameBufferIn
+		// logs.debug("checkSerial", "correct data received");
+		return true;
+	}
+
 	// not data available, clear the buffer and return false
 	memset(frameBufferIn, 0, sizeof(frameBufferIn));
 	// logs.debug("checkSerial", "default KO!");
@@ -324,9 +310,9 @@ void Mqttsn::subAckHandler(msg_suback* msg) {
 		// logs.debug("subAckHandler", "table[id]: ", topicTable[lastSubscribedTopic].id);
 		// logs.debug("subAckHandler", "table[name]: ", topicTable[lastSubscribedTopic].name);
 
-		// logs.info("subscibe OK");
+		logs.info("subscibe OK");
 	} else {
-		// logs.error("subscibe KO");
+		logs.error("subscibe KO");
 		regAckReturnCode = REJECTED;
 	}
 
@@ -375,7 +361,7 @@ void Mqttsn::sendMessage() {
 	}
 
 	// @BUG waits 500ms seconds otherwise the module miss some answers from the gateway
-	delay(100);
+	delay(LONG_WAIT);
 }
 
 bool Mqttsn::verifyChecksum(uint8_t frame_buffer[], int frame_size) {
@@ -462,7 +448,7 @@ void Mqttsn::connAckHandler(msg_connack* msg) {
 
 	if(msg->return_code == ACCEPTED) {
 		connected = ACCEPTED;
-		// logs.info("connected");
+		logs.info("connected");
 	} else {
 		connected = REJECTED;
 		// logs.notConnected();
@@ -474,20 +460,20 @@ void Mqttsn::disconnectHandler(msg_disconnect* msg) {
 
 	connected = REJECTED;
 
-	// logs.info("slepping");
+	logs.info("slepping");
 
 	delay(SLEEP_TIME * 1000); // 10 seconds (10000 milliseconds)
 
-	// logs.info("awake");
+	logs.info("awake");
 }
 
 void Mqttsn::searchGatewayHandler(msg_gwinfo* message) {
 
 	if(message->gw_id == GATEWAY_ID) {
-		// logs.info("started");
+		logs.info("started");
 		initOk = true;
 	} else {
-		// logs.error("not started: stop");
+		logs.error("not started: stop");
 		initOk = false;
 		while(1);
 	}
@@ -503,11 +489,11 @@ void Mqttsn::regAckHandler(msg_regack* msg) {
 		// logs.debug("regAckHandler", "Topic registered, id: ", msg->topic_id);
 		// logs.debug("regAckHandler", "Topic registered, table id: ", topicTable[nbRegisteredTopic].id);
 		// logs.debug("regAckHandler", "Topic registered, table name: ", topicTable[nbRegisteredTopic].name);
-		// logs.info("register OK");
+		logs.info("register OK");
 
 		nbRegisteredTopic++;
 	} else {
-		// logs.error("register KO");
+		logs.error("register KO");
 		regAckReturnCode = REJECTED;
 	}
 }

@@ -26,7 +26,7 @@ import gateway.utils.log.LogLevel;
 public class Device extends Thread {
 
 	private final long WAIT_NEXT_ACTION = 1000; // milliseconds - 1 second
-	private final long WAIT_SENDING_NEXT_MESSAGE = 5000; // milliseconds - 5 second
+	private final long WAIT_SENDING_NEXT_MESSAGE = 4000; // 2000 milliseconds (2 seconds)
 	private final short MAX_MESSAGES = 5;
 
 	private final Sender sender;
