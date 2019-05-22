@@ -2,15 +2,17 @@ package gateway.mqtt.sn.impl;
 
 import gateway.mqtt.client.Device;
 import gateway.mqtt.client.DeviceState;
-import gateway.mqtt.sn.IAction;
+import gateway.mqtt.impl.Sender;
+import gateway.mqtt.impl.SnMessage;
 import gateway.serial.SerialPortWriter;
 import gateway.utils.log.Log;
-import gateway.utils.log.LogLevel;
 
 /**
  * Created by arnaudoglaza on 07/07/2017.
  */
-public class PingReq implements IAction {
+public class PingReq implements Runnable {
+
+	private final long WAIT_SENDING_NEXT_MESSAGE = 1000; // 1000 milliseconds (1 seconds)
 
 	final Device device;
 	final byte[] msg;
@@ -24,14 +26,14 @@ public class PingReq implements IAction {
 	}
 
 	@Override
-	public void exec() {
+	public void run() {
 		device.setState(DeviceState.AWAKE);
 
-		Log.debug(LogLevel.ACTIVE, "PingReq", "exec", "begin send messages");
+		Log.activeDebug("PingReq", "run", "begin send messages");
 
 		// If send messages have not been interrupted, send pingresp
-		if (device.sendMqttMessages()) {
-			Log.debug(LogLevel.ACTIVE, "PingReq", "exec", "end send messages");
+		if (sendMqttMessages()) {
+			Log.activeDebug("PingReq", "run", "end send messages");
 
 			Log.output(device, "ping response");
 
@@ -43,8 +45,42 @@ public class PingReq implements IAction {
 
 			if (device.state().equals(DeviceState.AWAKE)) {
 				device.setState(DeviceState.ASLEEP);
-				Log.debug(LogLevel.ACTIVE, "MultipleSender", "pingResp", device + " goes to sleep");
+				Log.activeDebug("MultipleSender", "pingResp", device + " goes to sleep");
 			}
+		}
+	}
+
+	/**
+	 * The function is call after a PingReq. If it returns "false", pingreq have to
+	 * stop the rest of its instructions -> the device have been reset.
+	 *
+	 * The function can be interrupted at any time by a reboot of the arduino.
+	 *
+	 * @return false if the device have been reset, true otherwise.
+	 */
+	private Boolean sendMqttMessages() {
+
+		final Sender sender = new Sender(device);
+
+		synchronized (device.Messages) {
+			for (final SnMessage message : device.Messages) {
+
+				Log.activeDebug("PingReq", "sendMqttMessages", "sending message for topic: " + message.topic());
+				sender.send(message);
+
+				Log.verboseDebug("PingReq", "sendMqttMessages", "wait before sending next message");
+
+				try {
+					Thread.sleep(WAIT_SENDING_NEXT_MESSAGE);
+				} catch (final InterruptedException e) {
+					Log.error("PingReq", "sendMqttMessages", "fail waiting before sending next message");
+					Log.verboseDebug("PingReq", "sendMqttMessages", e.getMessage());
+					return false;
+				}
+			}
+			Log.verboseDebug("PingReq", "sendMqttMessages", "all messages have been sent");
+			device.Messages.clear();
+			return true;
 		}
 	}
 }

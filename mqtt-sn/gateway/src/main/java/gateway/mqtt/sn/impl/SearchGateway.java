@@ -9,11 +9,10 @@ package gateway.mqtt.sn.impl;
 
 import gateway.Main;
 import gateway.mqtt.client.Device;
-import gateway.mqtt.sn.IAction;
 import gateway.serial.SerialPortWriter;
 import gateway.utils.log.Log;
 
-public class SearchGateway implements IAction {
+public class SearchGateway implements Runnable {
 
 	private final Device device;
 	// NOT IMPLEMENTED YET
@@ -29,7 +28,7 @@ public class SearchGateway implements IAction {
 	}
 
 	@Override
-	public void exec() {
+	public void run() {
 
 		Log.output(device, "gateway info");
 

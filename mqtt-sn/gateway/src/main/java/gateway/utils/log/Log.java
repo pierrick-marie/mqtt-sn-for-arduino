@@ -17,7 +17,7 @@ public class Log {
 
 	public static Boolean COLOR = true;
 	public static final Boolean ERROR = true;
-	public static final gateway.utils.log.LogLevel LEVEL = gateway.utils.log.LogLevel.VERBOSE;
+	public static final gateway.utils.log.LogLevel LEVEL = gateway.utils.log.LogLevel.NONE;
 
 	private static final DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 
@@ -27,6 +27,11 @@ public class Log {
 	synchronized public static void activeDebug(final String message) {
 		bYellow(" # [ " + gateway.utils.log.LogLevel.ACTIVE.name() + " ] ");
 		yellow(message + "\n");
+	}
+
+	synchronized public static void activeDebug(final String className, final String methodeName,
+			final String message) {
+		debug(LogLevel.ACTIVE, className, methodeName, message);
 	}
 
 	private static void bBlue(final String message) {

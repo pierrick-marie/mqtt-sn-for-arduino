@@ -8,13 +8,12 @@
 package gateway.mqtt.sn.impl;
 
 import gateway.mqtt.client.Device;
-import gateway.mqtt.sn.IAction;
 import gateway.utils.log.Log;
 
 /**
  * @TODO not implemented yet
  */
-public class WillMessageReq implements IAction {
+public class WillMessageReq implements Runnable {
 
 	private final Device device;
 
@@ -23,11 +22,11 @@ public class WillMessageReq implements IAction {
 	}
 
 	@Override
-	public void exec() {
+	public void run() {
 
 		Log.input(device, "Will DMqMessage Req");
 
-		byte[] ret = new byte[2];
+		final byte[] ret = new byte[2];
 		ret[0] = (byte) 0x02;
 		ret[1] = (byte) 0x08;
 

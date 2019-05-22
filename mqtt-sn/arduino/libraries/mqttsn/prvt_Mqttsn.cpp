@@ -74,12 +74,12 @@ void Mqttsn::parseData() {
 		payload[i] = frameBufferIn[12+i];
 	}
 
-	logs.debug("parseData", "data have been collected");
+	// logs.debug("parseData", "data have been collected");
 
 	memset(responseBuffer, 0, MAX_BUFFER_SIZE);
 	memcpy(responseBuffer, (void*)payload, payload_lenght);
 
-	logs.debug("parseData", "-> dispatch");
+	// logs.debug("parseData", "-> dispatch");
 
 	dispatch();
 
@@ -91,108 +91,109 @@ void Mqttsn::dispatch() {
 	waitingForResponse = false;
 	message_header* response_message = (message_header*)responseBuffer;
 
-	logs.debug("dispatch", "response type:", response_message->type);
+	// logs.debug("dispatch", "response type:", response_message->type);
 	// logs.debug("dispatch", "response length:", response_message->length);
 
-	switch (response_message->type) {
-
-	case GWINFO:
-		logs.debug("dispatch", "GWINFO");
+	if(false == initOk && GWINFO == response_message->type) {
+		// logs.debug("dispatch", "GWINFO");
 		searchGatewayHandler((msg_gwinfo*)responseBuffer);
-		break;
+	} else {
 
-	case CONNACK:
-		logs.debug("dispatch", "CONNACK");
-		connAckHandler((msg_connack*)responseBuffer);
-		break;
+		switch (response_message->type) {
 
-	case REGACK:
-		// logs.debug("dispatch", "REGACK");
-		regAckHandler((msg_regack*)responseBuffer);
-		break;
+		case CONNACK:
+			// logs.debug("dispatch", "CONNACK");
+			connAckHandler((msg_connack*)responseBuffer);
+			break;
 
-	case PUBLISH:
-		logs.debug("dispatch", "PUBLISH");
-		publishHandler((msg_publish*)responseBuffer);
-		break;
+		case REGACK:
+			// logs.debug("dispatch", "REGACK");
+			regAckHandler((msg_regack*)responseBuffer);
+			break;
 
-	case SUBACK:
-		// logs.debug("dispatch", "SUBACK");
-		subAckHandler((msg_suback*)responseBuffer);
-		break;
+		case PUBLISH:
+			// logs.debug("dispatch", "PUBLISH");
+			publishHandler((msg_publish*)responseBuffer);
+			break;
 
-	case PINGRESP:
-		logs.debug("dispatch", "PINGRESP");
-		pingRespHandler();
-		break;
+		case SUBACK:
+			// logs.debug("dispatch", "SUBACK");
+			subAckHandler((msg_suback*)responseBuffer);
+			break;
 
-	case DISCONNECT:
-		// logs.debug("dispatch", "DISCONNECT");
-		disconnectHandler((msg_disconnect*)responseBuffer);
-		break;
+		case PINGRESP:
+			// logs.debug("dispatch", "PINGRESP");
+			pingRespHandler();
+			break;
 
-	case REREGISTER:
-		// logs.debug("dispatch", "RE-REGISTER");
-		reRegisterHandler((msg_reregister*)responseBuffer);
-		break;
+		case DISCONNECT:
+			// logs.debug("dispatch", "DISCONNECT");
+			disconnectHandler((msg_disconnect*)responseBuffer);
+			break;
 
-	default:
-		// logs.debug("dispatch", "DEFAULT");
-		return;
+		case REREGISTER:
+			// logs.debug("dispatch", "RE-REGISTER");
+			reRegisterHandler((msg_reregister*)responseBuffer);
+			break;
 
-		// @TODO not implemented yet
-		// case ADVERTISE:
-		// logs.debug("dispatch", "ADVERTISE");
-		// advertiseHandler((msg_advertise*)responseBuffer);
-		// break;
+		default:
+			// logs.debug("dispatch", "DEFAULT");
+			return;
 
-		// @TODO not implemented yet
-		// case PINGREQ:
-		// logs.debug("dispatch", "PINGREQ");
-		// pingReqHandler((msg_pingreq*)responseBuffer);
-		// break;
+			// @TODO not implemented yet
+			// case ADVERTISE:
+			// logs.debug("dispatch", "ADVERTISE");
+			// advertiseHandler((msg_advertise*)responseBuffer);
+			// break;
 
-		// @TODO not implemented yet - QoS level 1 or 2
-		// case PUBACK:
-		// logs.debug("dispatch", "PUBACK");
-		// pubAckHandler((msg_puback*)responseBuffer);
-		// break;
+			// @TODO not implemented yet
+			// case PINGREQ:
+			// logs.debug("dispatch", "PINGREQ");
+			// pingReqHandler((msg_pingreq*)responseBuffer);
+			// break;
 
-		// @TODO not implemented yet
-		// case WILLTOPICRESP:
-		// logs.debug("dispatch", "WILLTOPICRESP");
-		// willTopicRespHandler((msg_willtopicresp*)responseBuffer);
-		// break;
+			// @TODO not implemented yet - QoS level 1 or 2
+			// case PUBACK:
+			// logs.debug("dispatch", "PUBACK");
+			// pubAckHandler((msg_puback*)responseBuffer);
+			// break;
 
-		// @TODO not implemented yet
-		// case UNSUBACK:
-		// logs.debug("dispatch", "UNSUBACK");
-		// unsuback_handler((msg_unsuback*)responseBuffer);
-		// break;
+			// @TODO not implemented yet
+			// case WILLTOPICRESP:
+			// logs.debug("dispatch", "WILLTOPICRESP");
+			// willTopicRespHandler((msg_willtopicresp*)responseBuffer);
+			// break;
 
-		// @TODO not implemented yet
-		// case REGISTER:
-		// logs.debug("dispatch", "REGISTER");
-		// registerHandler((msg_register*)responseBuffer);
-		// break;
+			// @TODO not implemented yet
+			// case UNSUBACK:
+			// logs.debug("dispatch", "UNSUBACK");
+			// unsuback_handler((msg_unsuback*)responseBuffer);
+			// break;
 
-		// @TODO not implemented yet
-		// case WILLMSGRESP:
-		// logs.debug("dispatch", "WILLMSGRESP");
-		// willMsgRespHandler((msg_willmsgresp*)responseBuffer);
-		// break;
+			// @TODO not implemented yet
+			// case REGISTER:
+			// logs.debug("dispatch", "REGISTER");
+			// registerHandler((msg_register*)responseBuffer);
+			// break;
 
-		// @TODO not implemented yet
-		// case WILLTOPICREQ:
-		// logs.debug("dispatch", "WILLTOPICREQ");
-		// willTopicReqHandler(response_message);
-		// break;
+			// @TODO not implemented yet
+			// case WILLMSGRESP:
+			// logs.debug("dispatch", "WILLMSGRESP");
+			// willMsgRespHandler((msg_willmsgresp*)responseBuffer);
+			// break;
 
-		// @TODO not implemented yet
-		// case WILLMSGREQ:
-		// logs.debug("dispatch", "WILLMSGREQ");
-		// willmsgreq_handler(response_message);
-		// break;
+			// @TODO not implemented yet
+			// case WILLTOPICREQ:
+			// logs.debug("dispatch", "WILLTOPICREQ");
+			// willTopicReqHandler(response_message);
+			// break;
+
+			// @TODO not implemented yet
+			// case WILLMSGREQ:
+			// logs.debug("dispatch", "WILLMSGREQ");
+			// willmsgreq_handler(response_message);
+			// break;
+		}
 	}
 }
 
@@ -208,7 +209,7 @@ uint16_t Mqttsn::bitSwap(uint16_t value) {
 void Mqttsn::publishHandler(msg_publish* msg) {
 
 	if(nbReceivedMessage < MAX_MESSAGES) {
-		logs.info("#log: msg received");
+		logs.info("msg received");
 		receivedMessages[nbReceivedMessage].topic_id = bitSwap(msg->topic_id);
 		strcpy(receivedMessages[nbReceivedMessage].data, msg->data);
 		nbReceivedMessage++;

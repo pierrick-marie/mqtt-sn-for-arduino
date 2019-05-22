@@ -17,22 +17,13 @@ import jssc.SerialPortEvent;
 import jssc.SerialPortEventListener;
 import jssc.SerialPortException;
 
-public class SerialPortReader implements SerialPortEventListener {
+public enum SerialPortReader implements SerialPortEventListener {
+
+	Instance;
 
 	private final int NB_THREAD_PARSER = 10;
 
-	final ExecutorService executorService;
-
-	public SerialPortReader() {
-		try {
-			XBeeSerialPort.Instance.serialPort().addEventListener(this);
-		} catch (final SerialPortException e) {
-			Log.error("SerialPortReader", "constructor", "Serial port exception");
-			Log.debug(LogLevel.VERBOSE, "SerialPortReader", "constructor", e.getMessage());
-		}
-
-		executorService = Executors.newFixedThreadPool(NB_THREAD_PARSER);
-	}
+	private ExecutorService executorService;
 
 	private byte[] cleanBuffer(final byte[] data) {
 
@@ -45,6 +36,17 @@ public class SerialPortReader implements SerialPortEventListener {
 			}
 		}
 		return data;
+	}
+
+	public void init() {
+		try {
+			XBeeSerialPort.Instance.serialPort().addEventListener(this);
+		} catch (final SerialPortException e) {
+			Log.error("SerialPortReader", "constructor", "Serial port exception");
+			Log.debug(LogLevel.VERBOSE, "SerialPortReader", "constructor", e.getMessage());
+		}
+
+		executorService = Executors.newFixedThreadPool(NB_THREAD_PARSER);
 	}
 
 	@Override

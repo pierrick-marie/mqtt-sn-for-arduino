@@ -9,12 +9,11 @@ package gateway.mqtt.sn.impl;
 
 import gateway.mqtt.client.Device;
 import gateway.mqtt.impl.Topic;
-import gateway.mqtt.sn.IAction;
 import gateway.serial.SerialPortWriter;
 import gateway.utils.log.Log;
 import gateway.utils.log.LogLevel;
 
-public class Publish implements IAction {
+public class Publish implements Runnable {
 
 	private final Device device;
 	private final byte[] msg;
@@ -27,8 +26,29 @@ public class Publish implements IAction {
 		this.msg = msg;
 	}
 
+	private void reRegister(final int topicId, final byte[] messageId) {
+
+		Log.output(device, "re register");
+
+		final byte[] ret = new byte[7];
+		ret[0] = (byte) 0x07;
+		ret[1] = (byte) 0x1E;
+		if (topicId > 255) {
+			ret[2] = (byte) (topicId % 255);
+			ret[3] = (byte) (topicId / 255);
+		} else {
+			ret[2] = (byte) topicId;
+			ret[3] = (byte) 0x00;
+		}
+		ret[4] = messageId[0];
+		ret[5] = messageId[1];
+		ret[6] = Prtcl.ACCEPTED;
+
+		SerialPortWriter.write(device, ret);
+	}
+
 	@Override
-	public void exec() {
+	public void run() {
 
 		// @TODO not implemented yet
 		// final byte flags = msg[0];
@@ -71,27 +91,6 @@ public class Publish implements IAction {
 			Log.error("Publish", "publish", "unknown topic id: " + topicId + "-> send re-register");
 			reRegister(topicId, messageId);
 		}
-	}
-
-	private void reRegister(final int topicId, final byte[] messageId) {
-
-		Log.output(device, "re register");
-
-		final byte[] ret = new byte[7];
-		ret[0] = (byte) 0x07;
-		ret[1] = (byte) 0x1E;
-		if (topicId > 255) {
-			ret[2] = (byte) (topicId % 255);
-			ret[3] = (byte) (topicId / 255);
-		} else {
-			ret[2] = (byte) topicId;
-			ret[3] = (byte) 0x00;
-		}
-		ret[4] = messageId[0];
-		ret[5] = messageId[1];
-		ret[6] = Prtcl.ACCEPTED;
-
-		SerialPortWriter.write(device, ret);
 	}
 
 	/**

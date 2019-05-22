@@ -8,13 +8,12 @@
 package gateway.mqtt.sn.impl;
 
 import gateway.mqtt.client.Device;
-import gateway.mqtt.sn.IAction;
 import gateway.utils.log.Log;
 
 /**
  * @TODO not implemented yet
  */
-public class WillTopic implements IAction {
+public class WillTopic implements Runnable {
 
 	// private Device device;
 	// private byte[] msg;
@@ -28,21 +27,21 @@ public class WillTopic implements IAction {
 	}
 
 	@Override
-	public void exec() {
+	public void run() {
 		/*
 		 * if (msg.length == 0) {
-		 * 
+		 *
 		 * device.mqttClient().setWillMessage(""); device.mqttClient().setWillTopic("");
-		 * 
+		 *
 		 * } else {
-		 * 
+		 *
 		 * byte flags = msg[0]; boolean will_retain = (flags & 0b00010000) == 1; byte[]
 		 * data = new byte[msg.length - 1];
-		 * 
+		 *
 		 * for (int i = 0; i < msg.length - 1; i++) { data[i] = msg[i + 1]; }
-		 * 
+		 *
 		 * String willtopic = new String(data, StandardCharsets.UTF_8);
-		 * 
+		 *
 		 * device.mqttClient().setWillTopic(willtopic);
 		 * device.mqttClient().setWillQos(Prtcl.DEFAUlT_QOS);
 		 * device.mqttClient().setWillRetain(will_retain); }

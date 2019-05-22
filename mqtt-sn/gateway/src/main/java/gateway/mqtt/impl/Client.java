@@ -25,6 +25,7 @@ import gateway.utils.log.LogLevel;
 public class Client implements MqttCallback {
 
 	private final static String PRTCL = "tcp://";
+	private final short MAX_MESSAGES = 5;
 
 	// NOT IMPLEMENTED YET
 	// private final Boolean cleanSession;
@@ -34,7 +35,7 @@ public class Client implements MqttCallback {
 	private final MqttConnectOptions option;
 
 	public Client(final Device device, final Boolean cleanSession) throws MqttException {
-		mqttClient = new MqttClient(PRTCL + Config.IP_SERVER + ":" + Config.PORT_SERVER, device.getName(),
+		mqttClient = new MqttClient(PRTCL + Config.IP_SERVER + ":" + Config.PORT_SERVER, device.name(),
 				new MemoryPersistence());
 
 		this.device = device;
@@ -42,6 +43,20 @@ public class Client implements MqttCallback {
 		option = new MqttConnectOptions();
 		option.setCleanSession(cleanSession);
 		mqttClient.setCallback(this);
+	}
+
+	private void addMqttMessage(final SnMessage message) {
+
+		synchronized (device.Messages) {
+			while (MAX_MESSAGES <= device.Messages.size()) {
+				device.Messages.remove(0);
+				Log.debug(LogLevel.VERBOSE, "Client", "addMqttMessage",
+						"too many messages -> removing oldest message");
+			}
+
+			Log.debug(LogLevel.VERBOSE, "Client", "addMqttMessage", "save message");
+			device.Messages.add(message);
+		}
 	}
 
 	public Boolean connect() {
@@ -59,7 +74,7 @@ public class Client implements MqttCallback {
 			Log.error("Client", "connect", e.getCause().getMessage());
 		}
 
-		Log.debug(LogLevel.VERBOSE, "Client", "connect", device.getName() + " connected");
+		Log.debug(LogLevel.VERBOSE, "Client", "connect", device.name() + " connected");
 		return mqttClient.isConnected();
 	}
 
@@ -85,7 +100,7 @@ public class Client implements MqttCallback {
 
 		try {
 			mqttClient.disconnect();
-			Log.debug(LogLevel.VERBOSE, "Client", "disconnect", device.getName() + " disconnected");
+			Log.debug(LogLevel.VERBOSE, "Client", "disconnect", device.name() + " disconnected");
 			return true;
 		} catch (final MqttException e) {
 			Log.error("Client", "disconnect", e.getMessage());
@@ -104,7 +119,7 @@ public class Client implements MqttCallback {
 		if (message.getPayload().length < PAYLOAD_LENGTH) {
 			Log.debug(LogLevel.VERBOSE, "Client", "messageArrived",
 					"message: " + new String(message.getPayload()) + " on topic: " + topic);
-			device.addMqttMessage(new SnMessage(topic, new String(message.getPayload())));
+			addMqttMessage(new SnMessage(topic, new String(message.getPayload())));
 		} else {
 			Log.error("Client", "messageArrived", "payload too long");
 		}
@@ -130,7 +145,7 @@ public class Client implements MqttCallback {
 
 		try {
 			mqttClient.subscribe(topicName, Prtcl.DEFAULT_QOS);
-			Log.debug(LogLevel.VERBOSE, "Client", "subscribe", device.getName() + " subscribed to " + topicName);
+			Log.debug(LogLevel.VERBOSE, "Client", "subscribe", device.name() + " subscribed to " + topicName);
 			return true;
 		} catch (final MqttException e) {
 			Log.error("Client", "subscribe", e.getMessage());
@@ -142,8 +157,7 @@ public class Client implements MqttCallback {
 
 		try {
 			mqttClient.unsubscribe(topicName);
-			Log.debug(LogLevel.VERBOSE, "Client", "unsubscribe",
-					device.getName() + " subscribed to " + topicName);
+			Log.verboseDebug("Client", "unsubscribe", device.name() + " unsubscribed to topic " + topicName);
 			return true;
 		} catch (final MqttException e) {
 			Log.error("Client", "unsubscribe", e.getMessage());

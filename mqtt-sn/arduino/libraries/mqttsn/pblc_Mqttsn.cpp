@@ -202,7 +202,6 @@ bool Mqttsn::start() {
 
 	int i = 0;
 	while(false == initOk && i <= MAX_TRY) {
-		logs.debug("BEGIN WHILE LOOP");
 
 		// waiting next message
 		if( !checkSerial() ) {
@@ -212,7 +211,6 @@ bool Mqttsn::start() {
 		parseData();
 
 		i++;
-		logs.debug("END WHILE LOOP");
 	}
 
 	return initOk;
@@ -237,7 +235,7 @@ void Mqttsn::connect(const char* _moduleName) {
 	msg->duration = bitSwap(DURATION_TIME);
 	strcpy(msg->client_id, moduleName);
 
-	logs.debug( "connect", "send a connect message", msg->client_id);
+	// logs.debug( "connect", "send a connect message", msg->client_id);
 
 	sendMessage();
 

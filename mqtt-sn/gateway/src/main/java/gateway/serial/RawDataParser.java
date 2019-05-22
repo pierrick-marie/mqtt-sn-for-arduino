@@ -104,12 +104,7 @@ public class RawDataParser implements Runnable {
 
 		switch (data_type) {
 		case MqttSNMessageType.SEARCHGW:
-			device.resetAction();
-			Log.debug(LogLevel.VERBOSE, "jékjh", "jékjh", "jékjh");
 			device.setAction(new SearchGateway(device, Integer.valueOf(data[MessageStructure.RECEIVE_RADIUS])));
-			Log.debug(LogLevel.VERBOSE, "jékjh", "jékjh", "jékjh");
-			device.notify();
-			Log.debug(LogLevel.VERBOSE, "jékjh", "jékjh", "jékjh");
 			break;
 
 		case MqttSNMessageType.CONNECT:

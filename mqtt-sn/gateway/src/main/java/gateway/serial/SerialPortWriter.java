@@ -14,7 +14,9 @@ import gateway.utils.log.Log;
 import gateway.utils.log.LogLevel;
 import jssc.SerialPortException;
 
-public class SerialPortWriter {
+public enum SerialPortWriter {
+
+	Instance;
 
 	public synchronized static void write(final Device device, final byte[] payload) {
 

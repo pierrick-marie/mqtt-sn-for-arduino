@@ -2,7 +2,6 @@ package gateway.mqtt.sn.impl;
 
 import gateway.mqtt.client.Device;
 import gateway.mqtt.client.DeviceState;
-import gateway.mqtt.sn.IAction;
 import gateway.serial.SerialPortWriter;
 import gateway.utils.log.Log;
 import gateway.utils.log.LogLevel;
@@ -10,7 +9,7 @@ import gateway.utils.log.LogLevel;
 /**
  * Created by arnaudoglaza on 07/07/2017.
  */
-public class Disconnect implements IAction {
+public class Disconnect implements Runnable {
 
 	private final Device device;
 	private final byte[] msg;
@@ -35,14 +34,15 @@ public class Disconnect implements IAction {
 	}
 
 	@Override
-	public void exec() {
+	public void run() {
 
 		if (msg.length == 4) {
 			final short duration = (short) ((msg[0] << 8) + (msg[1] & 0xFF));
 
 			if (duration > 0) {
 
-				device.setState(DeviceState.ASLEEP).setDuration(duration);
+				device.setState(DeviceState.ASLEEP);
+				device.setDuration(duration);
 
 				disconnectAck();
 

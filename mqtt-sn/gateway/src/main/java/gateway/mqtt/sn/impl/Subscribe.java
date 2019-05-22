@@ -11,11 +11,10 @@ import java.nio.charset.StandardCharsets;
 
 import gateway.mqtt.client.Device;
 import gateway.mqtt.impl.Topic;
-import gateway.mqtt.sn.IAction;
 import gateway.serial.SerialPortWriter;
 import gateway.utils.log.Log;
 
-public class Subscribe implements IAction {
+public class Subscribe implements Runnable {
 
 	final Device device;
 	final byte[] msg;
@@ -29,7 +28,7 @@ public class Subscribe implements IAction {
 	}
 
 	@Override
-	public void exec() {
+	public void run() {
 		subscribe();
 	}
 

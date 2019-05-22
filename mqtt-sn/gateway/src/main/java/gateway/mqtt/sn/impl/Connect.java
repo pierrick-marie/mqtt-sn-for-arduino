@@ -9,12 +9,11 @@ import java.nio.charset.StandardCharsets;
 
 import gateway.mqtt.client.Device;
 import gateway.mqtt.client.DeviceState;
-import gateway.mqtt.sn.IAction;
 import gateway.serial.SerialPortWriter;
 import gateway.utils.log.Log;
 import gateway.utils.log.LogLevel;
 
-public class Connect implements IAction {
+public class Connect implements Runnable {
 
 	private final Device device;
 	private final byte[] message;
@@ -39,8 +38,21 @@ public class Connect implements IAction {
 		SerialPortWriter.write(device, serialMesasge);
 	}
 
+	private String getClientName() {
+
+		final byte[] name = new byte[message.length - 4];
+
+		for (int i = 0; i < name.length; i++) {
+			name[i] = message[4 + i];
+		}
+
+		final String clientName = new String(name, StandardCharsets.UTF_8);
+
+		return clientName;
+	}
+
 	@Override
-	public void exec() {
+	public void run() {
 
 		final byte flags = message[0];
 		final short duration = (short) (message[2] * 16 + message[3]);
@@ -73,18 +85,5 @@ public class Connect implements IAction {
 			connack(Prtcl.ACCEPTED);
 			device.setState(DeviceState.ACTIVE);
 		}
-	}
-
-	private String getClientName() {
-
-		final byte[] name = new byte[message.length - 4];
-
-		for (int i = 0; i < name.length; i++) {
-			name[i] = message[4 + i];
-		}
-
-		final String clientName = new String(name, StandardCharsets.UTF_8);
-
-		return clientName;
 	}
 }

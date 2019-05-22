@@ -11,11 +11,10 @@ import java.nio.charset.StandardCharsets;
 
 import gateway.mqtt.client.Device;
 import gateway.mqtt.impl.Topic;
-import gateway.mqtt.sn.IAction;
 import gateway.serial.SerialPortWriter;
 import gateway.utils.log.Log;
 
-public class Register implements IAction {
+public class Register implements Runnable {
 
 	private final Device device;
 	private final byte[] message;
@@ -26,43 +25,6 @@ public class Register implements IAction {
 
 		this.device = device;
 		message = msg;
-	}
-
-	/**
-	 * This method registers a topic name into the list of
-	 * Topics @see:Main.TopicName The method does not register the topic name to the
-	 * bus.
-	 */
-	@Override
-	public void exec() {
-
-		final byte[] messageId = new byte[2];
-		messageId[0] = message[2];
-		messageId[1] = message[3];
-		final byte[] name = new byte[message.length - 4];
-		String topicName;
-		int i;
-		final Topic topic;
-
-		if (!device.isConnected()) {
-			Log.error("Register", "register", device + "is not connected");
-			// Error - topicId = -1
-			regack(-1, messageId, Prtcl.REJECTED);
-			return;
-		}
-
-		for (i = 0; i < name.length; i++) {
-			name[i] = message[4 + i];
-		}
-
-		topicName = new String(name, StandardCharsets.UTF_8);
-
-		topic = device.register(topicName);
-		if (null != topic) {
-			regack(topic.id(), messageId, Prtcl.ACCEPTED);
-		} else {
-			regack(-1, messageId, Prtcl.REJECTED);
-		}
 	}
 
 	/**
@@ -92,5 +54,42 @@ public class Register implements IAction {
 		message[6] = returnCode;
 
 		SerialPortWriter.write(device, message);
+	}
+
+	/**
+	 * This method registers a topic name into the list of
+	 * Topics @see:Main.TopicName The method does not register the topic name to the
+	 * bus.
+	 */
+	@Override
+	public void run() {
+
+		final byte[] messageId = new byte[2];
+		messageId[0] = message[2];
+		messageId[1] = message[3];
+		final byte[] name = new byte[message.length - 4];
+		String topicName;
+		int i;
+		final Topic topic;
+
+		if (!device.isConnected()) {
+			Log.error("Register", "register", device + "is not connected");
+			// Error - topicId = -1
+			regack(-1, messageId, Prtcl.REJECTED);
+			return;
+		}
+
+		for (i = 0; i < name.length; i++) {
+			name[i] = message[4 + i];
+		}
+
+		topicName = new String(name, StandardCharsets.UTF_8);
+
+		topic = device.register(topicName);
+		if (null != topic) {
+			regack(topic.id(), messageId, Prtcl.ACCEPTED);
+		} else {
+			regack(-1, messageId, Prtcl.REJECTED);
+		}
 	}
 }
