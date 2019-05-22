@@ -59,12 +59,12 @@ public class Publish implements IAction {
 			if (device.publish(topic, new String(data))) {
 				Log.debug(LogLevel.ACTIVE, "Publish", "publish", "published " + new String(data) + " on topic "
 						+ topic.name().toString() + " (id:" + topicId + ")");
-				// @TODO not used until with QoS level 1 and 2 (not implemented)
+				// TODO not used until with QoS level 1 and 2 (not implemented)
 				// puback(topicId, messageId, Prtcl.ACCEPTED);
 			} else {
 				Log.error("Publish", "publish", "impossible to publish " + new String(data) + " on topic "
 						+ topic.name().toString() + " (id:" + topicId + ")");
-				// @TODO not used until with QoS level 1 and 2 (not implemented)
+				// TODO not used until with QoS level 1 and 2 (not implemented)
 				// puback(topicId, messageId, Prtcl.REJECTED);
 			}
 		} else {

@@ -32,7 +32,7 @@ public class Device extends Thread {
 	private final Sender sender;
 
 	private volatile boolean doAction = false;
-	private boolean doUnsubscribeAll = false;
+	private boolean topicSubscribed = false;
 	private IAction action = null;
 
 	private Address64 address64;
@@ -50,18 +50,21 @@ public class Device extends Thread {
 		this.address16 = address16;
 		state = DeviceState.FIRSTCONNECT;
 		sender = new Sender(this);
+		start();
 	}
 
-	synchronized public Boolean addMqttMessage(final SnMessage message) {
+	public Boolean addMqttMessage(final SnMessage message) {
 
-		while (MAX_MESSAGES <= Messages.size()) {
-			Messages.remove(0);
-			Log.debug(LogLevel.VERBOSE, "Device", "addMqttMessage",
-					"too many messages -> removing oldest message");
+		synchronized (Messages) {
+			while (MAX_MESSAGES <= Messages.size()) {
+				Messages.remove(0);
+				Log.debug(LogLevel.VERBOSE, "Device", "addMqttMessage",
+						"too many messages -> removing oldest message");
+			}
+
+			Log.debug(LogLevel.VERBOSE, "Device", "addMqttMessage", "save message");
+			return Messages.add(message);
 		}
-
-		Log.debug(LogLevel.VERBOSE, "Device", "addMqttMessage", "save message");
-		return Messages.add(message);
 	}
 
 	public Address16 address16() {
@@ -184,22 +187,22 @@ public class Device extends Thread {
 	synchronized public void resetAction() {
 		doAction = false;
 		action = null;
+		Log.debug(LogLevel.VERBOSE, "Device", "resetAction", "action is null");
 	}
 
 	@Override
-	public void run() {
+	synchronized public void run() {
 
 		boolean run = true;
 
 		while (run) {
+
 			if (doAction) {
 				action.exec();
-				resetAction();
+				doAction = false;
 			}
 			// if the current date is upper than the last update + duration time
-			if (doUnsubscribeAll && new Date().getTime() > lastUpdate + duration * 1000) {
-				Log.print(this + " - timeout: unsubscribe topics");
-
+			if (topicSubscribed && new Date().getTime() > lastUpdate + duration * 1000) {
 				unsubscribeAll();
 			}
 			// if the current date is upper than the last update + 3 x duration time
@@ -214,15 +217,19 @@ public class Device extends Thread {
 					mqttClient.disconnect();
 				}
 				Devices.list.remove(this);
-				setName("TO-REMOVE!");
+				setName("");
 				run = false;
+				doAction = false;
+				action = null;
+				interrupt();
 			}
 
 			try {
-				sleep(WAIT_NEXT_ACTION);
-			} catch (final Exception e) {
+				Log.verboseDebug("Device", "run", "waiting next action");
+				wait(WAIT_NEXT_ACTION);
+			} catch (final InterruptedException e) {
 				Log.error("Device", "run", "fail waiting next action");
-				Log.debug(LogLevel.VERBOSE, "Device", "run", e.getMessage());
+				Log.verboseDebug(e.getMessage());
 			}
 		}
 	}
@@ -231,36 +238,51 @@ public class Device extends Thread {
 	 * The function is call after a PingReq. If it returns "false", pingreq have to
 	 * stop the rest of its instructions -> the device have been reset.
 	 *
+	 * The function can be interrupted at any time by a reboot of the arduino.
+	 *
 	 * @return false if the device have been reset, true otherwise.
 	 */
-	synchronized public Boolean sendMqttMessages() {
+	public Boolean sendMqttMessages() {
 
-		for (final SnMessage message : Messages) {
+		synchronized (Messages) {
+			for (final SnMessage message : Messages) {
 
-			/*
-			 * While doAction is true, send messages. Sometimes the device is reset (new
-			 * connection @see RawDataParser switch case MessageType.SEARCHGW) while it's
-			 * waiting to send the next message. In that case, we have to quit the function.
-			 */
-			if (doAction) {
-				Log.debug(LogLevel.ACTIVE, "Device", "sendMqttMessages",
-						"sending message for topic: " + message.topic());
-				sender.send(message);
+				/*
+				 * While doAction is true, send messages. Sometimes the device is reset (new
+				 * connection @see RawDataParser switch case MessageType.SEARCHGW) while it's
+				 * waiting to send the next message. In that case, we have to quit the function.
+				 */
+				if (doAction) {
+					Log.debug(LogLevel.ACTIVE, "Device", "sendMqttMessages",
+							"sending message for topic: " + message.topic());
+					sender.send(message);
 
-				Log.debug(LogLevel.VERBOSE, "Device", "sendMqttMessages", "wait before sending next message");
-				try {
-					sleep(WAIT_SENDING_NEXT_MESSAGE);
-				} catch (final Exception e) {
-					Log.error("Device", "sendMqttMessages", "fail waiting before sending next message");
-					Log.debug(LogLevel.VERBOSE, "Device", "sendMqttMessages", e.getMessage());
+					Log.debug(LogLevel.VERBOSE, "Device", "sendMqttMessages",
+							"wait before sending next message");
+
+					try {
+						wait(WAIT_SENDING_NEXT_MESSAGE);
+					} catch (final InterruptedException e) {
+						Log.error("Device", "sendMqttMessages", "fail waiting before sending next message");
+						Log.debug(LogLevel.VERBOSE, "Device", "sendMqttMessages", e.getMessage());
+						return false;
+					}
+
+					/*
+					 * TODO
+					 *
+					 * try { sleep(WAIT_SENDING_NEXT_MESSAGE); } catch (final Exception e) {
+					 * Log.error("Device", "sendMqttMessages",
+					 * "fail waiting before sending next message"); Log.debug(LogLevel.VERBOSE,
+					 * "Device", "sendMqttMessages", e.getMessage()); return false; }
+					 */
+				} else {
 					return false;
 				}
-			} else {
-				return false;
 			}
+			Log.debug(LogLevel.VERBOSE, "Device", "sendMqttMessages", "all messages have been sent");
+			Messages.clear();
 		}
-		Log.debug(LogLevel.VERBOSE, "Device", "sendMqttMessages", "all messages have been sent");
-		Messages.clear();
 
 		return doAction;
 	}
@@ -269,10 +291,20 @@ public class Device extends Thread {
 
 		if (null == action) {
 			Log.error("Device", "setAction", "action is null");
+			return this;
 		}
+
+		Log.debug(LogLevel.VERBOSE, "Device", "setAction", "setup " + action.getClass().getName());
 
 		this.action = action;
 		doAction = true;
+
+		/*
+		 * TODO
+		 *
+		 * Log.debug(LogLevel.VERBOSE, "Device", "setAction", "Start device"); while
+		 * (!isAlive()) { start(); }
+		 */
 
 		return this;
 	}
@@ -324,7 +356,7 @@ public class Device extends Thread {
 		}
 
 		Log.print(this + " - subscribed to " + topicName + " with id " + topic.id());
-		doUnsubscribeAll = true;
+		topicSubscribed = true;
 		return topic.setSubscribed(true);
 	}
 
@@ -352,14 +384,15 @@ public class Device extends Thread {
 				topic.setRegistered(false);
 			}
 		}
-		doUnsubscribeAll = false;
+		topicSubscribed = false;
 	}
 
 	synchronized public void updateTimer() {
 
-		Log.debug(LogLevel.VERBOSE, "Device", "updateTimer", "");
-		lastUpdate = new Date().getTime();
-		Log.debug(LogLevel.VERBOSE, "Device", "updateTimer", "" + lastUpdate);
+		final Date d = new Date();
+		lastUpdate = d.getTime();
+
+		Log.debug(LogLevel.VERBOSE, "Device", "updateTimer", "" + d);
 	}
 
 	/**

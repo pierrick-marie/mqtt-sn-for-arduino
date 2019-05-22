@@ -23,7 +23,7 @@ void setup() {
 
   Serial.begin(9600);
 
-  while(!mqttsn.start());
+  mqttsn.start();
 }
 
 void loop() {

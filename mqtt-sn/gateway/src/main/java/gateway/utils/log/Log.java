@@ -24,7 +24,7 @@ public class Log {
 	private static final String INPUT = "received message - ";
 	private static final String OUTPUT = "send message - ";
 
-	public static void activeDebug(final String message) {
+	synchronized public static void activeDebug(final String message) {
 		bYellow(" # [ " + gateway.utils.log.LogLevel.ACTIVE.name() + " ] ");
 		yellow(message + "\n");
 	}
@@ -61,8 +61,8 @@ public class Log {
 		}
 	}
 
-	public static void debug(final gateway.utils.log.LogLevel level, final String className, final String methodeName,
-			final String message) {
+	synchronized public static void debug(final gateway.utils.log.LogLevel level, final String className,
+			final String methodeName, final String message) {
 		if (LEVEL.ordinal() >= level.ordinal()) {
 
 			bYellow(" # [ " + level.name() + " ] ");
@@ -73,7 +73,7 @@ public class Log {
 		}
 	}
 
-	public static void error(final String className, final String methodeName, final String message) {
+	synchronized public static void error(final String className, final String methodeName, final String message) {
 		if (ERROR) {
 			bRed(" ! [ ERROR ] ");
 			red(className + ".");
@@ -82,15 +82,15 @@ public class Log {
 		}
 	}
 
-	public static void input(final Device device, final String message) {
+	synchronized public static void input(final Device device, final String message) {
 		print(device + " - " + INPUT + message);
 	}
 
-	public static void output(final Device device, final String message) {
+	synchronized public static void output(final Device device, final String message) {
 		print(device + " - " + OUTPUT + message);
 	}
 
-	public static void print(final byte[] data) {
+	synchronized public static void print(final byte[] data) {
 
 		if (LEVEL == LogLevel.VERBOSE) {
 			activeDebug("Print buffer");
@@ -103,7 +103,7 @@ public class Log {
 		}
 	}
 
-	public static void print(final String message) {
+	synchronized public static void print(final String message) {
 		final Date date = new Date();
 		bBlue(" * [ INFO " + dateFormat.format(date) + " ] ");
 		blue(message + "\n");
@@ -117,9 +117,14 @@ public class Log {
 		}
 	}
 
-	public static void verboseDebug(final String message) {
+	synchronized public static void verboseDebug(final String message) {
 		bYellow(" # [ " + gateway.utils.log.LogLevel.VERBOSE.name() + " ] ");
 		yellow(message + "\n");
+	}
+
+	synchronized public static void verboseDebug(final String className, final String methodeName,
+			final String message) {
+		debug(LogLevel.VERBOSE, className, methodeName, message);
 	}
 
 	private static void yellow(final String message) {
@@ -130,6 +135,6 @@ public class Log {
 		}
 	}
 
-	public Log() {
+	private Log() {
 	}
 }
