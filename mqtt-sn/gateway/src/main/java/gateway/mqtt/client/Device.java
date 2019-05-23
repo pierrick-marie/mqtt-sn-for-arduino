@@ -47,7 +47,7 @@ public class Device {
 			while (run) {
 				// if the current date is upper than the last update + 3 x duration time
 				if (new Date().getTime() > lastUpdate + duration * 3000) {
-					Log.info(name + " timeout remove device");
+					Log.info(this.name + " timeout remove device");
 					removeDevice();
 				}
 
@@ -248,17 +248,18 @@ public class Device {
 		if (null == topic) {
 			topic = new Topic(Topics.size(), topicName);
 			if (!Topics.add(topic)) {
-				Log.debug("Device", "subscribe", "Error during subscribe topic");
+				Log.error("Device", "subscribe", "Impossible to add " + topic + " to the topics list");
 				return null;
 			}
 		}
 
 		if (!mqttClient.subscribe(topicName)) {
-			Log.debug("Device", "subscribe", "Mqtt client - error during register topic");
+			Log.error("Device", "subscribe", "Impossible to subscrible " + topicName + " to the broker");
 			return null;
 		}
 
-		Log.info(this + " - subscribed to " + topicName + " with id " + topic.id());
+		Log.info(name + " subscribed to " + topicName);
+		Log.debug("Device", "subscribe", "topic id " + topic.id());
 
 		final Runnable runnable = () -> {
 			while (run) {
@@ -287,11 +288,11 @@ public class Device {
 
 	synchronized private void unsubscribeAll() {
 
-		Log.info(name + " Time out unsubscibe all topics");
+		Log.info(name + " time out unsubscibe all topics");
 
 		for (final Topic topic : Topics) {
 
-			Log.debug("Device", "unsubscribeAll", topic.name() + " id: " + topic.id());
+			Log.info(name + " unsubscibe " + topic);
 
 			if (topic.isSubscribed()) {
 				mqttClient.unsubscribe(topic.name());

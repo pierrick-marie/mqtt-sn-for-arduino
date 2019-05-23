@@ -20,7 +20,7 @@ public class Puback implements Runnable {
 
 	public Puback(final Device device, final byte[] msg) {
 
-		Log.input(device, "pub ack");
+		Log.xbeeInput(device, "pub ack");
 
 		this.device = device;
 		this.msg = msg;

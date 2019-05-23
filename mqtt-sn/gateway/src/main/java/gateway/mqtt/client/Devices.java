@@ -22,7 +22,7 @@ public enum Devices {
 
 	public synchronized Boolean remove(final Device device) {
 
-		Log.error("Devices", "remvove", "Removing a device : " + device);
+		Log.debug("Devices", "remvove", "Removing " + device);
 
 		return DEVICES.remove(device);
 	}

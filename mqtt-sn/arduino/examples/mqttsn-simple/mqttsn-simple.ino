@@ -1,6 +1,6 @@
 /**
- * Il envoie sur le topic "TOPIC_PUB" l'identifiant du tag à chaque fois qu'il est approché du lecteur.
- * Dans l'exemple le programme est abonné au topic "TOPIC_SUB" et affiche régulièrement les messages reçus sur ce topic.
+   Il envoie sur le topic "TOPIC_PUB" l'identifiant du tag à chaque fois qu'il est approché du lecteur.
+   Dans l'exemple le programme est abonné au topic "TOPIC_SUB" et affiche régulièrement les messages reçus sur ce topic.
  **/
 
 #include <Mqttsn.h>
@@ -26,36 +26,42 @@ void setup() {
   mqttsn.start();
 
   mqttsn.connect(MODULE_NAME);
-  
-}
 
-void loop() {
-
-  
-
-/*
   if (mqttsn.subscribeTopic(TOPIC_SUB)) {
 
     nbReceivedMessages = mqttsn.requestMessages();
 
-    Serial.print(nbReceivedMessages);
+    Serial.print("Nb messages recu ");
+    Serial.println(nbReceivedMessages);
 
     msg_publish* msg = mqttsn.getReceivedMessages();
 
     while (nbReceivedMessages > 0) {
       nbReceivedMessages--;
-      Serial.print("Received messages: ");
+      Serial.print("Received message ");
       Serial.print(nbReceivedMessages);
-      Serial.print(": ");
+      Serial.print(" = ");
       Serial.println(msg[nbReceivedMessages].data);
     }
+    
   } else {
     Serial.println("\n!!! Subscribe KO !!!");
   }
 
   mqttsn.publish(TOPIC_PUB, "rfid");
 
-  mqttsn.disconnect();
+}
+
+void loop() {
+
+
+
+  /*
+
+
+    
+
+    mqttsn.disconnect();
 
   */
 

@@ -449,7 +449,7 @@ void Mqttsn::connAckHandler(msg_connack* msg) {
 
 	if(msg->return_code == ACCEPTED) {
 		connected = ACCEPTED;
-		logs.info("connected");
+		logs.info("connected OK");
 	} else {
 		connected = REJECTED;
 		logs.notConnected();

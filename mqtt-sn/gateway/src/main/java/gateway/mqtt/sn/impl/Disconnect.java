@@ -15,7 +15,7 @@ public class Disconnect implements Runnable {
 
 	public Disconnect(final Device device, final byte[] msg) {
 
-		Log.input(device, "disconnect");
+		Log.xbeeInput(device, "disconnect");
 
 		this.device = device;
 		this.msg = msg;
@@ -23,7 +23,7 @@ public class Disconnect implements Runnable {
 
 	private void disconnectAck() {
 
-		Log.input(device, "Disconnect Ack");
+		Log.xbeeInput(device, "Disconnect Ack");
 
 		final byte[] ret = new byte[2];
 		ret[0] = (byte) 0x02;
@@ -40,7 +40,7 @@ public class Disconnect implements Runnable {
 
 			if (duration > 0) {
 
-				Log.info(device + " is " + DeviceState.ACTIVE);
+				Log.info(device + " is " + DeviceState.ASLEEP);
 				device.setState(DeviceState.ASLEEP);
 
 				Log.info(device + " duration is " + duration + " seconds");

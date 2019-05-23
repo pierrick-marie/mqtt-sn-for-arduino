@@ -28,7 +28,7 @@ public class WillTopicReq implements Runnable {
 
 	private void willTopicReq() {
 
-		Log.input(device, "Will Topics Req");
+		Log.xbeeInput(device, "Will Topics Req");
 
 		final byte[] ret = new byte[2];
 		ret[0] = (byte) 0x02;

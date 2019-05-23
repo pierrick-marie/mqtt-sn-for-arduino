@@ -48,7 +48,7 @@ public enum SerialPortReader implements SerialPortEventListener {
 	@Override
 	public synchronized void serialEvent(SerialPortEvent event) {
 
-		Log.info("New XBee message received");
+		Log.xbeeInput(null, "new message");
 
 		int inputBufferSize;
 		int totalInputSize = 0;

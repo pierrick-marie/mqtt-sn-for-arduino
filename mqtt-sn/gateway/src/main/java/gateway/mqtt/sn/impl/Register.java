@@ -21,7 +21,7 @@ public class Register implements Runnable {
 
 	public Register(final Device device, final byte[] msg) {
 
-		Log.input(device, "register");
+		Log.xbeeInput(device, "register");
 
 		this.device = device;
 		message = msg;
@@ -35,7 +35,7 @@ public class Register implements Runnable {
 	 */
 	private void regack(final int topicId, final byte[] messageId, final byte returnCode) {
 
-		Log.output(device, "reg ack with return code: " + returnCode);
+		Log.xbeeOutput(device, "reg ack with return code " + returnCode);
 
 		// the message to send
 		final byte[] message = new byte[7];

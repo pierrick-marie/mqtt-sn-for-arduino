@@ -16,12 +16,14 @@ import gateway.mqtt.client.Device;
 public class Log {
 
 	public static Boolean COLOR = true;
-	public static final gateway.utils.log.LogLevel LEVEL = gateway.utils.log.LogLevel.ACTIVE;
+	public static final gateway.utils.log.LogLevel LEVEL = gateway.utils.log.LogLevel.NONE;
 
 	private static final DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 
-	private static final String INPUT = " --->> ";
-	private static final String OUTPUT = " <<--- ";
+	private static final String XBEE_INPUT = " --- XBEE >>> ";
+	private static final String XBEE_OUTPUT = " <<< XBEE --- ";
+	private static final String BROKER_INPUT = " --- BROKER >>> ";
+	private static final String BROKER_OUTPUT = " <<< BROKER --- ";
 
 	private static void bBlue(final String message) {
 		if (COLOR) {
@@ -47,6 +49,16 @@ public class Log {
 		}
 	}
 
+	synchronized public static void brokerInput(final Device device, final String message) {
+		bBlue(" * [ " + BROKER_INPUT + " ] ");
+		System.out.println(device + " receive " + message);
+	}
+
+	synchronized public static void brokerOutput(final Device device, final String message) {
+		bBlue(" * [ " + BROKER_OUTPUT + " ] ");
+		System.out.println("send " + message + " from " + device);
+	}
+
 	private static void bYellow(final String message) {
 		if (COLOR) {
 			System.out.print("\033[33;1m" + message + "\033[0m");
@@ -60,7 +72,7 @@ public class Log {
 		if (LEVEL.ordinal() >= level.ordinal()) {
 
 			final Date date = new Date();
-			bYellow(" # [ DEBUG " + dateFormat.format(date) + " ] ");
+			bYellow(" # [  DEBUG " + dateFormat.format(date) + "  ] ");
 
 			yellow(className + ".");
 			yellow(methodeName + ": ");
@@ -69,9 +81,11 @@ public class Log {
 	}
 
 	synchronized public static void debug(final String message) {
-		final Date date = new Date();
-		bYellow(" # [ DEBUG " + dateFormat.format(date) + " ] ");
-		yellow(message + "\n");
+		if (LEVEL.ordinal() >= LogLevel.ACTIVE.ordinal()) {
+			final Date date = new Date();
+			bYellow(" # [  DEBUG " + dateFormat.format(date) + "  ] ");
+			yellow(message + "\n");
+		}
 	}
 
 	synchronized public static void debug(final String className, final String methodeName, final String message) {
@@ -81,23 +95,16 @@ public class Log {
 	synchronized public static void error(final String className, final String methodeName, final String message) {
 
 		final Date date = new Date();
-		bRed(" # [ ERROR " + dateFormat.format(date) + " ] ");
+		bRed(" # [  ERROR " + dateFormat.format(date) + "  ] ");
 		red(className + ".");
 		red(methodeName + ": ");
 		red(message + "\n");
 	}
 
 	synchronized public static void info(final String message) {
-		bBlue(" * [ INFO ] ");
-		blue(message + "\n");
-	}
-
-	synchronized public static void input(final Device device, final String message) {
-		info(INPUT + device + ": " + message);
-	}
-
-	synchronized public static void output(final Device device, final String message) {
-		info(OUTPUT + device + ": " + message);
+		// bBlue(" * [ --- INFO --- ] ");
+		// System.out.println(message);
+		System.out.println("\033[1m" + message + "\033[0m");
 	}
 
 	synchronized public static void print(final byte[] data) {
@@ -119,6 +126,21 @@ public class Log {
 		} else {
 			System.out.print(message);
 		}
+	}
+
+	synchronized public static void xbeeInput(final Device device, final String message) {
+		if (null == device) {
+			bBlue(" * [ " + XBEE_INPUT + " ] ");
+			System.out.println(message);
+		} else {
+			bBlue(" * [ " + XBEE_INPUT + " ] ");
+			System.out.println(device + " receive " + message);
+		}
+	}
+
+	synchronized public static void xbeeOutput(final Device device, final String message) {
+		bBlue(" * [ " + XBEE_OUTPUT + " ] ");
+		System.out.println(message + " to " + device);
 	}
 
 	private static void yellow(final String message) {

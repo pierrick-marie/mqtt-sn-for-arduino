@@ -19,7 +19,7 @@ public class Publish implements Runnable {
 
 	public Publish(final Device device, final byte[] msg) {
 
-		Log.input(device, "publish");
+		Log.xbeeInput(device, "publish");
 
 		this.device = device;
 		this.msg = msg;
@@ -27,7 +27,7 @@ public class Publish implements Runnable {
 
 	private void reRegister(final int topicId, final byte[] messageId) {
 
-		Log.output(device, "re register");
+		Log.xbeeOutput(device, "re register");
 
 		final byte[] ret = new byte[7];
 		ret[0] = (byte) 0x07;

@@ -19,7 +19,7 @@ public class Connect implements Runnable {
 
 	public Connect(final Device device, final byte[] message) {
 
-		Log.input(device, "connect");
+		Log.xbeeInput(device, "connect");
 
 		this.device = device;
 		this.message = message;
@@ -27,7 +27,7 @@ public class Connect implements Runnable {
 
 	private void connack(final byte isConnected) {
 
-		Log.output(device, "connack " + isConnected);
+		Log.xbeeOutput(device, "connack " + isConnected);
 
 		final byte[] serialMesasge = new byte[3];
 		serialMesasge[0] = (byte) 0x03;
@@ -62,7 +62,7 @@ public class Connect implements Runnable {
 		Log.info(device + "'s name is now " + name);
 		device.setName(name);
 
-		Log.info(name + " is " + device.state());
+		Log.debug(name + " is " + device.state());
 
 		if (device.state().equals(DeviceState.LOST) || device.state().equals(DeviceState.FIRSTCONNECT)
 				|| device.state().equals(DeviceState.DISCONNECTED)) {

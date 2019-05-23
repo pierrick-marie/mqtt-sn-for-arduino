@@ -74,7 +74,7 @@ int Mqttsn::requestMessages() {
 		while(1);
 	}
 
-	logs.info("request");
+	logs.info("request msg");
 
 	msg_pingreq* msg = reinterpret_cast<msg_pingreq*>(messageBuffer);
 	msg->length = sizeof(msg_pingreq) + strlen(moduleName);

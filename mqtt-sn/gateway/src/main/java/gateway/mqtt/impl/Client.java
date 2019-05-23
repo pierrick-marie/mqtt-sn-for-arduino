@@ -76,15 +76,13 @@ public class Client implements MqttCallback {
 			System.exit(-2);
 		}
 
-		Log.debug("Client", "connect", "connection OK");
+		Log.info(device + " connected to the broker");
 		return mqttClient.isConnected();
 	}
 
 	@Override
 	public void connectionLost(Throwable throwable) {
-
 		Log.error("Client", "connectionLost", throwable.getMessage());
-
 	}
 
 	@Override
@@ -93,8 +91,9 @@ public class Client implements MqttCallback {
 		try {
 			Log.debug("Client", "deliveryComplete", iMqttDeliveryToken.getMessage().toString());
 		} catch (final MqttException e) {
-			Log.error("Client", "deliveryComplete", e.getMessage());
-			Log.debug("Client", "deliveryComplete", "Error while delivering message");
+			Log.error("Client", "deliveryComplete", "Error while delivering message");
+			Log.debug("Client", "deliveryComplete",
+					"org.eclipse.paho.client.mqttv3.MqttException error code " + e.getReasonCode());
 		}
 	}
 
@@ -105,8 +104,9 @@ public class Client implements MqttCallback {
 			Log.debug("Client", "disconnect", device.name() + " disconnected");
 			return true;
 		} catch (final MqttException e) {
-			Log.error("Client", "disconnect", e.getMessage());
-			Log.debug("Client", "disconnect", "Impossible to disconnect the client");
+			Log.error("Client", "disconnect", "Impossible to disconnect the client");
+			Log.debug("Client", "disconnect",
+					"org.eclipse.paho.client.mqttv3.MqttException error code " + e.getReasonCode());
 			return false;
 		}
 	}
@@ -119,11 +119,12 @@ public class Client implements MqttCallback {
 	public void messageArrived(String topic, MqttMessage message) {
 
 		if (message.getPayload().length < PAYLOAD_LENGTH) {
-			Log.debug("Client", "messageArrived",
-					"message: " + new String(message.getPayload()) + " on topic: " + topic);
+
+			Log.brokerInput(device, new String(message.getPayload()) + " on topic " + topic);
+
 			addMqttMessage(new SnMessage(topic, new String(message.getPayload())));
 		} else {
-			Log.error("Client", "messageArrived", "payload too long");
+			Log.error("Client", "messageArrived", "payload too long " + new String(message.getPayload()));
 		}
 	}
 
@@ -133,11 +134,12 @@ public class Client implements MqttCallback {
 			final MqttMessage mqttMessage = new MqttMessage(message.getBytes());
 			mqttMessage.setQos(Prtcl.DEFAULT_QOS);
 			mqttClient.publish(topicName, mqttMessage);
-			Log.debug("Client", "publish", "Publish message: " + message + " on the topic: " + topicName);
+			Log.brokerOutput(device, message + " on topic " + topicName);
 			return true;
 		} catch (final MqttException e) {
 			Log.error("Client", "publish", "Impossible to publish the message: " + message);
-			Log.debug("Client", "publish", e.getMessage());
+			Log.debug("Client", "publish",
+					"org.eclipse.paho.client.mqttv3.MqttException error code " + e.getReasonCode());
 			return false;
 		}
 	}
@@ -149,7 +151,9 @@ public class Client implements MqttCallback {
 			Log.debug("Client", "subscribe", device.name() + " subscribed to " + topicName);
 			return true;
 		} catch (final MqttException e) {
-			Log.error("Client", "subscribe", e.getMessage());
+			Log.error("Client", "subscribe", "Impossible to subscribe topic " + topicName);
+			Log.debug("Client", "subscrible",
+					"org.eclipse.paho.client.mqttv3.MqttException error code " + e.getReasonCode());
 			return false;
 		}
 	}
@@ -161,7 +165,9 @@ public class Client implements MqttCallback {
 			Log.debug("Client", "unsubscribe", device.name() + " unsubscribed to topic " + topicName);
 			return true;
 		} catch (final MqttException e) {
-			Log.error("Client", "unsubscribe", e.getMessage());
+			Log.error("Client", "unsubscribe", "Impossible to unsubscribe topic " + topicName);
+			Log.debug("Client", "unsubscrible",
+					"org.eclipse.paho.client.mqttv3.MqttException error code " + e.getReasonCode());
 			return false;
 		}
 	}

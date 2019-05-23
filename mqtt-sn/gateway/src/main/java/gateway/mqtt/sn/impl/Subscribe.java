@@ -21,7 +21,7 @@ public class Subscribe implements Runnable {
 
 	public Subscribe(final Device device, final byte[] msg) {
 
-		Log.input(device, "subscribe");
+		Log.xbeeInput(device, "subscribe");
 
 		this.device = device;
 		this.msg = msg;
@@ -34,7 +34,7 @@ public class Subscribe implements Runnable {
 
 	private void suback(final byte[] messageId, final int topicId, final byte returnCode) {
 
-		Log.output(device, "sub ack with return code: " + returnCode);
+		Log.xbeeOutput(device, "sub ack " + returnCode);
 
 		final byte[] message = new byte[8];
 		message[0] = (byte) 0x08;

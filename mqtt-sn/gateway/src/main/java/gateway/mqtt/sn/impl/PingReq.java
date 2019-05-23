@@ -19,7 +19,7 @@ public class PingReq implements Runnable {
 
 	public PingReq(final Device device, final byte[] msg) {
 
-		Log.input(device, "ping request");
+		Log.xbeeInput(device, "ping request");
 
 		this.device = device;
 		this.msg = msg;
@@ -36,7 +36,7 @@ public class PingReq implements Runnable {
 		if (sendMqttMessages()) {
 			Log.debug("PingReq", "run", "end send messages");
 
-			Log.output(device, "ping response");
+			Log.xbeeOutput(device, "ping response");
 
 			final byte[] ret = new byte[2];
 			ret[0] = (byte) 0x03;
@@ -45,8 +45,8 @@ public class PingReq implements Runnable {
 			SerialPortWriter.write(device, ret);
 
 			if (device.state().equals(DeviceState.AWAKE)) {
+				Log.info(device + " is " + DeviceState.ASLEEP);
 				device.setState(DeviceState.ASLEEP);
-				Log.debug("MultipleSender", "pingResp", device + " goes to sleep");
 			}
 		}
 	}
@@ -66,7 +66,8 @@ public class PingReq implements Runnable {
 		synchronized (device.Messages) {
 			for (final SnMessage message : device.Messages) {
 
-				Log.debug("PingReq", "sendMqttMessages", "sending message for topic: " + message.topic());
+				Log.xbeeOutput(device, new String(message.getPayload()) + " on topic " + message.topic());
+
 				sender.send(message);
 
 				Log.debug("PingReq", "sendMqttMessages", "wait before sending next message");

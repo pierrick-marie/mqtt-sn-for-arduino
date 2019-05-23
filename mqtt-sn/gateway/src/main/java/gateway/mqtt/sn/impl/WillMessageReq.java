@@ -24,7 +24,7 @@ public class WillMessageReq implements Runnable {
 	@Override
 	public void run() {
 
-		Log.input(device, "Will DMqMessage Req");
+		Log.xbeeInput(device, "Will DMqMessage Req");
 
 		final byte[] ret = new byte[2];
 		ret[0] = (byte) 0x02;

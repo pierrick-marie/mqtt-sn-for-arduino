@@ -20,7 +20,7 @@ public class WillTopic implements Runnable {
 
 	public WillTopic(final Device device, final byte[] msg) {
 
-		Log.input(device, "Will topic");
+		Log.xbeeInput(device, "Will topic");
 
 		// this.device = device;
 		// this.msg = msg;

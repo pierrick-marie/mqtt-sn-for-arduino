@@ -20,7 +20,7 @@ public class SearchGateway implements Runnable {
 
 	public SearchGateway(final Device device, final Integer radius) {
 
-		Log.input(device, "search gateway");
+		Log.xbeeInput(device, "search gateway");
 
 		this.device = device;
 		// NOT IMPLEMENTED YET
@@ -30,7 +30,7 @@ public class SearchGateway implements Runnable {
 	@Override
 	public void run() {
 
-		Log.output(device, "gateway info");
+		Log.xbeeOutput(device, "gateway info");
 
 		final byte[] ret = new byte[3];
 		ret[0] = (byte) 0x03;
