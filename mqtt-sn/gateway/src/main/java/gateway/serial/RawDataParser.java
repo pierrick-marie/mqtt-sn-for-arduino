@@ -22,7 +22,6 @@ import gateway.mqtt.sn.impl.Register;
 import gateway.mqtt.sn.impl.SearchGateway;
 import gateway.mqtt.sn.impl.Subscribe;
 import gateway.utils.log.Log;
-import gateway.utils.log.LogLevel;
 
 public class RawDataParser implements Runnable {
 
@@ -67,26 +66,26 @@ public class RawDataParser implements Runnable {
 		// for loops
 		int i;
 
-		Log.debug(LogLevel.VERBOSE, "RawDataParser", "parse", "Get 64b address");
+		Log.debug("RawDataParser", "parse", "64b address");
 
 		for (i = 0; i < MessageStructure.ADDRESS_64_SIZE; i++) {
 			address64[i] = buffer[MessageStructure.RECEIVE_ADDRESS_64_START + i];
 		}
 
-		Log.debug(LogLevel.VERBOSE, "RawDataParser", "parse", "Get 16b address");
+		Log.debug("RawDataParser", "parse", "16b address");
 
 		for (i = 0; i < MessageStructure.ADDRESS_16_SIZE; i++) {
 			address16[i] = buffer[MessageStructure.RECEIVE_ADDRESS_16_START + i];
 		}
 
-		Log.debug(LogLevel.VERBOSE, "RawDataParser", "parse", "Get payload");
+		Log.debug("RawDataParser", "parse", "payload");
 
 		try {
 			payload_length = buffer[MessageStructure.PAYLOAD_LENGTH];
 			data_type = buffer[MessageStructure.DATA_TYPE];
 		} catch (final Exception e) {
 			Log.error("RawDataParser", "parse", "Error while reading incoming data");
-			Log.debug(LogLevel.VERBOSE, "RawDataParser", "parse", e.getMessage());
+			Log.debug("RawDataParser", "parse", e.getMessage());
 		}
 
 		// Compute the message for each case of the following switch
@@ -95,12 +94,10 @@ public class RawDataParser implements Runnable {
 			data[i] = buffer[MessageStructure.RECEIVE_PAYLOAD_START + i];
 		}
 
-		Log.debug(LogLevel.VERBOSE, "RawDataParser", "parse", "Get device");
-
 		final Device device = Devices.list.search(new Address64(address64), new Address16(address16));
 		device.updateTimer();
 
-		Log.debug(LogLevel.VERBOSE, "RawDataParser", "parse", "switch message type");
+		Log.debug("RawDataParser", "parse", "analyse message type");
 
 		switch (data_type) {
 		case MqttSNMessageType.SEARCHGW:
@@ -152,13 +149,12 @@ public class RawDataParser implements Runnable {
 	@Override
 	public synchronized void run() {
 
-		Log.debug(LogLevel.VERBOSE, "RawDataParser", "run", "Start the executor reader");
+		Log.debug("RawDataParser", "run", "start the message executor reader");
 
 		final int indexOfByte = getFirstIndexforByte((byte) 0X7E, buffer);
 
 		if (indexOfByte == -1) {
 			if (verifyData(buffer)) {
-				Log.debug(LogLevel.VERBOSE, "RawDataParser", "run", "Parse the buffer");
 				parse(buffer);
 			}
 			return;
@@ -172,6 +168,8 @@ public class RawDataParser implements Runnable {
 	 * @return True if the checksum is ok, else false.
 	 */
 	private boolean verifyChecksum(final byte[] buffer) {
+
+		Log.debug("RawDataParser", "verifyChecksum", "");
 
 		int checksum = 0;
 
@@ -196,6 +194,8 @@ public class RawDataParser implements Runnable {
 	 * @return True is the @data is OK, else false.
 	 */
 	private boolean verifyData(final byte[] buffer) {
+
+		Log.debug("RawDataParser", "verifyData", "");
 
 		if (buffer[0] != (byte) 0x7E) {
 			return false;

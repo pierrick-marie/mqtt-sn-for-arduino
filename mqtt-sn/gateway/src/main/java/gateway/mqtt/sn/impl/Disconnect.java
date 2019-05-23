@@ -4,7 +4,6 @@ import gateway.mqtt.client.Device;
 import gateway.mqtt.client.DeviceState;
 import gateway.serial.SerialPortWriter;
 import gateway.utils.log.Log;
-import gateway.utils.log.LogLevel;
 
 /**
  * Created by arnaudoglaza on 07/07/2017.
@@ -41,13 +40,15 @@ public class Disconnect implements Runnable {
 
 			if (duration > 0) {
 
+				Log.info(device + " is " + DeviceState.ACTIVE);
 				device.setState(DeviceState.ASLEEP);
+
+				Log.info(device + " duration is " + duration + " seconds");
 				device.setDuration(duration);
 
 				disconnectAck();
 
-				Log.debug(LogLevel.ACTIVE, "Disconnect", "diconnect",
-						"Going into sleep with duration: " + duration);
+				Log.debug("Disconnect", "diconnect", "Going into sleep with duration: " + duration);
 			}
 		} else {
 			device.setState(DeviceState.DISCONNECTED);

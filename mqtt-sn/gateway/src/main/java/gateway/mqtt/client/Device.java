@@ -19,7 +19,6 @@ import gateway.mqtt.impl.Client;
 import gateway.mqtt.impl.SnMessage;
 import gateway.mqtt.impl.Topic;
 import gateway.utils.log.Log;
-import gateway.utils.log.LogLevel;
 
 public class Device {
 
@@ -36,19 +35,19 @@ public class Device {
 	public final List<SnMessage> Messages = Collections.synchronizedList(new ArrayList<>());
 	public final List<Topic> Topics = Collections.synchronizedList(new ArrayList<>());
 
-	public Device(final Address64 address64, final Address16 address16) {
+	public Device(final Address64 address64, final Address16 address16, final String name) {
 		this.address64 = address64;
 		this.address16 = address16;
 		state = DeviceState.FIRSTCONNECT;
 		run = true;
 		currentThread = new Thread();
-		name = "Unnamed device";
+		this.name = name;
 
 		final Runnable runnable = () -> {
 			while (run) {
 				// if the current date is upper than the last update + 3 x duration time
 				if (new Date().getTime() > lastUpdate + duration * 3000) {
-					Log.print(this + " - timeout: remove device");
+					Log.info(name + " timeout remove device");
 					removeDevice();
 				}
 
@@ -56,7 +55,7 @@ public class Device {
 					Thread.sleep(duration * 1000);
 				} catch (final InterruptedException e) {
 					Log.error("Device", "constructor", "fail waiting next action");
-					Log.verboseDebug(e.getMessage());
+					Log.debug(e.getMessage());
 				}
 			}
 		};
@@ -76,7 +75,7 @@ public class Device {
 		if (null == mqttClient) {
 			Log.error("Device", "connect", "mqtt client is null");
 		}
-		Log.print(this + " - connected with a keep alive: " + duration);
+		Log.info(this + " connected with a keep alive " + duration + " seconds");
 		this.duration = duration;
 
 		return mqttClient.connect();
@@ -147,8 +146,8 @@ public class Device {
 			mqttClient = new Client(this, cleanSeassion);
 		} catch (final MqttException e) {
 			Log.error("Device", "initMqttClient", "Error while creating the Mqtt client");
-			Log.verboseDebug(e.getMessage());
-			Log.verboseDebug(e.getCause().getMessage());
+			Log.debug(e.getMessage());
+			Log.debug(e.getCause().getMessage());
 		}
 	}
 
@@ -174,12 +173,12 @@ public class Device {
 		if (null == topic) {
 			topic = new Topic(Topics.size(), topicName);
 			if (!Topics.add(topic)) {
-				Log.debug(LogLevel.ACTIVE, "Device", "register", "Error during register topic");
+				Log.debug("Device", "register", "Error during register topic");
 				return null;
 			}
 		}
 
-		Log.print(this + " - registered topic: " + topicName);
+		Log.info(this + " - registered topic: " + topicName);
 		return topic.setRegistered(true);
 	}
 
@@ -198,11 +197,11 @@ public class Device {
 	synchronized public void setAction(final Runnable action) {
 
 		if (null == action) {
-			Log.error("Device", "setAction", "action is null");
+			Log.error("Device", "setAction", "argument action is null");
 			return;
 		}
 
-		Log.debug(LogLevel.VERBOSE, "Device", "setAction", "setup " + action.getClass().getSimpleName());
+		Log.debug("Device", "setAction", action.getClass().getSimpleName() + ".class");
 
 		while (currentThread.isAlive()) {
 			currentThread.interrupt();
@@ -215,27 +214,28 @@ public class Device {
 	synchronized public void setDuration(final Short duration) {
 
 		if (null == duration) {
-			Log.error("Device", "setDuration", "duration is null");
+			Log.error("Device", "setDuration", "argument duration is null");
 		}
 
 		this.duration = duration;
 
-		Log.debug(LogLevel.VERBOSE, "Device", "setDuration", "Register client's duration with " + duration);
+		Log.debug("Device", "setDuration", name + " duration is " + duration + " seconds");
 	}
 
 	public void setName(final String name) {
+		Log.debug("Device", "setName", name);
 		this.name = name;
 	}
 
 	synchronized public void setState(final DeviceState state) {
 
 		if (null == state) {
-			Log.error("Device", "setState", "state is null");
+			Log.error("Device", "setState", "argument state is null");
 		}
 
 		this.state = state;
 
-		Log.debug(LogLevel.VERBOSE, "Device", "setState", "Register client's state with " + state);
+		Log.debug("Device", "setState", name + " state is " + state);
 	}
 
 	public DeviceState state() {
@@ -248,17 +248,17 @@ public class Device {
 		if (null == topic) {
 			topic = new Topic(Topics.size(), topicName);
 			if (!Topics.add(topic)) {
-				Log.debug(LogLevel.ACTIVE, "Device", "subscribe", "Error during subscribe topic");
+				Log.debug("Device", "subscribe", "Error during subscribe topic");
 				return null;
 			}
 		}
 
 		if (!mqttClient.subscribe(topicName)) {
-			Log.debug(LogLevel.ACTIVE, "Device", "subscribe", "Mqtt client - error during register topic");
+			Log.debug("Device", "subscribe", "Mqtt client - error during register topic");
 			return null;
 		}
 
-		Log.print(this + " - subscribed to " + topicName + " with id " + topic.id());
+		Log.info(this + " - subscribed to " + topicName + " with id " + topic.id());
 
 		final Runnable runnable = () -> {
 			while (run) {
@@ -271,7 +271,7 @@ public class Device {
 					Thread.sleep(duration * 1000);
 				} catch (final InterruptedException e) {
 					Log.error("Device", "subscribe", "fail waiting next action");
-					Log.verboseDebug(e.getMessage());
+					Log.debug(e.getMessage());
 				}
 			}
 		};
@@ -282,21 +282,16 @@ public class Device {
 
 	@Override
 	public String toString() {
-
-		if (name().startsWith("Thread")) {
-			return address64.toString();
-		} else {
-			return name();
-		}
+		return name;
 	}
 
 	synchronized private void unsubscribeAll() {
 
-		Log.print(this + " Time out: unsubscibe all topics");
+		Log.info(name + " Time out unsubscibe all topics");
 
 		for (final Topic topic : Topics) {
 
-			Log.verboseDebug("Device", "unsubscribeAll", topic.name() + " id: " + topic.id());
+			Log.debug("Device", "unsubscribeAll", topic.name() + " id: " + topic.id());
 
 			if (topic.isSubscribed()) {
 				mqttClient.unsubscribe(topic.name());
@@ -311,7 +306,7 @@ public class Device {
 		final Date d = new Date();
 		lastUpdate = d.getTime();
 
-		Log.debug(LogLevel.VERBOSE, "Device", "updateTimer", "" + d);
+		Log.debug("Device", "updateTimer", "" + d);
 	}
 
 	/**

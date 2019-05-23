@@ -9,7 +9,6 @@ package gateway.serial;
 
 import gateway.utils.Config;
 import gateway.utils.log.Log;
-import gateway.utils.log.LogLevel;
 import jssc.SerialPort;
 import jssc.SerialPortException;
 
@@ -23,20 +22,23 @@ enum XBeeSerialPort {
 
 	XBeeSerialPort() {
 
-		Log.debug(LogLevel.VERBOSE, "XBeeSerialPort", "constructor", "connection to the XBee module");
+		Log.debug("XBeeSerialPort", "constructor", "connection to the XBee module");
 
 		serialPort = new jssc.SerialPort(SERIAL_PORT);
 
 		try {
-			serialPort().openPort();
-			serialPort().setParams(jssc.SerialPort.BAUDRATE_9600, jssc.SerialPort.DATABITS_8,
+			serialPort.openPort();
+			serialPort.setParams(jssc.SerialPort.BAUDRATE_9600, jssc.SerialPort.DATABITS_8,
 					jssc.SerialPort.STOPBITS_1, jssc.SerialPort.PARITY_NONE);
 
 			final int mask = jssc.SerialPort.MASK_RXCHAR + jssc.SerialPort.MASK_CTS + jssc.SerialPort.MASK_DSR;
-			serialPort().setEventsMask(mask);
+			serialPort.setEventsMask(mask);
+			Log.info("Connected to the XBee module");
 		} catch (final SerialPortException e) {
-			Log.error("XBeeSerialPort", "getSerial", "Impossible to get the XBee module");
-			Log.debug(LogLevel.ACTIVE, "XBeeSerialPort", "getSerial", e.getMessage());
+			Log.error("XBeeSerialPort", "getSerial", "Can't access to the XBee module " + SERIAL_PORT);
+			Log.debug("XBeeSerialPort", "getSerial", e.getMessage());
+			Log.debug("Abording");
+			System.exit(-1);
 		}
 	}
 

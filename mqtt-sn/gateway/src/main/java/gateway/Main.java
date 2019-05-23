@@ -17,11 +17,11 @@ public class Main {
 
 	public static void main(String[] args) {
 
-		Log.COLOR = false;
+		// Log.COLOR = false;
 
 		Config.instance.parseArgs(args);
 
-		Log.print("Starting the gateway \n * Serial: " + Config.SERIAL_PORT + "\n * IP server: " + Config.IP_SERVER
+		Log.info("Starting the gateway \n * Serial: " + Config.SERIAL_PORT + "\n * IP server: " + Config.IP_SERVER
 				+ " \n * Port server: " + Config.PORT_SERVER);
 
 		SerialPortReader.Instance.init();

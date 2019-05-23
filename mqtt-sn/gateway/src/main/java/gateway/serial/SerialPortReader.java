@@ -12,7 +12,6 @@ import java.util.concurrent.Executors;
 
 import gateway.utils.Time;
 import gateway.utils.log.Log;
-import gateway.utils.log.LogLevel;
 import jssc.SerialPortEvent;
 import jssc.SerialPortEventListener;
 import jssc.SerialPortException;
@@ -25,25 +24,22 @@ public enum SerialPortReader implements SerialPortEventListener {
 
 	private ExecutorService executorService;
 
-	private byte[] cleanBuffer(final byte[] data) {
-
-		int plop;
-		int i = 0;
-		for (; i < data.length; i++) {
-			if (data[i] < 0) {
-				plop = (byte) (data[i] & 0x000000FF);
-				Log.error("SerialReader", "cleanBuffer", "" + String.format("%02X ", plop));
-			}
-		}
-		return data;
-	}
+	/*
+	 * TODO
+	 *
+	 * private byte[] cleanBuffer(final byte[] data) {
+	 *
+	 * int plop; int i = 0; for (; i < data.length; i++) { if (data[i] < 0) { plop =
+	 * (byte) (data[i] & 0x000000FF); Log.error("SerialReader", "cleanBuffer", "" +
+	 * String.format("%02X ", plop)); } } return data; }
+	 */
 
 	public void init() {
 		try {
 			XBeeSerialPort.Instance.serialPort().addEventListener(this);
 		} catch (final SerialPortException e) {
-			Log.error("SerialPortReader", "constructor", "Serial port exception");
-			Log.debug(LogLevel.VERBOSE, "SerialPortReader", "constructor", e.getMessage());
+			Log.error("SerialPortReader", "init", "Serial port exception");
+			Log.debug("SerialPortReader", "init", e.getMessage());
 		}
 
 		executorService = Executors.newFixedThreadPool(NB_THREAD_PARSER);
@@ -52,7 +48,7 @@ public enum SerialPortReader implements SerialPortEventListener {
 	@Override
 	public synchronized void serialEvent(SerialPortEvent event) {
 
-		Log.debug(LogLevel.VERBOSE, "SerialPortReader", "serialEvent", "new event");
+		Log.info("New XBee message received");
 
 		int inputBufferSize;
 		int totalInputSize = 0;
@@ -66,7 +62,7 @@ public enum SerialPortReader implements SerialPortEventListener {
 					inputBufferSize = XBeeSerialPort.Instance.serialPort().getInputBufferBytesCount();
 				}
 
-				Log.debug(LogLevel.VERBOSE, "SerialPortReader", "serialEvent", "creating a new executor");
+				Log.debug("SerialPortReader", "serialEvent", "creating a new message executor reader");
 				/*
 				 * Got the bytes in the buffer -> ready to parse the message
 				 */
@@ -74,7 +70,7 @@ public enum SerialPortReader implements SerialPortEventListener {
 						new RawDataParser(XBeeSerialPort.Instance.serialPort().readBytes(totalInputSize)));
 			} catch (final SerialPortException e) {
 				Log.error("SerialPortReader", "serialEvent", "");
-				Log.debug(LogLevel.VERBOSE, "SerialPortReader", "serialEvent", e.getMessage());
+				Log.debug("SerialPortReader", "serialEvent", e.getMessage());
 			}
 		}
 	}

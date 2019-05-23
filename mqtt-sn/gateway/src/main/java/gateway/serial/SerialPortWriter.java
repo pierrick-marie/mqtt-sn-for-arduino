@@ -11,7 +11,6 @@ import gateway.mqtt.MessageStructure;
 import gateway.mqtt.XBeeMessageType;
 import gateway.mqtt.client.Device;
 import gateway.utils.log.Log;
-import gateway.utils.log.LogLevel;
 import jssc.SerialPortException;
 
 public enum SerialPortWriter {
@@ -20,7 +19,7 @@ public enum SerialPortWriter {
 
 	public synchronized static void write(final Device device, final byte[] payload) {
 
-		Log.debug(LogLevel.VERBOSE, "SerialPortWriter", "write", "sending a message");
+		Log.debug("SerialPortWriter", "write", "sending a message to " + device);
 
 		final byte[] res = new byte[MessageStructure.TRANSMIT_LENGHT + payload.length];
 		res[MessageStructure.START_DELIMITER] = XBeeMessageType.START_DELIMITER;
@@ -62,8 +61,8 @@ public enum SerialPortWriter {
 		try {
 			XBeeSerialPort.Instance.serialPort().writeBytes(res);
 		} catch (final SerialPortException e) {
-			Log.error("XBeeSerialPort", "write", "");
-			Log.debug(LogLevel.ACTIVE, "XBeeSerialPort", "write", e.getMessage());
+			Log.error("XBeeSerialPort", "write", "SerialPortException");
+			Log.debug("XBeeSerialPort", "write", e.getMessage());
 		}
 	}
 }

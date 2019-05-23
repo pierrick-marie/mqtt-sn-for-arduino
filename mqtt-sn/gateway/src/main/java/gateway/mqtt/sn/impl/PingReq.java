@@ -27,13 +27,14 @@ public class PingReq implements Runnable {
 
 	@Override
 	public void run() {
+		Log.info(device + " is " + DeviceState.AWAKE);
 		device.setState(DeviceState.AWAKE);
 
-		Log.activeDebug("PingReq", "run", "begin send messages");
+		Log.debug("PingReq", "run", "begin send messages");
 
 		// If send messages have not been interrupted, send pingresp
 		if (sendMqttMessages()) {
-			Log.activeDebug("PingReq", "run", "end send messages");
+			Log.debug("PingReq", "run", "end send messages");
 
 			Log.output(device, "ping response");
 
@@ -45,7 +46,7 @@ public class PingReq implements Runnable {
 
 			if (device.state().equals(DeviceState.AWAKE)) {
 				device.setState(DeviceState.ASLEEP);
-				Log.activeDebug("MultipleSender", "pingResp", device + " goes to sleep");
+				Log.debug("MultipleSender", "pingResp", device + " goes to sleep");
 			}
 		}
 	}
@@ -65,20 +66,20 @@ public class PingReq implements Runnable {
 		synchronized (device.Messages) {
 			for (final SnMessage message : device.Messages) {
 
-				Log.activeDebug("PingReq", "sendMqttMessages", "sending message for topic: " + message.topic());
+				Log.debug("PingReq", "sendMqttMessages", "sending message for topic: " + message.topic());
 				sender.send(message);
 
-				Log.verboseDebug("PingReq", "sendMqttMessages", "wait before sending next message");
+				Log.debug("PingReq", "sendMqttMessages", "wait before sending next message");
 
 				try {
 					Thread.sleep(WAIT_SENDING_NEXT_MESSAGE);
 				} catch (final InterruptedException e) {
 					Log.error("PingReq", "sendMqttMessages", "fail waiting before sending next message");
-					Log.verboseDebug("PingReq", "sendMqttMessages", e.getMessage());
+					Log.debug("PingReq", "sendMqttMessages", e.getMessage());
 					return false;
 				}
 			}
-			Log.verboseDebug("PingReq", "sendMqttMessages", "all messages have been sent");
+			Log.debug("PingReq", "sendMqttMessages", "all messages have been sent");
 			device.Messages.clear();
 			return true;
 		}

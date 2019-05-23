@@ -16,23 +16,12 @@ import gateway.mqtt.client.Device;
 public class Log {
 
 	public static Boolean COLOR = true;
-	public static final Boolean ERROR = true;
-	public static final gateway.utils.log.LogLevel LEVEL = gateway.utils.log.LogLevel.NONE;
+	public static final gateway.utils.log.LogLevel LEVEL = gateway.utils.log.LogLevel.ACTIVE;
 
 	private static final DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 
-	private static final String INPUT = "received message - ";
-	private static final String OUTPUT = "send message - ";
-
-	synchronized public static void activeDebug(final String message) {
-		bYellow(" # [ " + gateway.utils.log.LogLevel.ACTIVE.name() + " ] ");
-		yellow(message + "\n");
-	}
-
-	synchronized public static void activeDebug(final String className, final String methodeName,
-			final String message) {
-		debug(LogLevel.ACTIVE, className, methodeName, message);
-	}
+	private static final String INPUT = " --->> ";
+	private static final String OUTPUT = " <<--- ";
 
 	private static void bBlue(final String message) {
 		if (COLOR) {
@@ -66,39 +55,55 @@ public class Log {
 		}
 	}
 
-	synchronized public static void debug(final gateway.utils.log.LogLevel level, final String className,
+	synchronized private static void debug(final gateway.utils.log.LogLevel level, final String className,
 			final String methodeName, final String message) {
 		if (LEVEL.ordinal() >= level.ordinal()) {
 
-			bYellow(" # [ " + level.name() + " ] ");
+			final Date date = new Date();
+			bYellow(" # [ DEBUG " + dateFormat.format(date) + " ] ");
 
 			yellow(className + ".");
-			yellow(methodeName + "(): ");
+			yellow(methodeName + ": ");
 			yellow(message + "\n");
 		}
 	}
 
+	synchronized public static void debug(final String message) {
+		final Date date = new Date();
+		bYellow(" # [ DEBUG " + dateFormat.format(date) + " ] ");
+		yellow(message + "\n");
+	}
+
+	synchronized public static void debug(final String className, final String methodeName, final String message) {
+		debug(LogLevel.ACTIVE, className, methodeName, message);
+	}
+
 	synchronized public static void error(final String className, final String methodeName, final String message) {
-		if (ERROR) {
-			bRed(" ! [ ERROR ] ");
-			red(className + ".");
-			red(methodeName + "(): ");
-			red(message + "\n");
-		}
+
+		final Date date = new Date();
+		bRed(" # [ ERROR " + dateFormat.format(date) + " ] ");
+		red(className + ".");
+		red(methodeName + ": ");
+		red(message + "\n");
+	}
+
+	synchronized public static void info(final String message) {
+		bBlue(" * [ INFO ] ");
+		blue(message + "\n");
 	}
 
 	synchronized public static void input(final Device device, final String message) {
-		print(device + " - " + INPUT + message);
+		info(INPUT + device + ": " + message);
 	}
 
 	synchronized public static void output(final Device device, final String message) {
-		print(device + " - " + OUTPUT + message);
+		info(OUTPUT + device + ": " + message);
 	}
 
 	synchronized public static void print(final byte[] data) {
 
-		if (LEVEL == LogLevel.VERBOSE) {
-			activeDebug("Print buffer");
+		if (LEVEL == LogLevel.ACTIVE) {
+			debug("Print buffer");
 
 			for (final byte element : data) {
 				System.out.print(String.format("%02X ", element));
@@ -108,28 +113,12 @@ public class Log {
 		}
 	}
 
-	synchronized public static void print(final String message) {
-		final Date date = new Date();
-		bBlue(" * [ INFO " + dateFormat.format(date) + " ] ");
-		blue(message + "\n");
-	}
-
 	private static void red(final String message) {
 		if (COLOR) {
 			System.out.print("\033[31m" + message + "\033[0m");
 		} else {
 			System.out.print(message);
 		}
-	}
-
-	synchronized public static void verboseDebug(final String message) {
-		bYellow(" # [ " + gateway.utils.log.LogLevel.VERBOSE.name() + " ] ");
-		yellow(message + "\n");
-	}
-
-	synchronized public static void verboseDebug(final String className, final String methodeName,
-			final String message) {
-		debug(LogLevel.VERBOSE, className, methodeName, message);
 	}
 
 	private static void yellow(final String message) {

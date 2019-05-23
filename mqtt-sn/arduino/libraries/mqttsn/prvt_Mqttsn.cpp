@@ -452,7 +452,7 @@ void Mqttsn::connAckHandler(msg_connack* msg) {
 		logs.info("connected");
 	} else {
 		connected = REJECTED;
-		// logs.notConnected();
+		logs.notConnected();
 		while(1);
 	}
 }
@@ -461,17 +461,17 @@ void Mqttsn::disconnectHandler(msg_disconnect* msg) {
 
 	connected = REJECTED;
 
-	logs.info("slepping");
+	logs.info("#slepping");
 
 	delay(SLEEP_TIME * 1000); // 10 seconds (10000 milliseconds)
 
-	logs.info("awake");
+	logs.info("#awake");
 }
 
 void Mqttsn::searchGatewayHandler(msg_gwinfo* message) {
 
 	if(message->gw_id == GATEWAY_ID) {
-		logs.info("started");
+		logs.info("mqtsn started");
 		initOk = true;
 	} else {
 		logs.error("not started: stop");

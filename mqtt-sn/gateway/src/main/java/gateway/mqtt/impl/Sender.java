@@ -10,7 +10,6 @@ package gateway.mqtt.impl;
 import gateway.mqtt.client.Device;
 import gateway.serial.SerialPortWriter;
 import gateway.utils.log.Log;
-import gateway.utils.log.LogLevel;
 
 public class Sender {
 
@@ -55,7 +54,7 @@ public class Sender {
 		serialMessage[1] = (byte) 0x0C;
 		serialMessage[2] = (byte) 0x00;
 
-		Log.debug(LogLevel.ACTIVE, "Sender", "sendMessage", "topic = " + message.topic());
+		Log.debug("Sender", "sendMessage", "topic = " + message.topic());
 
 		serialMessage[3] = getTopicId(message.topic())[0];
 		serialMessage[4] = getTopicId(message.topic())[1];

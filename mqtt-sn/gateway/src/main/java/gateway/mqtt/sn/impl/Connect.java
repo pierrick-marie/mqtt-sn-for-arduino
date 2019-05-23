@@ -11,7 +11,6 @@ import gateway.mqtt.client.Device;
 import gateway.mqtt.client.DeviceState;
 import gateway.serial.SerialPortWriter;
 import gateway.utils.log.Log;
-import gateway.utils.log.LogLevel;
 
 public class Connect implements Runnable {
 
@@ -28,7 +27,7 @@ public class Connect implements Runnable {
 
 	private void connack(final byte isConnected) {
 
-		Log.output(device, "connack: " + isConnected);
+		Log.output(device, "connack " + isConnected);
 
 		final byte[] serialMesasge = new byte[3];
 		serialMesasge[0] = (byte) 0x03;
@@ -60,10 +59,10 @@ public class Connect implements Runnable {
 		final boolean cleanSession = flags >> 2 == 1;
 
 		final String name = getClientName();
-		Log.debug(LogLevel.ACTIVE, "Connect", "getClientName", "setup the device's name with " + name);
+		Log.info(device + "'s name is now " + name);
 		device.setName(name);
 
-		Log.debug(LogLevel.ACTIVE, "Connect", "connect", device + " status is " + device.state());
+		Log.info(name + " is " + device.state());
 
 		if (device.state().equals(DeviceState.LOST) || device.state().equals(DeviceState.FIRSTCONNECT)
 				|| device.state().equals(DeviceState.DISCONNECTED)) {
@@ -71,18 +70,20 @@ public class Connect implements Runnable {
 			device.initMqttClient(cleanSession);
 
 			if (device.connect(duration)) {
-				Log.debug(LogLevel.ACTIVE, "Connect", "connectToTheBroker", "connected");
-				device.setState(DeviceState.ACTIVE);
 				connack(Prtcl.ACCEPTED);
+				Log.info(name + " is " + DeviceState.ACTIVE);
+				device.setState(DeviceState.ACTIVE);
 			} else {
-				Log.debug(LogLevel.ACTIVE, "Connect", "connectToTheBroker", "device not connected");
-				device.setState(DeviceState.DISCONNECTED);
+				Log.error("Connect", "connect", device + " not connected to the broker");
 				connack(Prtcl.REJECTED);
+				Log.info(name + " is " + DeviceState.DISCONNECTED);
+				device.setState(DeviceState.DISCONNECTED);
 			}
 
 		} else {
 			// device's state is ACTIVE or AWAKE
 			connack(Prtcl.ACCEPTED);
+			Log.info(name + " is " + DeviceState.ACTIVE);
 			device.setState(DeviceState.ACTIVE);
 		}
 	}

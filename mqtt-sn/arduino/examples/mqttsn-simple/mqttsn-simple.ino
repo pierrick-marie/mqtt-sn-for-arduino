@@ -5,7 +5,7 @@
 
 #include <Mqttsn.h>
 
-#define MODULE_NAME "Arduino"
+#define MODULE_NAME "Arduino 0"
 
 #define TOPIC_SUB "TOPIC_SUB"
 
@@ -24,12 +24,16 @@ void setup() {
   Serial.begin(9600);
 
   mqttsn.start();
+
+  mqttsn.connect(MODULE_NAME);
+  
 }
 
 void loop() {
 
-  mqttsn.connect(MODULE_NAME);
+  
 
+/*
   if (mqttsn.subscribeTopic(TOPIC_SUB)) {
 
     nbReceivedMessages = mqttsn.requestMessages();
@@ -52,5 +56,7 @@ void loop() {
   mqttsn.publish(TOPIC_PUB, "rfid");
 
   mqttsn.disconnect();
+
+  */
 
 }

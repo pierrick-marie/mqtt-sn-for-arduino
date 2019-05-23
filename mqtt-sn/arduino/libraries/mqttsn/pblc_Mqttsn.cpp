@@ -106,7 +106,7 @@ int Mqttsn::requestMessages() {
 void Mqttsn::disconnect() {
 
 	if(connected != ACCEPTED) {
-		// logs.notConnected();
+		logs.notConnected();
 		while(1);
 	}
 
@@ -134,7 +134,7 @@ void Mqttsn::disconnect() {
 void Mqttsn::publish(const char* topicName, String message){
 
 	if(connected != ACCEPTED) {
-		// logs.notConnected();
+		logs.notConnected();
 		while(1);
 	}
 
@@ -219,7 +219,7 @@ bool Mqttsn::start() {
 void Mqttsn::connect(const char* _moduleName) {
 
 	if(!initOk) {
-		// logs.notConnected();
+		logs.notConnected();
 		while(1);
 	}
 
@@ -276,7 +276,7 @@ const char* Mqttsn::findTopicName(int topicId) {
 bool Mqttsn::subscribeTopic(const char* topicName) {
 
 	if(connected != ACCEPTED) {
-		// logs.notConnected();
+		logs.notConnected();
 		while(1);
 	}
 
@@ -342,7 +342,7 @@ bool Mqttsn::subscribeTopic(const char* topicName) {
 bool Mqttsn::registerTopic(const char* topicName) {
 
 	if(connected != ACCEPTED) {
-		// logs.notConnected();
+		logs.notConnected();
 		while(1);
 	}
 
