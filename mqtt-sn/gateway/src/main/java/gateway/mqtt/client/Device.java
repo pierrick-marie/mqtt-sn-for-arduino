@@ -54,7 +54,7 @@ public class Device {
 				try {
 					Thread.sleep(duration * 1000);
 				} catch (final InterruptedException e) {
-					Log.error("Device", "constructor", "fail waiting next action");
+					Log.error("Device", "<init>", "fail waiting next action");
 					Log.debug(e.getMessage());
 				}
 			}
@@ -75,7 +75,7 @@ public class Device {
 		if (null == mqttClient) {
 			Log.error("Device", "connect", "mqtt client is null");
 		}
-		Log.info(this + " connected with a keep alive " + duration + " seconds");
+
 		this.duration = duration;
 
 		return mqttClient.connect();
@@ -178,7 +178,7 @@ public class Device {
 			}
 		}
 
-		Log.info(this + " - registered topic: " + topicName);
+		Log.info(name + " registered to " + topicName);
 		return topic.setRegistered(true);
 	}
 
@@ -288,11 +288,9 @@ public class Device {
 
 	synchronized private void unsubscribeAll() {
 
-		Log.info(name + " time out unsubscibe all topics");
+		Log.info(name + " timeout unsubscibe all topics " + Topics);
 
 		for (final Topic topic : Topics) {
-
-			Log.info(name + " unsubscibe " + topic);
 
 			if (topic.isSubscribed()) {
 				mqttClient.unsubscribe(topic.name());

@@ -11,7 +11,7 @@ import java.nio.charset.StandardCharsets;
 
 import gateway.mqtt.client.Device;
 import gateway.mqtt.impl.Topic;
-import gateway.serial.SerialPortWriter;
+import gateway.serial.Writer;
 import gateway.utils.log.Log;
 
 public class Subscribe implements Runnable {
@@ -53,7 +53,7 @@ public class Subscribe implements Runnable {
 		message[6] = messageId[1];
 		message[7] = returnCode;
 
-		SerialPortWriter.write(device, message);
+		Writer.Instance.write(device, message);
 	}
 
 	public void subscribe() {

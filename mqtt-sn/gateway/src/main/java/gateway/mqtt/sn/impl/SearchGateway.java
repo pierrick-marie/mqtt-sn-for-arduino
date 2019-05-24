@@ -9,7 +9,7 @@ package gateway.mqtt.sn.impl;
 
 import gateway.Main;
 import gateway.mqtt.client.Device;
-import gateway.serial.SerialPortWriter;
+import gateway.serial.Writer;
 import gateway.utils.log.Log;
 
 public class SearchGateway implements Runnable {
@@ -30,6 +30,7 @@ public class SearchGateway implements Runnable {
 	@Override
 	public void run() {
 
+		Log.info(device + " first connect OK");
 		Log.xbeeOutput(device, "gateway info");
 
 		final byte[] ret = new byte[3];
@@ -37,6 +38,6 @@ public class SearchGateway implements Runnable {
 		ret[1] = (byte) 0x02;
 		ret[2] = (byte) Main.GATEWAY_ID;
 
-		SerialPortWriter.write(device, ret);
+		Writer.Instance.write(device, ret);
 	}
 }

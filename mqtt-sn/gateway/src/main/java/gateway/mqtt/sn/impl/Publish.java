@@ -9,7 +9,7 @@ package gateway.mqtt.sn.impl;
 
 import gateway.mqtt.client.Device;
 import gateway.mqtt.impl.Topic;
-import gateway.serial.SerialPortWriter;
+import gateway.serial.Writer;
 import gateway.utils.log.Log;
 
 public class Publish implements Runnable {
@@ -43,7 +43,7 @@ public class Publish implements Runnable {
 		ret[5] = messageId[1];
 		ret[6] = Prtcl.ACCEPTED;
 
-		SerialPortWriter.write(device, ret);
+		Writer.Instance.write(device, ret);
 	}
 
 	@Override
@@ -76,8 +76,9 @@ public class Publish implements Runnable {
 			final Topic topic = device.getTopic(topicId);
 
 			if (device.publish(topic, new String(data))) {
-				Log.debug("Publish", "publish", "published " + new String(data) + " on topic "
-						+ topic.name().toString() + " (id:" + topicId + ")");
+
+				Log.info(device + " publish message " + new String(data) + " on topic "
+						+ topic.name().toString());
 				// TODO not used until with QoS level 1 and 2 (not implemented)
 				// puback(topicId, messageId, Prtcl.ACCEPTED);
 			} else {

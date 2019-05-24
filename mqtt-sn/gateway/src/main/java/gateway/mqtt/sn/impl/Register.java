@@ -11,7 +11,7 @@ import java.nio.charset.StandardCharsets;
 
 import gateway.mqtt.client.Device;
 import gateway.mqtt.impl.Topic;
-import gateway.serial.SerialPortWriter;
+import gateway.serial.Writer;
 import gateway.utils.log.Log;
 
 public class Register implements Runnable {
@@ -53,7 +53,7 @@ public class Register implements Runnable {
 		message[5] = messageId[1];
 		message[6] = returnCode;
 
-		SerialPortWriter.write(device, message);
+		Writer.Instance.write(device, message);
 	}
 
 	/**

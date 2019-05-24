@@ -58,9 +58,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define QOS_FLAG 0
 #define DURATION_TIME 60 // 60 seconds
-#define SLEEP_TIME 10 // 10 seconds
+#define SLEEP_TIME 10 // 10 ms
 
-#define MAX_TRY 10
+#define MAX_TRY 20
 
 #define RADIUS 15
 
@@ -68,7 +68,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define BAUD_RATE 9600
 
-#define LONG_WAIT 500 // 500ms (0.5 second)
+#define LONG_WAIT 500 // 500 ms (0.5 second)
 
 class Mqttsn {
 
@@ -279,7 +279,7 @@ private:
 	SoftwareSerial* xBee;
 
 	// the status of the connection (first sent message)
-	bool initOk = false;
+	bool searchGatewayOk = false;
 	bool waitingForResponse = false;
 
 	// the code received after a subscribe or register message

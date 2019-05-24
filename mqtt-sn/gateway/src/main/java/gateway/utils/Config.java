@@ -7,27 +7,70 @@
 
 package gateway.utils;
 
-import static java.lang.System.out;
+import gateway.utils.log.Log;
+import gateway.utils.log.LogLevel;
 
 public enum Config {
 
-	instance;
+	Instance;
 
-	public static String SERIAL_PORT;
-	public static String IP_SERVER;
-	public static Integer PORT_SERVER;
+	private final Integer NB_ARGS = 4;
+	private final Integer SERIAL_PORT = 0;
+	private final Integer IP_SERVER = 1;
+	private final Integer PORT_SERVER = 2;
+	private final Integer LOG_LEVEL = 3;
+
+	private String ipServer;
+	private LogLevel logLevel;
+	private Integer portServer;
+	private String serialPort;
+
+	private void error() {
+		Log.info("");
+		Log.info("Missing arguments. Usage:   SERIAL_PORT   IP_SERVER   PORT_SERVER   LOG_LEVEL(NONE || ACTIVE)");
+		Log.info("");
+		System.exit(-1);
+	}
+
+	public String ipServer() {
+		return ipServer;
+	}
+
+	public LogLevel logLevel() {
+		return logLevel;
+	}
+
+	private void ok() {
+		Log.info("Starting the gateway \n * Serial: " + Config.Instance.serialPort() + "\n * IP server: "
+				+ Config.Instance.ipServer() + " \n * Port server: " + Config.Instance.portServer()
+				+ " \n * Log level: " + Config.Instance.logLevel());
+	}
 
 	public void parseArgs(String[] args) {
 
-		if (args.length != 3 || args[2].equals("")) {
-			out.println();
-			out.println("\tMissing arguments. Usage:   SERIAL_PORT   IP_SERVER   PORT_SERVER");
-			out.println();
-			System.exit(-1);
+		if (args.length != NB_ARGS) {
+			error();
 		} else {
-			SERIAL_PORT = args[0];
-			IP_SERVER = args[1];
-			PORT_SERVER = Integer.valueOf(args[2]);
+
+			try {
+				logLevel = LogLevel.valueOf(args[LOG_LEVEL]);
+			} catch (final IllegalArgumentException exception) {
+				error();
+			}
+
+			serialPort = args[SERIAL_PORT];
+			ipServer = args[IP_SERVER];
+			portServer = Integer.valueOf(args[PORT_SERVER]);
+
+			ok();
 		}
+	}
+
+	public Integer portServer() {
+		return portServer;
+	}
+
+	public String serialPort() {
+		return serialPort;
 	}
 }

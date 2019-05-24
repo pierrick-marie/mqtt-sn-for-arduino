@@ -24,6 +24,9 @@ import gateway.utils.log.Log;
 public class Client implements MqttCallback {
 
 	private final static String PRTCL = "tcp://";
+	private static final String IP_SERVER = Config.Instance.ipServer();
+	private static final Integer PORT_SERVER = Config.Instance.portServer();
+
 	private final short MAX_MESSAGES = 5;
 
 	// NOT IMPLEMENTED YET
@@ -34,8 +37,7 @@ public class Client implements MqttCallback {
 	private final MqttConnectOptions option;
 
 	public Client(final Device device, final Boolean cleanSession) throws MqttException {
-		mqttClient = new MqttClient(PRTCL + Config.IP_SERVER + ":" + Config.PORT_SERVER, device.name(),
-				new MemoryPersistence());
+		mqttClient = new MqttClient(PRTCL + IP_SERVER + ":" + PORT_SERVER, device.name(), new MemoryPersistence());
 
 		this.device = device;
 		// this.cleanSession = cleanSession;
@@ -68,15 +70,14 @@ public class Client implements MqttCallback {
 		try {
 			mqttClient.connect();
 		} catch (final MqttException e) {
-			Log.error("Client", "connect",
-					"Can' access to the broker " + PRTCL + Config.IP_SERVER + ":" + Config.PORT_SERVER);
+			Log.error("Client", "connect", "Can' access to the broker " + PRTCL + IP_SERVER + ":" + PORT_SERVER);
 			Log.debug("Client", "connect",
 					"org.eclipse.paho.client.mqttv3.MqttClient error code " + e.getReasonCode());
 			Log.debug("Abording");
 			System.exit(-2);
 		}
 
-		Log.info(device + " connected to the broker");
+		Log.info("\n" + device + " connected to the broker");
 		return mqttClient.isConnected();
 	}
 

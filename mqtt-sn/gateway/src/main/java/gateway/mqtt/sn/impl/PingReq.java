@@ -4,7 +4,7 @@ import gateway.mqtt.client.Device;
 import gateway.mqtt.client.DeviceState;
 import gateway.mqtt.impl.Sender;
 import gateway.mqtt.impl.SnMessage;
-import gateway.serial.SerialPortWriter;
+import gateway.serial.Writer;
 import gateway.utils.log.Log;
 
 /**
@@ -27,7 +27,6 @@ public class PingReq implements Runnable {
 
 	@Override
 	public void run() {
-		Log.info(device + " is " + DeviceState.AWAKE);
 		device.setState(DeviceState.AWAKE);
 
 		Log.debug("PingReq", "run", "begin send messages");
@@ -42,10 +41,9 @@ public class PingReq implements Runnable {
 			ret[0] = (byte) 0x03;
 			ret[1] = (byte) 0x17;
 
-			SerialPortWriter.write(device, ret);
+			Writer.Instance.write(device, ret);
 
 			if (device.state().equals(DeviceState.AWAKE)) {
-				Log.info(device + " is " + DeviceState.ASLEEP);
 				device.setState(DeviceState.ASLEEP);
 			}
 		}
@@ -68,6 +66,8 @@ public class PingReq implements Runnable {
 
 				Log.xbeeOutput(device, new String(message.getPayload()) + " on topic " + message.topic());
 
+				Log.info(device + " get message " + new String(message.getPayload()) + " on topic "
+						+ message.topic());
 				sender.send(message);
 
 				Log.debug("PingReq", "sendMqttMessages", "wait before sending next message");

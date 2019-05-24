@@ -2,7 +2,7 @@ package gateway.mqtt.sn.impl;
 
 import gateway.mqtt.client.Device;
 import gateway.mqtt.client.DeviceState;
-import gateway.serial.SerialPortWriter;
+import gateway.serial.Writer;
 import gateway.utils.log.Log;
 
 /**
@@ -23,13 +23,13 @@ public class Disconnect implements Runnable {
 
 	private void disconnectAck() {
 
-		Log.xbeeInput(device, "Disconnect Ack");
+		Log.xbeeInput(device, "disconnect Ack");
 
 		final byte[] ret = new byte[2];
 		ret[0] = (byte) 0x02;
 		ret[1] = (byte) 0x18;
 
-		SerialPortWriter.write(device, ret);
+		Writer.Instance.write(device, ret);
 	}
 
 	@Override
@@ -40,10 +40,9 @@ public class Disconnect implements Runnable {
 
 			if (duration > 0) {
 
-				Log.info(device + " is " + DeviceState.ASLEEP);
 				device.setState(DeviceState.ASLEEP);
 
-				Log.info(device + " duration is " + duration + " seconds");
+				Log.info(device + " disconnected \n");
 				device.setDuration(duration);
 
 				disconnectAck();

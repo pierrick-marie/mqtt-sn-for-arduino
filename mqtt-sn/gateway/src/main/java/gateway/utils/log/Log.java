@@ -12,30 +12,23 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import gateway.mqtt.client.Device;
+import gateway.utils.Config;
 
 public class Log {
 
-	public static Boolean COLOR = true;
-	public static final gateway.utils.log.LogLevel LEVEL = gateway.utils.log.LogLevel.NONE;
-
+	private static Boolean COLOR = true;
 	private static final DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 
-	private static final String XBEE_INPUT = " --- XBEE >>> ";
-	private static final String XBEE_OUTPUT = " <<< XBEE --- ";
+	private static final String XBEE_INPUT = " ---  XBEE  >>> ";
+	private static final String XBEE_OUTPUT = " <<<  XBEE  --- ";
 	private static final String BROKER_INPUT = " --- BROKER >>> ";
 	private static final String BROKER_OUTPUT = " <<< BROKER --- ";
+
+	private final static gateway.utils.log.LogLevel LEVEL = Config.Instance.logLevel();
 
 	private static void bBlue(final String message) {
 		if (COLOR) {
 			System.out.print("\033[34;1m" + message + "\033[0m");
-		} else {
-			System.out.print(message);
-		}
-	}
-
-	private static void blue(final String message) {
-		if (COLOR) {
-			System.out.print("\033[34m" + message + "\033[0m");
 		} else {
 			System.out.print(message);
 		}
@@ -50,13 +43,17 @@ public class Log {
 	}
 
 	synchronized public static void brokerInput(final Device device, final String message) {
-		bBlue(" * [ " + BROKER_INPUT + " ] ");
-		System.out.println(device + " receive " + message);
+		if (LEVEL.ordinal() >= LogLevel.ACTIVE.ordinal()) {
+			bBlue(" [ " + BROKER_INPUT + " ]  ");
+			System.out.println(message + " for " + device);
+		}
 	}
 
 	synchronized public static void brokerOutput(final Device device, final String message) {
-		bBlue(" * [ " + BROKER_OUTPUT + " ] ");
-		System.out.println("send " + message + " from " + device);
+		if (LEVEL.ordinal() >= LogLevel.ACTIVE.ordinal()) {
+			bBlue(" [ " + BROKER_OUTPUT + " ]  ");
+			System.out.println(message + " from " + device);
+		}
 	}
 
 	private static void bYellow(final String message) {
@@ -81,7 +78,7 @@ public class Log {
 	}
 
 	synchronized public static void debug(final String message) {
-		if (LEVEL.ordinal() >= LogLevel.ACTIVE.ordinal()) {
+		if (LEVEL.ordinal() >= LogLevel.VERBOSE.ordinal()) {
 			final Date date = new Date();
 			bYellow(" # [  DEBUG " + dateFormat.format(date) + "  ] ");
 			yellow(message + "\n");
@@ -89,13 +86,13 @@ public class Log {
 	}
 
 	synchronized public static void debug(final String className, final String methodeName, final String message) {
-		debug(LogLevel.ACTIVE, className, methodeName, message);
+		debug(LogLevel.VERBOSE, className, methodeName, message);
 	}
 
 	synchronized public static void error(final String className, final String methodeName, final String message) {
 
 		final Date date = new Date();
-		bRed(" # [  ERROR " + dateFormat.format(date) + "  ] ");
+		bRed(" [  ERROR " + dateFormat.format(date) + "  ] ");
 		red(className + ".");
 		red(methodeName + ": ");
 		red(message + "\n");
@@ -109,7 +106,7 @@ public class Log {
 
 	synchronized public static void print(final byte[] data) {
 
-		if (LEVEL == LogLevel.ACTIVE) {
+		if (LEVEL.ordinal() >= LogLevel.VERBOSE.ordinal()) {
 			debug("Print buffer");
 
 			for (final byte element : data) {
@@ -129,18 +126,23 @@ public class Log {
 	}
 
 	synchronized public static void xbeeInput(final Device device, final String message) {
-		if (null == device) {
-			bBlue(" * [ " + XBEE_INPUT + " ] ");
-			System.out.println(message);
-		} else {
-			bBlue(" * [ " + XBEE_INPUT + " ] ");
-			System.out.println(device + " receive " + message);
+
+		if (LEVEL.ordinal() >= LogLevel.ACTIVE.ordinal()) {
+			if (null == device) {
+				bBlue(" [ " + XBEE_INPUT + " ]  ");
+				System.out.println(message);
+			} else {
+				bBlue(" [ " + XBEE_INPUT + " ]  ");
+				System.out.println(message + " from " + device);
+			}
 		}
 	}
 
 	synchronized public static void xbeeOutput(final Device device, final String message) {
-		bBlue(" * [ " + XBEE_OUTPUT + " ] ");
-		System.out.println(message + " to " + device);
+		if (LEVEL.ordinal() >= LogLevel.ACTIVE.ordinal()) {
+			bBlue(" [ " + XBEE_OUTPUT + " ]  ");
+			System.out.println(message + " to " + device);
+		}
 	}
 
 	private static void yellow(final String message) {
@@ -151,6 +153,8 @@ public class Log {
 		}
 	}
 
-	private Log() {
-	}
+	/*
+	 * public Log() { if (Config.LOG_LEVEL.equals(LogLevel.ACTIVE.name())) { LEVEL =
+	 * LogLevel.ACTIVE; } else { LEVEL = LogLevel.NONE; } }
+	 */
 }

@@ -25,6 +25,10 @@ void setup() {
 
   mqttsn.start();
 
+}
+
+void loop() {
+
   mqttsn.connect(MODULE_NAME);
 
   if (mqttsn.subscribeTopic(TOPIC_SUB)) {
@@ -43,26 +47,13 @@ void setup() {
       Serial.print(" = ");
       Serial.println(msg[nbReceivedMessages].data);
     }
-    
+
   } else {
     Serial.println("\n!!! Subscribe KO !!!");
   }
 
   mqttsn.publish(TOPIC_PUB, "rfid");
 
-}
-
-void loop() {
-
-
-
-  /*
-
-
-    
-
-    mqttsn.disconnect();
-
-  */
+  mqttsn.disconnect();
 
 }

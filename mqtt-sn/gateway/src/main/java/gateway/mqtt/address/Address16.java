@@ -14,7 +14,7 @@ public class Address16 extends Address {
 		super(address);
 
 		if (16 < address.length) {
-			Log.error("Address16", "constructor", "The address length is too long: " + address.length);
+			Log.error("Address16", "<init>", "The address length is too long: " + address.length);
 		}
 	}
 }

@@ -8,7 +8,7 @@
 package gateway.mqtt.impl;
 
 import gateway.mqtt.client.Device;
-import gateway.serial.SerialPortWriter;
+import gateway.serial.Writer;
 import gateway.utils.log.Log;
 
 public class Sender {
@@ -71,7 +71,7 @@ public class Sender {
 			serialMessage[7 + i] = data[i];
 		}
 
-		SerialPortWriter.write(device, serialMessage);
+		Writer.Instance.write(device, serialMessage);
 		message.setId(messageId);
 	}
 }

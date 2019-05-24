@@ -94,7 +94,7 @@ void Mqttsn::dispatch() {
 	// logs.debug("dispatch", "response type:", response_message->type);
 	// logs.debug("dispatch", "response length:", response_message->length);
 
-	if(false == initOk && GWINFO == response_message->type) {
+	if(false == searchGatewayOk && GWINFO == response_message->type) {
 		// logs.debug("dispatch", "GWINFO");
 		searchGatewayHandler((msg_gwinfo*)responseBuffer);
 	} else {
@@ -316,7 +316,6 @@ void Mqttsn::subAckHandler(msg_suback* msg) {
 		logs.error("subscibe KO");
 		regAckReturnCode = REJECTED;
 	}
-
 }
 
 /*
@@ -461,21 +460,21 @@ void Mqttsn::disconnectHandler(msg_disconnect* msg) {
 
 	connected = REJECTED;
 
-	logs.info("#slepping");
+	logs.info("disconnect OK -> sleeping");
 
-	delay(SLEEP_TIME * 1000); // 10 seconds (10000 milliseconds)
+	delay(SLEEP_TIME * 1500); // 10 ms * 1500 = 15000 ms = 15 s
 
-	logs.info("#awake");
+	logs.info("awake");
 }
 
 void Mqttsn::searchGatewayHandler(msg_gwinfo* message) {
 
 	if(message->gw_id == GATEWAY_ID) {
 		logs.info("mqtsn started");
-		initOk = true;
+		searchGatewayOk = true;
 	} else {
 		logs.error("not started: stop");
-		initOk = false;
+		searchGatewayOk = false;
 		while(1);
 	}
 }
