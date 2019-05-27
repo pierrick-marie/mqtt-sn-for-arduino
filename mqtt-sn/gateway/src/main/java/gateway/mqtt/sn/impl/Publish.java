@@ -25,7 +25,8 @@ public class Publish implements Runnable {
 		this.msg = msg;
 	}
 
-	private void reRegister(final int topicId, final byte[] messageId) {
+	// private void reRegister(final int topicId, final byte[] messageId) {
+	private void reRegister(final int topicId) {
 
 		Log.xbeeOutput(device, "re register");
 
@@ -39,8 +40,10 @@ public class Publish implements Runnable {
 			ret[2] = (byte) topicId;
 			ret[3] = (byte) 0x00;
 		}
-		ret[4] = messageId[0];
-		ret[5] = messageId[1];
+		// ret[4] = messageId[0];
+		// ret[5] = messageId[1];
+		ret[4] = 0x00;
+		ret[5] = 0x00;
 		ret[6] = Prtcl.ACCEPTED;
 
 		Writer.Instance.write(device, ret);
@@ -56,8 +59,10 @@ public class Publish implements Runnable {
 		final int topicId = (msg[2] << 8) + (msg[1] & 0xFF);
 
 		final byte[] messageId = new byte[2];
-		messageId[0] = msg[3];
-		messageId[1] = msg[4];
+		// messageId[0] = msg[3];
+		// messageId[1] = msg[4];
+		messageId[0] = 0x00;
+		messageId[1] = 0x00;
 
 		if (!device.isConnected()) {
 			Log.error("Publish", "publish", device + "is not connected");
@@ -89,7 +94,9 @@ public class Publish implements Runnable {
 			}
 		} else {
 			Log.error("Publish", "publish", "unknown topic id: " + topicId + "-> send re-register");
-			reRegister(topicId, messageId);
+
+			// reRegister(topicId, messageId);
+			reRegister(topicId);
 		}
 	}
 

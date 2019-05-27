@@ -40,23 +40,22 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * ****************************
  **/
 
-Mqttsn::Mqttsn(SoftwareSerial* _xBee) {
+Mqttsn::Mqttsn(SoftwareSerial* xBee) {
 
-	xBee = _xBee;
+	XBEE = xBee;
 
-	xBee->begin(BAUD_RATE);
+	XBEE->begin(BAUD_RATE);
 
-	messageId = 0;
-	gatewayId = 0;
-	lastSubscribedTopic = 0;
-	nbRegisteredTopic = 0;
-	nbReceivedMessage = 0;
-	connected = REJECTED;
-	searchGatewayOk = false;
+	GatewayId = 0;
+	LastSubscribedTopic = 0;
+	NbRegisteredTopic = 0;
+	NbReceivedMessage = 0;
+	Connected = REJECTED;
+	SearchGatewayOk = false;
 
-	memset(topicTable, 0, sizeof(topic) * MAX_TOPICS);
-	memset(messageBuffer, 0, MAX_BUFFER_SIZE);
-	memset(responseBuffer, 0, MAX_BUFFER_SIZE);
+	memset(TopicTable, 0, sizeof(Topic) * MAX_TOPICS);
+	memset(MessageBuffer, 0, MAX_BUFFER_SIZE);
+	memset(ResponseBuffer, 0, MAX_BUFFER_SIZE);
 }
 
 Mqttsn::~Mqttsn() {
@@ -64,109 +63,108 @@ Mqttsn::~Mqttsn() {
 
 bool Mqttsn::isConnected() {
 
-	return connected == ACCEPTED;
+	return Connected == ACCEPTED;
 }
 
 int Mqttsn::requestMessages() {
 
-	logs.info("request msg");
+	LOGS.info("request msg");
 
-	msg_pingreq* msg = reinterpret_cast<msg_pingreq*>(messageBuffer);
-	msg->length = sizeof(msg_pingreq) + strlen(moduleName);
+	MsgPingReq* msg = reinterpret_cast<MsgPingReq*>(MessageBuffer);
+	msg->length = sizeof(MsgPingReq) + strlen(ModuleName);
 	msg->type = PINGREQ;
-	strcpy(msg->client_id, moduleName);
+	strcpy(msg->clientId, ModuleName);
 
 	sendMessage();
 
-	// logs.debug("pinqReq", "clean received messages");
+	// LOGS.debug("pinqReq", "clean received messages");
 
-	while(nbReceivedMessage > 0) {
-		nbReceivedMessage--;
-		memset(&receivedMessages[nbReceivedMessage], 0, sizeof(msg_publish));
-		// logs.debug("pinqReq", "clean message ", nbReceivedMessage);
+	while(NbReceivedMessage > 0) {
+		NbReceivedMessage--;
+		memset(&ReceivedMessages[NbReceivedMessage], 0, sizeof(MsgPublish));
+		// LOGS.debug("pinqReq", "clean message ", nbReceivedMessage);
 	}
 
 	if( !checkSerial() ) {
-		// logs.debug("pingReq", "check serial rejected");
-		connected = REJECTED;
-		logs.notConnected();
+		// LOGS.debug("pingReq", "check serial rejected");
+		Connected = REJECTED;
+		LOGS.notConnected();
 		while(1);
 	}
 
-	// logs.debug("pingReq", "parsing published messages");
+	// LOGS.debug("pingReq", "parsing published messages");
 	parseData();
 
-	return nbReceivedMessage;
+	return NbReceivedMessage;
 }
 
 void Mqttsn::disconnect() {
 
 	/*
-	if(connected != ACCEPTED) {
-		logs.notConnected();
+	if(Connected != ACCEPTED) {
+		LOGS.notConnected();
 		while(1);
 	}
 	*/
 
-	msg_disconnect* msg = reinterpret_cast<msg_disconnect*>(messageBuffer);
+	MsgDisconnect* msg = reinterpret_cast<MsgDisconnect*>(MessageBuffer);
 
-	msg->length = sizeof(message_header);
+	msg->length = sizeof(MessageHeader);
 	msg->type = DISCONNECT;
 
-	msg->length += sizeof(msg_disconnect);
+	msg->length += sizeof(MsgDisconnect);
 	msg->duration = bitSwap(DURATION_TIME);
-	// logs.debug("diconnect", "sleep duration: ", sleepDuration);
+	// LOGS.debug("diconnect", "sleep duration: ", sleepDuration);
 
 	sendMessage();
 
 	if( !checkSerial() ) {
-		// logs.debug("disconnect", "check serial rejected");
-		connected = REJECTED;
-		logs.notConnected();
+		// LOGS.debug("disconnect", "check serial rejected");
+		Connected = REJECTED;
+		LOGS.notConnected();
 		while(1);
 	}
 
-	// logs.debug("disconnect", "parsing published messages");
+	// LOGS.debug("disconnect", "parsing published messages");
 	parseData();
 }
 
-void Mqttsn::publish(const char* topicName, String message){
+void Mqttsn::publish(const char* _topicName, String _message){
 
-	if(connected != ACCEPTED) {
-		logs.notConnected();
+	if(Connected != ACCEPTED) {
+		LOGS.notConnected();
 		while(1);
 	}
 
-	int topic_id = findTopicId(topicName);
+	int topicId = findTopicId(_topicName);
 
-	if(-1 == topic_id) {
-		// logs.debug("publish", "unknown->register", topicName);
-		if( ! registerTopic(topicName)) {
-			// logs.debug("publish", "can't register topic");
+	if(-1 == topicId) {
+		// LOGS.debug("publish", "unknown->register", topicName);
+		if(! registerTopic(_topicName)) {
+			// LOGS.debug("publish", "can't register topic");
 			return;
 		}
-		// logs.debug("publish", "call again");
-		// logs.debug("publish", "name: ", topicTable[nbRegisteredTopic].name);
-		publish(topicName, message);
+		// LOGS.debug("publish", "call again");
+		// LOGS.debug("publish", "name: ", TopicTable[NbRegisteredTopic].name);
+		publish(_topicName, _message);
 	} else {
 
-		msg_publish* msg = reinterpret_cast<msg_publish*>(messageBuffer);
-		++messageId;
+		MsgPublish* msg = reinterpret_cast<MsgPublish*>(MessageBuffer);
 
-		// get sizeof (msg_publish + message) - sizeof msg_publish.data (array of 40 char)
-		// get "sizeof(header of msg_publish)" + sizeof(message)
-		msg->length = sizeof(msg_publish) - sizeof(msg->data) + message.length();
+		// get sizeof (MsgPublish + message) - sizeof MsgPublish.data (array of 40 char)
+		// get "sizeof(header of MsgPublish)" + sizeof(message)
+		msg->length = sizeof(MsgPublish) - sizeof(msg->data) + _message.length();
 		msg->type = PUBLISH;
 		msg->flags = QOS_FLAG;
 		// @BUG msg->topic_id = bitSwap(topic_id);
-		msg->topic_id = ( topic_id );
-		msg->message_id = bitSwap(messageId);
-		strcpy(msg->data, message.c_str());
+		msg->topicId = ( topicId );
+		msg->messageId = bitSwap(MESSAGE_ID);
+		strcpy(msg->data, _message.c_str());
 
-		logs.info("publish msg");
+		LOGS.info("publish msg");
 
-		// logs.debug("publish", "id:", msg->topic_id);
-		// logs.debug("publish", "msg: ", msg->data);
+		// LOGS.debug("publish", "id:", msg->topic_id);
+		// LOGS.debug("publish", "msg: ", msg->data);
 
 		sendMessage();
 
@@ -176,34 +174,34 @@ void Mqttsn::publish(const char* topicName, String message){
 		// }
 		// parseData();
 		// @TODO do not wait a response
-		waitingForResponse = false;
+		WaitingForResponse = false;
 	}
 }
 
 bool Mqttsn::start() {
 
-	logs.info("start mqttsn");
+	LOGS.info("start mqttsn");
 
-	waitingForResponse = false;
-	searchGatewayOk = false;
+	WaitingForResponse = false;
+	SearchGatewayOk = false;
 
-	msg_searchgw* msg = reinterpret_cast<msg_searchgw*>(messageBuffer);
+	MsgSearchGateway* msg = reinterpret_cast<MsgSearchGateway*>(MessageBuffer);
 
-	msg->length = sizeof(msg_searchgw);
+	msg->length = sizeof(MsgSearchGateway);
 	msg->type = SEARCHGW;
 	msg->radius = RADIUS;
 
-	// logs.debug("searchGateway", "sending message");
+	// LOGS.debug("searchGateway", "sending message");
 	sendMessage();
 
-	// logs.debug("searchGateway", "checking the response from the gateway");
+	// LOGS.debug("searchGateway", "checking the response from the gateway");
 
 	int i = 0;
-	while(false == searchGatewayOk && i <= MAX_TRY) {
+	while(false == SearchGatewayOk && i <= MAX_TRY) {
 
 		// waiting next message
 		if( !checkSerial() ) {
-			logs.error("not started: stop");
+			LOGS.error("not started: stop");
 			while(1);
 		}
 		parseData();
@@ -211,179 +209,176 @@ bool Mqttsn::start() {
 		i++;
 	}
 
-	return searchGatewayOk;
+	return SearchGatewayOk;
 }
 
 void Mqttsn::connect(const char* _moduleName) {
 
-	// logs.debug( "connect", "save module name", strlen(_moduleName));
-	strcpy(moduleName, _moduleName);
+	// LOGS.debug( "connect", "save module name", strlen(_moduleName));
+	strcpy(ModuleName, _moduleName);
 
-	msg_connect* msg = reinterpret_cast<msg_connect*>(messageBuffer);
+	MsgConnect* msg = reinterpret_cast<MsgConnect*>(MessageBuffer);
 
-	msg->length = sizeof(msg_connect) + strlen(moduleName);
+	msg->length = sizeof(MsgConnect) + strlen(ModuleName);
 	msg->type = CONNECT;
 	msg->flags = QOS_FLAG;
-	msg->protocol_id = PROTOCOL_ID;
+	msg->protocolId = PROTOCOL_ID;
 	msg->duration = bitSwap(DURATION_TIME);
-	strcpy(msg->client_id, moduleName);
+	strcpy(msg->clientId, ModuleName);
 
-	// logs.debug( "connect", "send a connect message", msg->client_id);
+	// LOGS.debug( "connect", "send a connect message", msg->client_id);
 
 	sendMessage();
 
 	if( !checkSerial() ) {
-		// logs.debug( "connect", "check serial rejected");
-		connected = REJECTED;
-		logs.notConnected();
+		// LOGS.debug( "connect", "check serial rejected");
+		Connected = REJECTED;
+		LOGS.notConnected();
 		while(1);
 	}
 	parseData();
 }
 
-int Mqttsn::findTopicId(const char* topicName) {
+int Mqttsn::findTopicId(const char* _topicName) {
 
-	for (int i = 0; i < nbRegisteredTopic; i++) {
-		// logs.debug( "findTopicid", "id = ", (int)topicTable[i].id);
-		// logs.debug( "findTopicid", "name = ", topicTable[i].name);
-		if (topicTable[i].id != DEFAULT_TOPIC_ID && strcmp(topicTable[i].name, topicName) == 0) {
-			return topicTable[i].id;
+	for (int i = 0; i < NbRegisteredTopic; i++) {
+		// LOGS.debug( "findTopicid", "id = ", (int)TopicTable[i].id);
+		// LOGS.debug( "findTopicid", "name = ", TopicTable[i].name);
+		if (TopicTable[i].id != DEFAULT_TOPIC_ID && strcmp(TopicTable[i].name, _topicName) == 0) {
+			return TopicTable[i].id;
 		}
 	}
 
-	// logs.debug("findTopicId", "topicName not found");
+	// LOGS.debug("findTopicId", "topicName not found");
 	return -1;
 }
 
-const char* Mqttsn::findTopicName(int topicId) {
+const char* Mqttsn::findTopicName(int _topicId) {
 
-	for (int i = 0; i < nbRegisteredTopic; i++) {
-		if (topicTable[i].id != DEFAULT_TOPIC_ID && topicTable[i].id == topicId) {
-			return topicTable[i].name;
+	for (int i = 0; i < NbRegisteredTopic; i++) {
+		if (TopicTable[i].id != DEFAULT_TOPIC_ID && TopicTable[i].id == _topicId) {
+			return TopicTable[i].name;
 		}
 	}
 
-	// logs.debug("findTopicName", "name not found");
+	// LOGS.debug("findTopicName", "name not found");
 	return NULL;
 }
 
-bool Mqttsn::subscribeTopic(const char* topicName) {
+bool Mqttsn::subscribeTopic(const char* _topicName) {
 
-	// logs.debug("subscribeTopic", "topic: ", topicName);
+	// LOGS.debug("subscribeTopic", "topic: ", topicName);
 
-	if(nbRegisteredTopic >= MAX_TOPICS) {
-		// logs.debug("subscribeTopic", "nb > MAX_TOPICS");
+	if(NbRegisteredTopic >= MAX_TOPICS) {
+		// LOGS.debug("subscribeTopic", "nb > MAX_TOPICS");
 		return false;
 	}
 
-	int topicId = findTopicId(topicName);
+	int topicId = findTopicId(_topicName);
 	if(topicId != -1) {
-		topicTable[topicId].id = DEFAULT_TOPIC_ID;
-		// logs.debug("subscribeTopic", "reset topic id:", topicId);
-		lastSubscribedTopic = topicId;
+		TopicTable[topicId].id = DEFAULT_TOPIC_ID;
+		// LOGS.debug("subscribeTopic", "reset topic id:", topicId);
+		LastSubscribedTopic = topicId;
 	} else {
-		// logs.debug("subscribeTopic", "id:", topicId);
+		// LOGS.debug("subscribeTopic", "id:", topicId);
 
 		// Fill in the next table entry, but we only increment the counter to
 		// the next topic when we get a REGACK from the broker. So don't issue
 		// another REGISTER until we have resolved this one.
 		// @name is save now because it will be lost at the end of this function.
-		strcpy(topicTable[nbRegisteredTopic].name, topicName);
-		// logs.debug("subscribeTopic", "name:", topicTable[nbRegisteredTopic].name);
+		strcpy(TopicTable[NbRegisteredTopic].name, _topicName);
+		// LOGS.debug("subscribeTopic", "name:", TopicTable[NbRegisteredTopic].name);
 
 		// A magic number while the gateway respond: @see:regAckHandler()
-		topicTable[nbRegisteredTopic].id = DEFAULT_TOPIC_ID;
-		lastSubscribedTopic = nbRegisteredTopic;
+		TopicTable[NbRegisteredTopic].id = DEFAULT_TOPIC_ID;
+		LastSubscribedTopic = NbRegisteredTopic;
 
-		nbRegisteredTopic++;
+		NbRegisteredTopic++;
 	}
 
-	// logs.debug("subscribeTopic", topicName);
+	// LOGS.debug("subscribeTopic", topicName);
 
-	++messageId;
-	msg_subscribe* msg = reinterpret_cast<msg_subscribe*>(messageBuffer);
+	MsgSubscribe* msg = reinterpret_cast<MsgSubscribe*>(MessageBuffer);
 
 	// The -2 here is because we're unioning a 0-length member (topicName)
-	// with a uint16_t in the msg_subscribe struct.
-	msg->length = sizeof(msg_subscribe) + strlen(topicName) - 2;
+	// with a uint16_t in the MsgSubscribe struct.
+	msg->length = sizeof(MsgSubscribe) + strlen(_topicName) - 2;
 	msg->type = SUBSCRIBE;
 	msg->flags = (QOS_MASK & QOS_MASK) | FLAG_TOPIC_NAME;
-	msg->message_id = bitSwap(messageId);
-	strcpy(msg->topic_name, topicName);
+	msg->messageId = bitSwap(MESSAGE_ID);
+	strcpy(msg->topicName, _topicName);
 
-	// logs.debug("subscribeTopic", "sending message 'subscribe topic'");
+	// LOGS.debug("subscribeTopic", "sending message 'subscribe topic'");
 
 	sendMessage();
 
 	if( !checkSerial() ) {
-		// logs.debug("subscribe", "check serial rejected");
-		connected = REJECTED;
-		logs.notConnected();
+		// LOGS.debug("subscribe", "check serial rejected");
+		Connected = REJECTED;
+		LOGS.notConnected();
 		while(1);
 	}
 
-	// logs.debug("subscribe", "parsing response 'subscribe topic'");
+	// LOGS.debug("subscribe", "parsing response 'subscribe topic'");
 	parseData();
 
-	// logs.debug("subscribeTopic", "response from the gateway", subAckReturnCode);
-	return subAckReturnCode == ACCEPTED;
+	// LOGS.debug("subscribeTopic", "response from the gateway", subAckReturnCode);
+	return SubAckReturnCode == ACCEPTED;
 }
 
-bool Mqttsn::registerTopic(const char* topicName) {
+bool Mqttsn::registerTopic(const char* _topicName) {
 
-	// logs.debug("register", "topic: ", topicName);
+	// LOGS.debug("register", "topic: ", _topicName);
 
-	if(nbRegisteredTopic >= MAX_TOPICS) {
-		// logs.debug("register", "nb > MAX_TOPICS");
+	if(NbRegisteredTopic >= MAX_TOPICS) {
+		// LOGS.debug("register", "nb > MAX_TOPICS");
 		return false;
 	}
 
-	int topicId = findTopicId(topicName);
+	int topicId = findTopicId(_topicName);
 	if(topicId != -1) {
-		// logs.debug("register", "already registered");
+		// LOGS.debug("register", "already registered");
 		return true;
 	}
-	// logs.debug("register", "id:", topicId);
+	// LOGS.debug("register", "id:", topicId);
 
 	// Fill in the next table entry, but we only increment the counter to
 	// the next topic when we get a REGACK from the broker. So don't issue
 	// another REGISTER until we have resolved this one.
 	// @name is save now because it will be lost at the end of this function.
-	strcpy(topicTable[nbRegisteredTopic].name, topicName);
-	// logs.debug("register", "name:", topicTable[nbRegisteredTopic].name);
+	strcpy(TopicTable[NbRegisteredTopic].name, _topicName);
+	// LOGS.debug("register", "name:", TopicTable[NbRegisteredTopic].name);
 
 	// A magic number while the gateway respond: @see:regAckHandler()
-	topicTable[nbRegisteredTopic].id = DEFAULT_TOPIC_ID;
+	TopicTable[NbRegisteredTopic].id = DEFAULT_TOPIC_ID;
 
-	messageId++;
+	MsgRegister* msg = reinterpret_cast<MsgRegister*>(MessageBuffer);
 
-	msg_register* msg = reinterpret_cast<msg_register*>(messageBuffer);
-
-	msg->length = sizeof(msg_register) + strlen(topicName);
+	msg->length = sizeof(MsgRegister) + strlen(_topicName);
 	msg->type = REGISTER;
-	msg->topic_id = 0;
-	msg->message_id = bitSwap(messageId);
-	strcpy(msg->topic_name, topicName);
+	msg->topicId = 0;
+	msg->messageId = bitSwap(MESSAGE_ID);
+	strcpy(msg->topicName, _topicName);
 
 	sendMessage();
 
 	if( !checkSerial() ) {
-		// logs.debug("register", "rejected");
-		connected = REJECTED;
-		logs.notConnected();
+		// LOGS.debug("register", "rejected");
+		Connected = REJECTED;
+		LOGS.notConnected();
 		while(1);
 	}
 
 	parseData();
 
-	// logs.debug("register", "response:", regAckReturnCode);
-	// logs.debug("register", "id:", findTopicId(topicName));
+	// LOGS.debug("register", "response:", RegAckReturnCode);
+	// LOGS.debug("register", "id:", findTopicId(_topicName));
 
-	return regAckReturnCode == ACCEPTED;
+	return RegAckReturnCode == ACCEPTED;
 }
 
-msg_publish* Mqttsn::getReceivedMessages() {
-	return receivedMessages;
+MsgPublish* Mqttsn::getReceivedMessages() {
+	return ReceivedMessages;
 }
 
 /**
@@ -393,9 +388,9 @@ msg_publish* Mqttsn::getReceivedMessages() {
  *
 void Mqttsn::pingResp() {
 
-	// logs.debug("pingResp");
+	// LOGS.debug("pingResp");
 
-	message_header* msg = reinterpret_cast<message_header*>(messageBuffer);
+	message_header* msg = reinterpret_cast<message_header*>(MessageBuffer);
 	msg->length = sizeof(message_header);
 	msg->type = PINGRESP;
 	sendMessage();

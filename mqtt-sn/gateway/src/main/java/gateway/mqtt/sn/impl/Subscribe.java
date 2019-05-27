@@ -32,7 +32,9 @@ public class Subscribe implements Runnable {
 		subscribe();
 	}
 
-	private void suback(final byte[] messageId, final int topicId, final byte returnCode) {
+	// private void suback(final byte[] messageId, final int topicId, final byte
+	// returnCode) {
+	private void suback(final int topicId, final byte returnCode) {
 
 		Log.xbeeOutput(device, "sub ack " + returnCode);
 
@@ -49,8 +51,10 @@ public class Subscribe implements Runnable {
 			message[2] = (byte) 0x00;
 		}
 
-		message[5] = messageId[0];
-		message[6] = messageId[1];
+		// message[5] = messageId[0];
+		// message[6] = messageId[1];
+		message[5] = 0x00;
+		message[6] = 0x00;
 		message[7] = returnCode;
 
 		Writer.Instance.write(device, message);
@@ -61,12 +65,16 @@ public class Subscribe implements Runnable {
 		// NOT IMPLEMENTED YET (QoS)
 		// final byte flags = msg[0];
 		final byte[] messageId = new byte[2];
-		messageId[0] = msg[1];
-		messageId[1] = msg[2];
+		// messageId[0] = msg[1];
+		// messageId[1] = msg[2];
+		messageId[0] = 0x00;
+		messageId[1] = 0x00;
 
 		if (!device.isConnected()) {
 			Log.error("Subscribre", "subscribe", device + "is not connected");
-			suback(messageId, -1, Prtcl.REJECTED);
+
+			// suback(messageId, -1, Prtcl.REJECTED);
+			suback(-1, Prtcl.REJECTED);
 			return;
 		}
 
@@ -78,9 +86,11 @@ public class Subscribe implements Runnable {
 
 		final Topic topic = device.subscribe(topicName);
 		if (null != topic) {
-			suback(messageId, 298, Prtcl.ACCEPTED);
+			// suback(messageId, 298, Prtcl.ACCEPTED);
+			suback(298, Prtcl.ACCEPTED);
 		} else {
-			suback(messageId, -1, Prtcl.REJECTED);
+			// suback(messageId, -1, Prtcl.REJECTED);
+			suback(-1, Prtcl.REJECTED);
 		}
 	}
 }

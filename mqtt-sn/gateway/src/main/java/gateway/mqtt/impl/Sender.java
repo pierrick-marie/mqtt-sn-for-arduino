@@ -13,7 +13,7 @@ import gateway.utils.log.Log;
 
 public class Sender {
 
-	private static volatile int messageId = 0;
+	// private static volatile int messageId = 0;
 
 	private final Device device;
 
@@ -59,19 +59,19 @@ public class Sender {
 		serialMessage[3] = getTopicId(message.topic())[0];
 		serialMessage[4] = getTopicId(message.topic())[1];
 
-		if (messageId > 255) {
-			serialMessage[5] = (byte) (messageId / 256);
-			serialMessage[6] = (byte) (messageId % 256);
-		} else {
-			serialMessage[5] = (byte) 0x00;
-			serialMessage[6] = (byte) messageId;
-		}
+		/*
+		 * if (messageId > 255) { serialMessage[5] = (byte) (messageId / 256);
+		 * serialMessage[6] = (byte) (messageId % 256); } else { serialMessage[5] =
+		 * (byte) 0x00; serialMessage[6] = (byte) messageId; }
+		 */
+		serialMessage[5] = (byte) 0x00;
+		serialMessage[6] = (byte) 0x00;
 
 		for (i = 0; i < message.getPayload().length; i++) {
 			serialMessage[7 + i] = data[i];
 		}
 
 		Writer.Instance.write(device, serialMessage);
-		message.setId(messageId);
+		// message.setId(messageId);
 	}
 }

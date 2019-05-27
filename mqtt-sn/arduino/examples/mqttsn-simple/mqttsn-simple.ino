@@ -38,7 +38,7 @@ void loop() {
     Serial.print("Nb messages recu ");
     Serial.println(nbReceivedMessages);
 
-    msg_publish* msg = mqttsn.getReceivedMessages();
+    MsgPublish* msg = mqttsn.getReceivedMessages();
 
     while (nbReceivedMessages > 0) {
       nbReceivedMessages--;

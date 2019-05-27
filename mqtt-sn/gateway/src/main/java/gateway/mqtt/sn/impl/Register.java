@@ -33,7 +33,9 @@ public class Register implements Runnable {
 	 * @param messageId
 	 * @param topicId
 	 */
-	private void regack(final int topicId, final byte[] messageId, final byte returnCode) {
+	// private void regack(final int topicId, final byte[] messageId, final byte
+	// returnCode) {
+	private void regack(final int topicId, final byte returnCode) {
 
 		Log.xbeeOutput(device, "reg ack with return code " + returnCode);
 
@@ -49,8 +51,10 @@ public class Register implements Runnable {
 			message[2] = (byte) topicId;
 			message[3] = (byte) 0x00;
 		}
-		message[4] = messageId[0];
-		message[5] = messageId[1];
+		// message[4] = messageId[0];
+		// message[5] = messageId[1];
+		message[4] = 0x00;
+		message[5] = 0x00;
 		message[6] = returnCode;
 
 		Writer.Instance.write(device, message);
@@ -65,8 +69,10 @@ public class Register implements Runnable {
 	public void run() {
 
 		final byte[] messageId = new byte[2];
-		messageId[0] = message[2];
-		messageId[1] = message[3];
+		// messageId[0] = message[2];
+		// messageId[1] = message[3];
+		messageId[0] = 0x00;
+		messageId[1] = 0x00;
 		final byte[] name = new byte[message.length - 4];
 		String topicName;
 		int i;
@@ -75,7 +81,8 @@ public class Register implements Runnable {
 		if (!device.isConnected()) {
 			Log.error("Register", "register", device + "is not connected");
 			// Error - topicId = -1
-			regack(-1, messageId, Prtcl.REJECTED);
+			// regack(-1, messageId, Prtcl.REJECTED);
+			regack(-1, Prtcl.REJECTED);
 			return;
 		}
 
@@ -87,9 +94,11 @@ public class Register implements Runnable {
 
 		topic = device.register(topicName);
 		if (null != topic) {
-			regack(topic.id(), messageId, Prtcl.ACCEPTED);
+			// regack(topic.id(), messageId, Prtcl.ACCEPTED);
+			regack(topic.id(), Prtcl.ACCEPTED);
 		} else {
-			regack(-1, messageId, Prtcl.REJECTED);
+			// regack(-1, messageId, Prtcl.REJECTED);
+			regack(-1, Prtcl.REJECTED);
 		}
 	}
 }
