@@ -14,7 +14,9 @@ public enum Config {
 
 	Instance;
 
-	private final Integer NB_ARGS = 4;
+	private final int NB_ARGS_MIN = 3;
+	private final int NB_ARGS_MAX = 4;
+
 	private final Integer SERIAL_PORT = 0;
 	private final Integer IP_SERVER = 1;
 	private final Integer PORT_SERVER = 2;
@@ -27,7 +29,7 @@ public enum Config {
 
 	private void error() {
 		Log.info("");
-		Log.info("Missing arguments. Usage:   SERIAL_PORT   IP_SERVER   PORT_SERVER   LOG_LEVEL(NONE || ACTIVE)");
+		Log.info("Missing arguments. Usage:   SERIAL_PORT   IP_SERVER   PORT_SERVER   [OPTION LOG_LEVEL: (ACTIVE || VERBOSE)]");
 		Log.info("");
 		System.exit(-1);
 	}
@@ -46,24 +48,37 @@ public enum Config {
 				+ " \n * Log level: " + Config.Instance.logLevel());
 	}
 
-	public void parseArgs(String[] args) {
+	public void parseArgs(final String[] args) {
 
-		if (args.length != NB_ARGS) {
-			error();
-		} else {
+		switch (args.length) {
+		case NB_ARGS_MIN:
+
+			logLevel = LogLevel.NONE;
+			break;
+
+		case NB_ARGS_MAX:
 
 			try {
-				logLevel = LogLevel.valueOf(args[LOG_LEVEL]);
+				if (args[LOG_LEVEL].isEmpty()) {
+					logLevel = LogLevel.NONE;
+				} else {
+					logLevel = LogLevel.valueOf(args[LOG_LEVEL]);
+				}
 			} catch (final IllegalArgumentException exception) {
 				error();
 			}
+			break;
 
-			serialPort = args[SERIAL_PORT];
-			ipServer = args[IP_SERVER];
-			portServer = Integer.valueOf(args[PORT_SERVER]);
+		default:
 
-			ok();
+			error();
+			return;
 		}
+
+		serialPort = args[SERIAL_PORT];
+		ipServer = args[IP_SERVER];
+		portServer = Integer.valueOf(args[PORT_SERVER]);
+		ok();
 	}
 
 	public Integer portServer() {
