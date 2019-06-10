@@ -27,7 +27,7 @@ public class Client implements MqttCallback {
 	private static final String IP_SERVER = Config.Instance.ipServer();
 	private static final Integer PORT_SERVER = Config.Instance.portServer();
 
-	private final short MAX_MESSAGES = 5;
+	private final short MAX_MESSAGES = 4;
 
 	// NOT IMPLEMENTED YET
 	// private final Boolean cleanSession;

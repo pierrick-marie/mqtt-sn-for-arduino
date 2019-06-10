@@ -43,8 +43,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "mqttsn-messages.h"
 #include "Logs.h"
 
-#define MAX_TOPICS 10
-#define MAX_MESSAGES 5
+#define MAX_TOPICS 4
+#define MAX_MESSAGES 4
 
 #define DEFAULT_TOPIC_ID 0xffff
 
@@ -237,6 +237,7 @@ private:
 	void reRegisterHandler(MsgReRegister* msg);
 
 	void displayFrameBufferOut();
+	void displayFrameBufferIn();
 
 	// @TODO not implemented yet
 	// void willTopicRespHandler(msg_willtopicresp* msg);

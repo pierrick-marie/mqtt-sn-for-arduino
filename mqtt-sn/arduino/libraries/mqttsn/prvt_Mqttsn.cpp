@@ -56,11 +56,11 @@ bool Mqttsn::waitData() {
 		i++;
 	}
 	if( i >= MAX_TRY ) {
-		// LOGS.debug("waitData", "no data received");
+		// LOGS.debugln("waitData", "KO");
 		return false;
 	}
 
-	// LOGS.debug("waitData", "data received");
+	// LOGS.debugln("waitData", "OK");
 	return true;
 }
 
@@ -74,7 +74,7 @@ void Mqttsn::parseData() {
 		payload[i] = FrameBufferIn[12+i];
 	}
 
-	// LOGS.debug("parseData", "data have been collected");
+	// LOGS.debugln("parseData", "OK");
 
 	memset(ResponseBuffer, 0, MAX_BUFFER_SIZE);
 	memcpy(ResponseBuffer, (void*)payload, payloadLenght);
@@ -95,49 +95,49 @@ void Mqttsn::dispatch() {
 	// LOGS.debug("dispatch", "response length:", responseMessage->length);
 
 	if(false == SearchGatewayOk && GWINFO == responseMessage->type) {
-		// LOGS.debug("dispatch", "GWINFO");
+		// LOGS.debugln("dispatch", "x2");
 		searchGatewayHandler((MsgGwinfo*)ResponseBuffer);
 	} else {
 
 		switch (responseMessage->type) {
 
 		case CONNACK:
-			// LOGS.debug("dispatch", "CONNACK");
+			// LOGS.debugln("dispatch", "x5");
 			connAckHandler((MsgConnAck*)ResponseBuffer);
 			break;
 
 		case REGACK:
-			// LOGS.debug("dispatch", "REGACK");
+			// LOGS.debugln("dispatch", "xB");
 			regAckHandler((MsgRegAck*)ResponseBuffer);
 			break;
 
 		case PUBLISH:
-			// LOGS.debug("dispatch", "PUBLISH");
+			// LOGS.debugln("dispatch", "xC");
 			publishHandler((MsgPublish*)ResponseBuffer);
 			break;
 
 		case SUBACK:
-			// LOGS.debug("dispatch", "SUBACK");
+			// LOGS.debugln("dispatch", "x13");
 			subAckHandler((MsgSubAck*)ResponseBuffer);
 			break;
 
 		case PINGRESP:
-			// LOGS.debug("dispatch", "PINGRESP");
+			// LOGS.debugln("dispatch", "x17");
 			pingRespHandler();
 			break;
 
 		case DISCONNECT:
-			// LOGS.debug("dispatch", "DISCONNECT");
+			// LOGS.debugln("dispatch", "x18");
 			disconnectHandler((MsgDisconnect*)ResponseBuffer);
 			break;
 
 		case REREGISTER:
-			// LOGS.debug("dispatch", "RE-REGISTER");
+			// LOGS.debugln("dispatch", "x1E");
 			reRegisterHandler((MsgReRegister*)ResponseBuffer);
 			break;
 
 		default:
-			// LOGS.debug("dispatch", "DEFAULT");
+			// LOGS.debugln("dispatch", "xx");
 			return;
 
 			// @TODO not implemented yet
@@ -248,13 +248,14 @@ bool Mqttsn::checkSerial() {
 
 	// no data is available
 	if(!waitData()) {
-		// LOGS.debug("checkSerial", "no data available -> timeout");
+		// LOGS.debugln("checkSerial", "KO 0");
 		return false;
 	}
+
 	delimiter = XBEE->read();
 
 	if(delimiter != 0x7E) {
-		// LOGS.debug("checkSerial", "delimiter KO!");
+		// LOGS.debug("checkSerial", "KO 1", delimiter);
 		return checkSerial();
 	}
 
@@ -269,14 +270,16 @@ bool Mqttsn::checkSerial() {
 	}
 
 	if(!verifyChecksum(FrameBufferIn, frameSize)) {
-		// LOGS.debug("checkSerial", "checksum KO!");
+		// LOGS.debug("checkSerial", "KO 2", delimiter);
 		return checkSerial();
 	}
 
-	if(FrameBufferIn[0] == 139) {
-		// LOGS.debug("checkSerial", "a transmit status (XBEE acquitall) -> get next message!");
+	if(FrameBufferIn[0] == 139 || FrameBufferIn[0] == 161) {
+		// LOGS.debug("checkSerial", "KO 3" , FrameBufferIn[0]);
 		return checkSerial();
 	}
+
+	// printFrameBufferIn();
 
 	if(FrameBufferIn[0] == 144) {
 		// this is a data packet, copy the gateway address
@@ -291,13 +294,13 @@ bool Mqttsn::checkSerial() {
 			GatewayAddress[7] = FrameBufferIn[8];
 		}
 		// all data have been store in @FrameBufferIn
-		// LOGS.debug("checkSerial", "correct data received");
+		// LOGS.debugln("checkSerial", "OK");
 		return true;
 	}
 
 	// not data available, clear the buffer and return false
 	memset(FrameBufferIn, 0, sizeof(FrameBufferIn));
-	// LOGS.debug("checkSerial", "default KO!");
+	// LOGS.debugln("checkSerial", "KO 4");
 	return false;
 }
 
@@ -317,18 +320,6 @@ void Mqttsn::subAckHandler(MsgSubAck* msg) {
 		RegAckReturnCode = REJECTED;
 	}
 }
-
-/*
-void Mqttsn::displayFrameBufferOut() {
-	int i = 0;
-	LOGS.debug("Print FrameBufferOut");
-	for(; i < sizeof(FrameBufferOut); i++) {
-		Serial.print(FrameBufferOut[i], HEX);
-		Serial.print(" ");
-	}
-	Serial.println("");
-}
-*/
 
 void Mqttsn::sendMessage() {
 
@@ -448,7 +439,7 @@ void Mqttsn::connAckHandler(MsgConnAck* msg) {
 
 	if(msg->returnCode == ACCEPTED) {
 		Connected = ACCEPTED;
-		LOGS.info("Connected OK");
+		LOGS.info("connected");
 	} else {
 		Connected = REJECTED;
 		LOGS.notConnected();
@@ -460,7 +451,7 @@ void Mqttsn::disconnectHandler(MsgDisconnect* msg) {
 
 	Connected = REJECTED;
 
-	LOGS.info("disconnect OK -> sleeping");
+	LOGS.info("disconnected");
 
 	delay(SLEEP_TIME * 1500); // 10 ms * 1500 = 15000 ms = 15 s
 
@@ -470,10 +461,10 @@ void Mqttsn::disconnectHandler(MsgDisconnect* msg) {
 void Mqttsn::searchGatewayHandler(MsgGwinfo* message) {
 
 	if(message->gatewayId == GATEWAY_ID) {
-		LOGS.info("mqtsn started");
+		LOGS.info("started");
 		SearchGatewayOk = true;
 	} else {
-		LOGS.error("not started: stop");
+		LOGS.error("not started");
 		SearchGatewayOk = false;
 		while(1);
 	}
@@ -526,6 +517,28 @@ void Mqttsn::reRegisterHandler(MsgReRegister* msg) {
 		registerTopic(topicName);
 	}
 }
+
+/*
+void Mqttsn::printFrameBufferOut() {
+	int i = 0;
+	for(; i < sizeof(FrameBufferOut); i++) {
+		Serial.print(FrameBufferOut[i], HEX);
+		Serial.print(" ");
+	}
+	Serial.println("");
+}
+*/
+
+/*
+void Mqttsn::printFrameBufferIn() {
+	int i = 0;
+	for(; i < sizeof(FrameBufferIn); i++) {
+		Serial.print(FrameBufferIn[i], HEX);
+		Serial.print(" ");
+	}
+	Serial.println("");
+}
+*/
 
 /**
  * @TODO never used

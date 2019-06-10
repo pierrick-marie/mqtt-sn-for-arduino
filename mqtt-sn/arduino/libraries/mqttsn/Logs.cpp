@@ -34,44 +34,36 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <Arduino.h>
 
-#define DEBUG_MESSAGE " # [ DEBUG ] "
+#define DEBUG_MESSAGE "[DEBUG] "
 
 Logs::Logs() {}
 
 Logs::~Logs() {}
 
-
-void Logs::debug(const char* methodeName) {
-
-	Serial.print(DEBUG_MESSAGE);
-	Serial.print(methodeName);
-	Serial.println("()");
-}
-
 void Logs::debug(const char* methodeName, const char* message) {
 
 	Serial.print(DEBUG_MESSAGE);
 	Serial.print(methodeName);
-	Serial.print("(): ");
-	Serial.println(message);
+	Serial.print(": ");
+	Serial.print(message);
+}
+
+void Logs::debugln(const char* methodeName, const char* message) {
+
+	debug(methodeName, message);
+	Serial.println("");
 }
 
 void Logs::debug(const char* methodeName, const char* message, const int value) {
 
-	Serial.print(DEBUG_MESSAGE);
-	Serial.print(methodeName);
-	Serial.print("(): ");
-	Serial.print(message);
+	debug(methodeName, message);
 	Serial.print(" ");
 	Serial.println(value);
 }
 
 void Logs::debug(const char* methodeName, const char* message, const char* value) {
 
-	Serial.print(DEBUG_MESSAGE);
-	Serial.print(methodeName);
-	Serial.print("(): ");
-	Serial.print(message);
+	debug(methodeName, message);
 	Serial.print(" ");
 	Serial.println(value);
 }
@@ -84,11 +76,11 @@ void Logs::info(const char* message) {
 
 void Logs::error(const char* message) {
 
-	Serial.print("\n[MQTT] -ERR- ");
+	Serial.print("\n[MQTT-ERR]");
 	Serial.println(message);
 }
 
 void Logs::notConnected() {
 
-	error("not connected: stop");
+	error("not connected");
 }

@@ -61,10 +61,11 @@ public enum Writer {
 		res[res.length - 1] = (byte) checksum;
 
 		try {
+			Log.print(res);
 			xbee.port.writeBytes(res);
 		} catch (final SerialPortException e) {
-			Log.error("XBeeSerialPort", "write", "SerialPortException");
-			Log.debug("XBeeSerialPort", "write", e.getMessage());
+			Log.error("Writer", "write", "SerialPortException");
+			Log.debug("Writer", "write", e.getMessage());
 		}
 	}
 }

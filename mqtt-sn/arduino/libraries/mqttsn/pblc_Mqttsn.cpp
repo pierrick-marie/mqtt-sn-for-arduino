@@ -180,7 +180,7 @@ void Mqttsn::publish(const char* _topicName, String _message){
 
 bool Mqttsn::start() {
 
-	LOGS.info("start mqttsn");
+	LOGS.info("start");
 
 	WaitingForResponse = false;
 	SearchGatewayOk = false;
@@ -191,10 +191,10 @@ bool Mqttsn::start() {
 	msg->type = SEARCHGW;
 	msg->radius = RADIUS;
 
-	// LOGS.debug("searchGateway", "sending message");
+	// LOGS.debug("start", "sending message");
 	sendMessage();
 
-	// LOGS.debug("searchGateway", "checking the response from the gateway");
+	// LOGS.debug("start", "checking the response from the gateway");
 
 	int i = 0;
 	while(false == SearchGatewayOk && i <= MAX_TRY) {
@@ -214,7 +214,6 @@ bool Mqttsn::start() {
 
 void Mqttsn::connect(const char* _moduleName) {
 
-	// LOGS.debug( "connect", "save module name", strlen(_moduleName));
 	strcpy(ModuleName, _moduleName);
 
 	MsgConnect* msg = reinterpret_cast<MsgConnect*>(MessageBuffer);
@@ -226,12 +225,12 @@ void Mqttsn::connect(const char* _moduleName) {
 	msg->duration = bitSwap(DURATION_TIME);
 	strcpy(msg->clientId, ModuleName);
 
-	// LOGS.debug( "connect", "send a connect message", msg->client_id);
+	// LOGS.debug("connect", "name", msg->clientId);
 
 	sendMessage();
 
 	if( !checkSerial() ) {
-		// LOGS.debug( "connect", "check serial rejected");
+		// LOGS.debugln("connect", "KO");
 		Connected = REJECTED;
 		LOGS.notConnected();
 		while(1);
