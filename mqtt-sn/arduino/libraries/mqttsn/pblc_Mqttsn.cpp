@@ -87,9 +87,11 @@ int Mqttsn::requestMessages() {
 
 	if( !checkSerial() ) {
 		// LOGS.debug("pingReq", "check serial rejected");
-		Connected = REJECTED;
-		LOGS.notConnected();
-		while(1);
+		// Connected = REJECTED;
+		LOGS.connectionLost();
+		start();
+		connect(ModuleName);
+		requestMessages();
 	}
 
 	// LOGS.debug("pingReq", "parsing published messages");
@@ -99,13 +101,6 @@ int Mqttsn::requestMessages() {
 }
 
 void Mqttsn::disconnect() {
-
-	/*
-	if(Connected != ACCEPTED) {
-		LOGS.notConnected();
-		while(1);
-	}
-	*/
 
 	MsgDisconnect* msg = reinterpret_cast<MsgDisconnect*>(MessageBuffer);
 
@@ -120,9 +115,9 @@ void Mqttsn::disconnect() {
 
 	if( !checkSerial() ) {
 		// LOGS.debug("disconnect", "check serial rejected");
-		Connected = REJECTED;
-		LOGS.notConnected();
-		while(1);
+		// Connected = REJECTED;
+		LOGS.connectionLost();
+		disconnect();
 	}
 
 	// LOGS.debug("disconnect", "parsing published messages");
@@ -132,8 +127,10 @@ void Mqttsn::disconnect() {
 void Mqttsn::publish(const char* _topicName, String _message){
 
 	if(Connected != ACCEPTED) {
-		LOGS.notConnected();
-		while(1);
+		LOGS.connectionLost();
+		start();
+		connect(ModuleName);
+		publish(_topicName, _message);
 	}
 
 	int topicId = findTopicId(_topicName);
@@ -179,8 +176,6 @@ void Mqttsn::publish(const char* _topicName, String _message){
 }
 
 bool Mqttsn::start() {
-
-	LOGS.info("start");
 
 	WaitingForResponse = false;
 	SearchGatewayOk = false;
@@ -231,9 +226,10 @@ void Mqttsn::connect(const char* _moduleName) {
 
 	if( !checkSerial() ) {
 		// LOGS.debugln("connect", "KO");
-		Connected = REJECTED;
-		LOGS.notConnected();
-		while(1);
+		// Connected = REJECTED;
+		LOGS.connectionLost();
+		start();
+		connect(_moduleName);
 	}
 	parseData();
 }
@@ -313,9 +309,11 @@ bool Mqttsn::subscribeTopic(const char* _topicName) {
 
 	if( !checkSerial() ) {
 		// LOGS.debug("subscribe", "check serial rejected");
-		Connected = REJECTED;
-		LOGS.notConnected();
-		while(1);
+		// Connected = REJECTED;
+		LOGS.connectionLost();
+		start();
+		connect(ModuleName);
+		subscribeTopic(_topicName);
 	}
 
 	// LOGS.debug("subscribe", "parsing response 'subscribe topic'");
@@ -363,9 +361,11 @@ bool Mqttsn::registerTopic(const char* _topicName) {
 
 	if( !checkSerial() ) {
 		// LOGS.debug("register", "rejected");
-		Connected = REJECTED;
-		LOGS.notConnected();
-		while(1);
+		// Connected = REJECTED;
+		LOGS.connectionLost();
+		start();
+		connect(ModuleName);
+		registerTopic(_topicName);
 	}
 
 	parseData();

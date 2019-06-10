@@ -80,7 +80,8 @@ void Logs::error(const char* message) {
 	Serial.println(message);
 }
 
-void Logs::notConnected() {
+void Logs::connectionLost() {
 
-	error("not connected");
+	error("connection lost");
+	info("retry");
 }

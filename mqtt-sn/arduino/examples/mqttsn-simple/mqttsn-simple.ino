@@ -5,11 +5,13 @@
 
 #include <Mqttsn.h>
 
-#define MODULE_NAME "Arduino 0"
+#define MODULE_NAME "Arduino-1"
 
-#define TOPIC_SUB "TOPIC_SUB"
+#define TOPIC_SUB "TOPIC_PUB-3"
 
-#define TOPIC_PUB "TOPIC_PUB"
+#define TOPIC_PUB "TOPIC_PUB-1"
+
+#define MESSAGE "MESSAGE 1"
 
 String rfid = "";
 int nbReceivedMessages = 0;
@@ -52,7 +54,7 @@ void loop() {
     Serial.println("\n!!! Subscribe KO !!!");
   }
 
-  mqttsn.publish(TOPIC_PUB, "rfid");
+  mqttsn.publish(TOPIC_PUB, MESSAGE);
 
   mqttsn.disconnect();
 

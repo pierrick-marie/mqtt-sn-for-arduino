@@ -42,24 +42,22 @@ public class RawDataParser implements Runnable {
 	 * @param buffer       The date to search into the @searchedByte.
 	 * @return The index of @searedByte or -1 if not found.
 	 */
-	private int getFirstIndexforByte(final byte searchedByte, final byte[] buffer) {
-
-		for (int i = 1; i < buffer.length; i++) {
-			if (buffer[i] == searchedByte) {
-				return i;
-			}
-		}
-
-		return -1;
-	}
+	/*
+	 * TODO DEBUG private int getFirstIndexforByte(final byte searchedByte, final
+	 * byte[] buffer) {
+	 *
+	 * for (int i = 1; i < buffer.length; i++) { if (buffer[i] == searchedByte) {
+	 * return i; } }
+	 *
+	 * return -1; }
+	 */
 
 	private synchronized void parse(final byte[] buffer) {
 
 		if (buffer[MessageStructure.FRAME_TYPE] == (byte) XBeeMessageType.TRANSMIT_STATUS) {
 			Log.error("RawDataParser", "parse", "MessageStructure.FRAME_TYPE == MessageType.FRAME_TYPE_ERROR -> "
 					+ String.format("%02X ", buffer[MessageStructure.FRAME_TYPE]));
-			Log.print(buffer);
-			Log.print(buffer);
+			// Log.print(buffer);
 			return;
 		}
 
@@ -151,13 +149,13 @@ public class RawDataParser implements Runnable {
 
 		Log.debug("RawDataParser", "run", "start the message executor reader");
 
-		final int indexOfByte = getFirstIndexforByte((byte) 0X7E, buffer);
-
-		if (indexOfByte == -1) {
-			if (verifyData(buffer)) {
+		/*
+		 * TODO DEBUG final int indexOfByte = getFirstIndexforByte((byte) 0X7E, buffer);
+		 */
+		if (verifyData(buffer)) {
+			if (verifyChecksum(buffer)) {
 				parse(buffer);
 			}
-			return;
 		}
 	}
 
@@ -169,8 +167,6 @@ public class RawDataParser implements Runnable {
 	 */
 	private boolean verifyChecksum(final byte[] buffer) {
 
-		Log.debug("RawDataParser", "verifyChecksum", "");
-
 		int checksum = 0;
 
 		// 3 magic number
@@ -180,8 +176,11 @@ public class RawDataParser implements Runnable {
 		checksum = checksum & 0xFF;
 
 		if (checksum == 0xFF) {
+			Log.debug("RawDataParser", "verifyChecksum", "OK");
 			return true;
 		} else {
+			Log.error("RawDataParser", "verifyChecksum", "Fail");
+			Log.debug("RawDataParser", "verifyChecksum", "checksum: " + checksum);
 			return false;
 		}
 	}
@@ -195,12 +194,13 @@ public class RawDataParser implements Runnable {
 	 */
 	private boolean verifyData(final byte[] buffer) {
 
-		Log.debug("RawDataParser", "verifyData", "");
-
 		if (buffer[0] != (byte) 0x7E) {
+			Log.error("RawDataParser", "verifyData", "Fail");
+			Log.debug("RawDataParser", "run", "start delimiter: " + buffer[0]);
 			return false;
 		}
 
-		return verifyChecksum(buffer);
+		Log.debug("RawDataParser", "verifyData", "OK");
+		return true;
 	}
 }

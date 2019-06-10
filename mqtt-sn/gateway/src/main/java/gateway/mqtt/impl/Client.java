@@ -84,6 +84,7 @@ public class Client implements MqttCallback {
 	@Override
 	public void connectionLost(Throwable throwable) {
 		Log.error("Client", "connectionLost", throwable.getMessage());
+		Log.debug("Client", "connectionLost", device.name());
 	}
 
 	@Override

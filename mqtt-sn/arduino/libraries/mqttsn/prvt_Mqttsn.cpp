@@ -442,7 +442,7 @@ void Mqttsn::connAckHandler(MsgConnAck* msg) {
 		LOGS.info("connected");
 	} else {
 		Connected = REJECTED;
-		LOGS.notConnected();
+		LOGS.error("not connected");
 		while(1);
 	}
 }

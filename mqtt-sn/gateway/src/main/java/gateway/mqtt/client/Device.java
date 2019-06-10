@@ -74,6 +74,7 @@ public class Device {
 	synchronized public Boolean connect(final int duration) {
 		if (null == mqttClient) {
 			Log.error("Device", "connect", "mqtt client is null");
+			return false;
 		}
 
 		this.duration = duration;

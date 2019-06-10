@@ -54,7 +54,7 @@ public:
 
 	void error(const char* message);
 
-	void notConnected();
+	void connectionLost();
 };
 
 #endif
