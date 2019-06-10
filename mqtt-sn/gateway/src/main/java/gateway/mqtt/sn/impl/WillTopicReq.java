@@ -8,13 +8,12 @@
 package gateway.mqtt.sn.impl;
 
 import gateway.mqtt.client.Device;
-import gateway.mqtt.sn.IAction;
 import gateway.utils.log.Log;
 
 /**
  * @TODO not implemented yet
  */
-public class WillTopicReq implements IAction {
+public class WillTopicReq implements Runnable {
 
 	private final Device device;
 
@@ -22,19 +21,19 @@ public class WillTopicReq implements IAction {
 		this.device = device;
 	}
 
+	@Override
+	public void run() {
+		willTopicReq();
+	}
+
 	private void willTopicReq() {
 
-		Log.input(device, "Will Topics Req");
+		Log.xbeeInput(device, "Will Topics Req");
 
-		byte[] ret = new byte[2];
+		final byte[] ret = new byte[2];
 		ret[0] = (byte) 0x02;
 		ret[1] = (byte) 0x06;
 
 		// SerialPortWriter.write(device, ret);
-	}
-
-	@Override
-	public void exec() {
-		willTopicReq();
 	}
 }

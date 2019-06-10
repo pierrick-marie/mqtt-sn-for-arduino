@@ -8,5 +8,15 @@
 package gateway.utils.log;
 
 public enum LogLevel {
-	NONE, ACTIVE, VERBOSE
+	NONE("NONE"), ACTIVE("ACTIVE"), VERBOSE("VERBOSE");
+
+	private String name;
+
+	private LogLevel(final String value) {
+		name = value;
+	}
+
+	public String getName() {
+		return name;
+	}
 }

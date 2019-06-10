@@ -11,31 +11,32 @@ import java.nio.charset.StandardCharsets;
 
 import gateway.mqtt.client.Device;
 import gateway.mqtt.impl.Topic;
-import gateway.mqtt.sn.IAction;
-import gateway.serial.SerialPortWriter;
+import gateway.serial.Writer;
 import gateway.utils.log.Log;
 
-public class Subscribe implements IAction {
+public class Subscribe implements Runnable {
 
 	final Device device;
 	final byte[] msg;
 
 	public Subscribe(final Device device, final byte[] msg) {
 
-		Log.input(device, "subscribe");
+		Log.xbeeInput(device, "subscribe");
 
 		this.device = device;
 		this.msg = msg;
 	}
 
 	@Override
-	public void exec() {
+	public void run() {
 		subscribe();
 	}
 
-	private void suback(final byte[] messageId, final int topicId, final byte returnCode) {
+	// private void suback(final byte[] messageId, final int topicId, final byte
+	// returnCode) {
+	private void suback(final int topicId, final byte returnCode) {
 
-		Log.output(device, "sub ack with return code: " + returnCode);
+		Log.xbeeOutput(device, "sub ack " + returnCode);
 
 		final byte[] message = new byte[8];
 		message[0] = (byte) 0x08;
@@ -50,11 +51,13 @@ public class Subscribe implements IAction {
 			message[2] = (byte) 0x00;
 		}
 
-		message[5] = messageId[0];
-		message[6] = messageId[1];
+		// message[5] = messageId[0];
+		// message[6] = messageId[1];
+		message[5] = 0x00;
+		message[6] = 0x00;
 		message[7] = returnCode;
 
-		SerialPortWriter.write(device, message);
+		Writer.Instance.write(device, message);
 	}
 
 	public void subscribe() {
@@ -62,12 +65,16 @@ public class Subscribe implements IAction {
 		// NOT IMPLEMENTED YET (QoS)
 		// final byte flags = msg[0];
 		final byte[] messageId = new byte[2];
-		messageId[0] = msg[1];
-		messageId[1] = msg[2];
+		// messageId[0] = msg[1];
+		// messageId[1] = msg[2];
+		messageId[0] = 0x00;
+		messageId[1] = 0x00;
 
 		if (!device.isConnected()) {
 			Log.error("Subscribre", "subscribe", device + "is not connected");
-			suback(messageId, -1, Prtcl.REJECTED);
+
+			// suback(messageId, -1, Prtcl.REJECTED);
+			suback(-1, Prtcl.REJECTED);
 			return;
 		}
 
@@ -79,9 +86,11 @@ public class Subscribe implements IAction {
 
 		final Topic topic = device.subscribe(topicName);
 		if (null != topic) {
-			suback(messageId, 298, Prtcl.ACCEPTED);
+			// suback(messageId, 298, Prtcl.ACCEPTED);
+			suback(298, Prtcl.ACCEPTED);
 		} else {
-			suback(messageId, -1, Prtcl.REJECTED);
+			// suback(messageId, -1, Prtcl.REJECTED);
+			suback(-1, Prtcl.REJECTED);
 		}
 	}
 }

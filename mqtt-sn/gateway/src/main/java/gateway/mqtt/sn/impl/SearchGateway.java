@@ -9,11 +9,10 @@ package gateway.mqtt.sn.impl;
 
 import gateway.Main;
 import gateway.mqtt.client.Device;
-import gateway.mqtt.sn.IAction;
-import gateway.serial.SerialPortWriter;
+import gateway.serial.Writer;
 import gateway.utils.log.Log;
 
-public class SearchGateway implements IAction {
+public class SearchGateway implements Runnable {
 
 	private final Device device;
 	// NOT IMPLEMENTED YET
@@ -21,7 +20,7 @@ public class SearchGateway implements IAction {
 
 	public SearchGateway(final Device device, final Integer radius) {
 
-		Log.input(device, "search gateway");
+		Log.xbeeInput(device, "search gateway");
 
 		this.device = device;
 		// NOT IMPLEMENTED YET
@@ -29,15 +28,16 @@ public class SearchGateway implements IAction {
 	}
 
 	@Override
-	public void exec() {
+	public void run() {
 
-		Log.output(device, "gateway info");
+		Log.info(device + " first connect OK");
+		Log.xbeeOutput(device, "gateway info");
 
 		final byte[] ret = new byte[3];
 		ret[0] = (byte) 0x03;
 		ret[1] = (byte) 0x02;
 		ret[2] = (byte) Main.GATEWAY_ID;
 
-		SerialPortWriter.write(device, ret);
+		Writer.Instance.write(device, ret);
 	}
 }

@@ -7,21 +7,17 @@
 
 package gateway;
 
-import gateway.serial.SerialPortReader;
+import gateway.serial.Reader;
 import gateway.utils.Config;
-import gateway.utils.log.Log;
 
 public class Main {
 
 	public static final int GATEWAY_ID = 1;
 
-	public static void main(String[] args) {
+	public static void main(final String[] args) {
 
-		Config.instance.parseArgs(args);
+		Config.Instance.parseArgs(args);
 
-		Log.print("Starting the gateway \n * Serial: " + Config.SERIAL_PORT + "\n * IP server: " + Config.IP_SERVER
-				+ " \n * Port server: " + Config.PORT_SERVER);
-
-		new SerialPortReader();
+		Reader.Instance.start();
 	}
 }

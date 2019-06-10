@@ -11,58 +11,20 @@ import java.nio.charset.StandardCharsets;
 
 import gateway.mqtt.client.Device;
 import gateway.mqtt.impl.Topic;
-import gateway.mqtt.sn.IAction;
-import gateway.serial.SerialPortWriter;
+import gateway.serial.Writer;
 import gateway.utils.log.Log;
 
-public class Register implements IAction {
+public class Register implements Runnable {
 
 	private final Device device;
 	private final byte[] message;
 
 	public Register(final Device device, final byte[] msg) {
 
-		Log.input(device, "register");
+		Log.xbeeInput(device, "register");
 
 		this.device = device;
 		message = msg;
-	}
-
-	/**
-	 * This method registers a topic name into the list of
-	 * Topics @see:Main.TopicName The method does not register the topic name to the
-	 * bus.
-	 */
-	@Override
-	public void exec() {
-
-		final byte[] messageId = new byte[2];
-		messageId[0] = message[2];
-		messageId[1] = message[3];
-		final byte[] name = new byte[message.length - 4];
-		String topicName;
-		int i;
-		final Topic topic;
-
-		if (!device.isConnected()) {
-			Log.error("Register", "register", device + "is not connected");
-			// Error - topicId = -1
-			regack(-1, messageId, Prtcl.REJECTED);
-			return;
-		}
-
-		for (i = 0; i < name.length; i++) {
-			name[i] = message[4 + i];
-		}
-
-		topicName = new String(name, StandardCharsets.UTF_8);
-
-		topic = device.register(topicName);
-		if (null != topic) {
-			regack(topic.id(), messageId, Prtcl.ACCEPTED);
-		} else {
-			regack(-1, messageId, Prtcl.REJECTED);
-		}
 	}
 
 	/**
@@ -71,9 +33,11 @@ public class Register implements IAction {
 	 * @param messageId
 	 * @param topicId
 	 */
-	private void regack(final int topicId, final byte[] messageId, final byte returnCode) {
+	// private void regack(final int topicId, final byte[] messageId, final byte
+	// returnCode) {
+	private void regack(final int topicId, final byte returnCode) {
 
-		Log.output(device, "reg ack with return code: " + returnCode);
+		Log.xbeeOutput(device, "reg ack with return code " + returnCode);
 
 		// the message to send
 		final byte[] message = new byte[7];
@@ -87,10 +51,54 @@ public class Register implements IAction {
 			message[2] = (byte) topicId;
 			message[3] = (byte) 0x00;
 		}
-		message[4] = messageId[0];
-		message[5] = messageId[1];
+		// message[4] = messageId[0];
+		// message[5] = messageId[1];
+		message[4] = 0x00;
+		message[5] = 0x00;
 		message[6] = returnCode;
 
-		SerialPortWriter.write(device, message);
+		Writer.Instance.write(device, message);
+	}
+
+	/**
+	 * This method registers a topic name into the list of
+	 * Topics @see:Main.TopicName The method does not register the topic name to the
+	 * bus.
+	 */
+	@Override
+	public void run() {
+
+		final byte[] messageId = new byte[2];
+		// messageId[0] = message[2];
+		// messageId[1] = message[3];
+		messageId[0] = 0x00;
+		messageId[1] = 0x00;
+		final byte[] name = new byte[message.length - 4];
+		String topicName;
+		int i;
+		final Topic topic;
+
+		if (!device.isConnected()) {
+			Log.error("Register", "register", device + "is not connected");
+			// Error - topicId = -1
+			// regack(-1, messageId, Prtcl.REJECTED);
+			regack(-1, Prtcl.REJECTED);
+			return;
+		}
+
+		for (i = 0; i < name.length; i++) {
+			name[i] = message[4 + i];
+		}
+
+		topicName = new String(name, StandardCharsets.UTF_8);
+
+		topic = device.register(topicName);
+		if (null != topic) {
+			// regack(topic.id(), messageId, Prtcl.ACCEPTED);
+			regack(topic.id(), Prtcl.ACCEPTED);
+		} else {
+			// regack(-1, messageId, Prtcl.REJECTED);
+			regack(-1, Prtcl.REJECTED);
+		}
 	}
 }

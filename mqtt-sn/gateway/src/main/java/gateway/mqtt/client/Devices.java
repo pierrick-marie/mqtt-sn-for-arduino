@@ -13,7 +13,6 @@ import java.util.List;
 import gateway.mqtt.address.Address16;
 import gateway.mqtt.address.Address64;
 import gateway.utils.log.Log;
-import gateway.utils.log.LogLevel;
 
 public enum Devices {
 
@@ -23,12 +22,14 @@ public enum Devices {
 
 	public synchronized Boolean remove(final Device device) {
 
-		Log.error("Devices", "remvove", "Removing a device : " + device);
+		Log.debug("Devices", "remvove", "Removing " + device);
 
 		return DEVICES.remove(device);
 	}
 
 	public synchronized Device search(final Address64 address64, final Address16 address16) {
+
+		Log.debug("Devices", "search", "addr 64b: " + address64 + " - addr 16b: " + address16);
 
 		Device device = null;
 
@@ -40,15 +41,13 @@ public enum Devices {
 		}
 
 		if (null == device) {
-			Log.debug(LogLevel.VERBOSE, "Devices", "search",
-					"device with address " + address64 + " is NOT registered");
-			Log.debug(LogLevel.ACTIVE, "Devices", "search", "creating a new device");
+			Log.debug("Devices", "search", "device with address " + address64 + " is NOT registered");
+			Log.debug("Devices", "search", "creating a new device");
 
-			device = new Device(address64, address16);
+			device = new Device(address64, address16, "Unnamed device " + DEVICES.size());
 			DEVICES.add(device);
-			device.start();
 		} else {
-			Log.debug(LogLevel.VERBOSE, "Devices", "search", "device " + device + " is already registered");
+			Log.debug("Devices", "search", device + " is already registered");
 		}
 
 		return device;

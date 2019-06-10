@@ -7,6 +7,9 @@
 
 package gateway.serial;
 
+import gateway.mqtt.MessageStructure;
+import gateway.mqtt.MqttSNMessageType;
+import gateway.mqtt.XBeeMessageType;
 import gateway.mqtt.address.Address16;
 import gateway.mqtt.address.Address64;
 import gateway.mqtt.client.Device;
@@ -19,122 +22,185 @@ import gateway.mqtt.sn.impl.Register;
 import gateway.mqtt.sn.impl.SearchGateway;
 import gateway.mqtt.sn.impl.Subscribe;
 import gateway.utils.log.Log;
-import gateway.utils.log.LogLevel;
 
-enum RawDataParser {
+public class RawDataParser implements Runnable {
 
-	Instance;
+	private final byte[] buffer;
+	private int payload_length;
+	private int data_type;
+	private final byte address16[] = new byte[MessageStructure.ADDRESS_16_SIZE];
+	private final byte address64[] = new byte[MessageStructure.ADDRESS_64_SIZE];
 
-	static byte address64[] = new byte[8];
-	static byte address16[] = new byte[2];
-	static int payload_length;
-	static int data_type;
-	static byte[] payload;
-	static byte[] message;
+	public RawDataParser(final byte[] buffer) {
+		this.buffer = buffer;
+	}
 
-	public void parse(final byte[] data) {
+	/**
+	 * The function returns the index of @searchedByte into @data.
+	 *
+	 * @param searchedByte The byte to search.
+	 * @param buffer       The date to search into the @searchedByte.
+	 * @return The index of @searedByte or -1 if not found.
+	 */
+	/*
+	 * TODO DEBUG private int getFirstIndexforByte(final byte searchedByte, final
+	 * byte[] buffer) {
+	 *
+	 * for (int i = 1; i < buffer.length; i++) { if (buffer[i] == searchedByte) {
+	 * return i; } }
+	 *
+	 * return -1; }
+	 */
 
-		if (data[3] == (byte) 0x8B) {
+	private synchronized void parse(final byte[] buffer) {
+
+		if (buffer[MessageStructure.FRAME_TYPE] == (byte) XBeeMessageType.TRANSMIT_STATUS) {
+			Log.error("RawDataParser", "parse", "MessageStructure.FRAME_TYPE == MessageType.FRAME_TYPE_ERROR -> "
+					+ String.format("%02X ", buffer[MessageStructure.FRAME_TYPE]));
+			// Log.print(buffer);
 			return;
 		}
 
-		// for loop
+		// for loops
 		int i;
 
-		// Read the first 8 bytes
-		for (i = 0; i < 8; i++) {
-			address64[i] = data[4 + i];
+		Log.debug("RawDataParser", "parse", "64b address");
+
+		for (i = 0; i < MessageStructure.ADDRESS_64_SIZE; i++) {
+			address64[i] = buffer[MessageStructure.RECEIVE_ADDRESS_64_START + i];
 		}
 
-		// Read the first 2 bytes
-		for (i = 0; i < 2; i++) {
-			address16[i] = data[12 + i];
+		Log.debug("RawDataParser", "parse", "16b address");
+
+		for (i = 0; i < MessageStructure.ADDRESS_16_SIZE; i++) {
+			address16[i] = buffer[MessageStructure.RECEIVE_ADDRESS_16_START + i];
 		}
+
+		Log.debug("RawDataParser", "parse", "payload");
 
 		try {
-			// check the type of message
-			if (data[15] == 0x01) {
-				payload_length = data[16] * 16 + data[17];
-				data_type = data[18];
-				payload = new byte[payload_length];
-				for (i = 19; i < data.length; i++) {
-					payload[i] = data[i];
-				}
-			} else {
-				payload_length = data[15];
-				data_type = data[16];
-				payload = new byte[payload_length];
-				for (i = 0; i < payload_length; i++) {
-					payload[i] = data[15 + i];
-				}
-			}
+			payload_length = buffer[MessageStructure.PAYLOAD_LENGTH];
+			data_type = buffer[MessageStructure.DATA_TYPE];
 		} catch (final Exception e) {
 			Log.error("RawDataParser", "parse", "Error while reading incoming data");
-			Log.debug(LogLevel.VERBOSE, "RawDataParser", "parse", e.getMessage());
+			Log.debug("RawDataParser", "parse", e.getMessage());
 		}
 
-		// Compute the message for each case of the following switch except for SEARCHGW
-		message = new byte[payload_length - 2];
-		for (i = 0; i < message.length; i++) {
-			message[i] = payload[2 + i];
+		// Compute the message for each case of the following switch
+		final byte[] data = new byte[payload_length - MessageStructure.CHECKSUM_SIZE];
+		for (i = 0; i < data.length; i++) {
+			data[i] = buffer[MessageStructure.RECEIVE_PAYLOAD_START + i];
 		}
 
 		final Device device = Devices.list.search(new Address64(address64), new Address16(address16));
 		device.updateTimer();
 
+		Log.debug("RawDataParser", "parse", "analyse message type");
+
 		switch (data_type) {
-		case 0x01:
-			// SEARCHGW
-			device.setAction(new SearchGateway(device, Integer.valueOf(payload[2])));
+		case MqttSNMessageType.SEARCHGW:
+			device.setAction(new SearchGateway(device, Integer.valueOf(data[MessageStructure.RECEIVE_RADIUS])));
 			break;
 
-		case 0x04:
-			// CONNECT
-			device.setAction(new Connect(device, message));
+		case MqttSNMessageType.CONNECT:
+			device.setAction(new Connect(device, data));
 			break;
 
-		case 0x0A:
-			// REGISTER
-			device.setAction(new Register(device, message));
+		case MqttSNMessageType.REGISTER:
+			device.setAction(new Register(device, data));
 			break;
 
-		case 0x12:
-			// SUBSCRIBE
-			device.setAction(new Subscribe(device, message));
+		case MqttSNMessageType.SUBSCRIBE:
+			device.setAction(new Subscribe(device, data));
 			break;
 
-		case 0x18:
-			// DISCONNECT
-			device.setAction(new Disconnect(device, message));
+		case MqttSNMessageType.DISCONNECT:
+			device.setAction(new Disconnect(device, data));
 			break;
 
-		case 0x0C:
-			// PUBLISH
-			device.setAction(new Publish(device, message));
+		case MqttSNMessageType.PUBLISH:
+			device.setAction(new Publish(device, data));
 			break;
 
-		case 0x16:
-			// PINGREQ
-			device.setAction(new PingReq(device, message));
+		case MqttSNMessageType.PINGREQ:
+			device.setAction(new PingReq(device, data));
 			break;
 
-		case 0x07:
-			// WILLTOPIC
+		case MqttSNMessageType.WILLTOPIC:
 			// @TODO not implemented yet
 			// device.setAction(new WillTopic(device, message));
 			break;
 
-		case 0x09:
-			// WILLMESSAGE
+		case MqttSNMessageType.WILLMSG:
 			// @TODO not implemented yet
 			// device.setAction(new WillMessage(device, message));
 			break;
 
-		case 0x0D:
+		case MqttSNMessageType.PUBACK:
 			// PUBACK
 			// Only used with QoS level 1 and 2 - not used yet
 			// device.setAction(new Puback(device, message));
 			break;
 		}
+	}
+
+	@Override
+	public synchronized void run() {
+
+		Log.debug("RawDataParser", "run", "start the message executor reader");
+
+		/*
+		 * TODO DEBUG final int indexOfByte = getFirstIndexforByte((byte) 0X7E, buffer);
+		 */
+		if (verifyData(buffer)) {
+			if (verifyChecksum(buffer)) {
+				parse(buffer);
+			}
+		}
+	}
+
+	/**
+	 * The function verifies the checksum of the @data.
+	 *
+	 * @param buffer The data to verify the checksum.
+	 * @return True if the checksum is ok, else false.
+	 */
+	private boolean verifyChecksum(final byte[] buffer) {
+
+		int checksum = 0;
+
+		// 3 magic number
+		for (int i = 3; i < buffer.length; i++) {
+			checksum += buffer[i] & 0xFF;
+		}
+		checksum = checksum & 0xFF;
+
+		if (checksum == 0xFF) {
+			Log.debug("RawDataParser", "verifyChecksum", "OK");
+			return true;
+		} else {
+			Log.error("RawDataParser", "verifyChecksum", "Fail");
+			Log.debug("RawDataParser", "verifyChecksum", "checksum: " + checksum);
+			return false;
+		}
+	}
+
+	/**
+	 * The function checks if the first byte of @data is equals to 0x7E else returns
+	 * false. If ok, the functions returns the result of @verifyChecksum()
+	 *
+	 * @param buffer The data to verify.
+	 * @return True is the @data is OK, else false.
+	 */
+	private boolean verifyData(final byte[] buffer) {
+
+		if (buffer[0] != (byte) 0x7E) {
+			Log.error("RawDataParser", "verifyData", "Fail");
+			Log.debug("RawDataParser", "run", "start delimiter: " + buffer[0]);
+			return false;
+		}
+
+		Log.debug("RawDataParser", "verifyData", "OK");
+		return true;
 	}
 }

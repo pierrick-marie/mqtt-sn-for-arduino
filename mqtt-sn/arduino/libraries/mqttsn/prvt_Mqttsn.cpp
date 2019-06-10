@@ -46,197 +46,188 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 bool Mqttsn::waitData() {
 
-	// @BUG waits 500ms seconds otherwise the module miss some answers from the gateway
 	delay(LONG_WAIT);
 
-	int i = 1;
-	while( xBee->available() <= 0 && i <= MAX_TRY ) {
+	int i = 0;
+	XBEE->listen();
+	while(XBEE->isListening() && XBEE->available() <= 0 && i <= MAX_TRY ) {
 		// waiting for incoming data longer during 1 second (1000ms)
 		delay(LONG_WAIT);
 		i++;
 	}
 	if( i >= MAX_TRY ) {
-		// logs.debug("waitData", "no data received");
+		// LOGS.debugln("waitData", "KO");
 		return false;
 	}
 
-	// logs.debug("waitData", "data received");
+	// LOGS.debugln("waitData", "OK");
 	return true;
 }
 
 void Mqttsn::parseData() {
 
 	int i;
-	int payload_lenght = frameBufferIn[12];
-	uint8_t payload[payload_lenght];
+	int payloadLenght = FrameBufferIn[12];
+	uint8_t payload[payloadLenght];
 
-	// for(int i = 0; i <= 12; i++) {
-	// Serial.print(i);
-	// Serial.print(" : ");
-	// Serial.println(frameBufferIn[12+i]);
-	// }
-	// Serial.println("--------");
-
-	for(i = 0; i < payload_lenght; i++){
-		payload[i] = frameBufferIn[12+i];
-		// Serial.print(i + 12);
-		// Serial.print(" : ");
-		// Serial.println(payload[i]);
+	for(i = 0; i < payloadLenght; i++){
+		payload[i] = FrameBufferIn[12+i];
 	}
 
-	// logs.debug("parseData", "data have been parsed");
+	// LOGS.debugln("parseData", "OK");
 
-	memset(responseBuffer, 0, MAX_BUFFER_SIZE);
-	memcpy(responseBuffer, (void*)payload, payload_lenght);
+	memset(ResponseBuffer, 0, MAX_BUFFER_SIZE);
+	memcpy(ResponseBuffer, (void*)payload, payloadLenght);
 
-	// logs.debug( "parseStream", "Stream is ready -> dispatch");
+	// LOGS.debug("parseData", "-> dispatch");
 
 	dispatch();
 
-	memset(frameBufferIn, 0, sizeof(frameBufferIn));
+	memset(FrameBufferIn, 0, sizeof(FrameBufferIn));
 }
 
 void Mqttsn::dispatch() {
 
-	waitingForResponse = false;
-	message_header* response_message = (message_header*)responseBuffer;
+	WaitingForResponse = false;
+	MessageHeader* responseMessage = (MessageHeader*)ResponseBuffer;
 
-	// logs.debug("dispatch", "response type:", response_message->type);
-	// logs.debug("dispatch", "response length:", response_message->length);
+	// LOGS.debug("dispatch", "response type:", responseMessage->type);
+	// LOGS.debug("dispatch", "response length:", responseMessage->length);
 
-	switch (response_message->type) {
+	if(false == SearchGatewayOk && GWINFO == responseMessage->type) {
+		// LOGS.debugln("dispatch", "x2");
+		searchGatewayHandler((MsgGwinfo*)ResponseBuffer);
+	} else {
 
-	case GWINFO:
-		// logs.debug("dispatch", "GWINFO");
-		searchGatewayHandler((msg_gwinfo*)responseBuffer);
-		break;
+		switch (responseMessage->type) {
 
-	case CONNACK:
-		// logs.debug("dispatch", "CONNACK");
-		connAckHandler((msg_connack*)responseBuffer);
-		break;
+		case CONNACK:
+			// LOGS.debugln("dispatch", "x5");
+			connAckHandler((MsgConnAck*)ResponseBuffer);
+			break;
 
-	case REGACK:
-		// logs.debug("dispatch", "REGACK");
-		regAckHandler((msg_regack*)responseBuffer);
-		break;
+		case REGACK:
+			// LOGS.debugln("dispatch", "xB");
+			regAckHandler((MsgRegAck*)ResponseBuffer);
+			break;
 
-	case PUBLISH:
-		// logs.debug("dispatch", "PUBLISH");
-		publishHandler((msg_publish*)responseBuffer);
-		break;
+		case PUBLISH:
+			// LOGS.debugln("dispatch", "xC");
+			publishHandler((MsgPublish*)ResponseBuffer);
+			break;
 
-	case SUBACK:
-		// logs.debug("dispatch", "SUBACK");
-		subAckHandler((msg_suback*)responseBuffer);
-		break;
+		case SUBACK:
+			// LOGS.debugln("dispatch", "x13");
+			subAckHandler((MsgSubAck*)ResponseBuffer);
+			break;
 
-	case PINGRESP:
-		// logs.debug("dispatch", "PINGRESP");
-		pingRespHandler();
-		break;
+		case PINGRESP:
+			// LOGS.debugln("dispatch", "x17");
+			pingRespHandler();
+			break;
 
-	case DISCONNECT:
-		// logs.debug("dispatch", "DISCONNECT");
-		disconnectHandler((msg_disconnect*)responseBuffer);
-		break;
+		case DISCONNECT:
+			// LOGS.debugln("dispatch", "x18");
+			disconnectHandler((MsgDisconnect*)ResponseBuffer);
+			break;
 
-	case REREGISTER:
-		// logs.debug("dispatch", "RE-REGISTER");
-		reRegisterHandler((msg_reregister*)responseBuffer);
-		break;
+		case REREGISTER:
+			// LOGS.debugln("dispatch", "x1E");
+			reRegisterHandler((MsgReRegister*)ResponseBuffer);
+			break;
 
-	default:
-		// logs.debug("dispatch", "DEFAULT");
-		return;
+		default:
+			// LOGS.debugln("dispatch", "xx");
+			return;
 
-		// @TODO not implemented yet
-		// case ADVERTISE:
-		// logs.debug("dispatch", "ADVERTISE");
-		// advertiseHandler((msg_advertise*)responseBuffer);
-		// break;
+			// @TODO not implemented yet
+			// case ADVERTISE:
+			// LOGS.debug("dispatch", "ADVERTISE");
+			// advertiseHandler((msg_advertise*)ResponseBuffer);
+			// break;
 
-		// @TODO not implemented yet
-		// case PINGREQ:
-		// logs.debug("dispatch", "PINGREQ");
-		// pingReqHandler((msg_pingreq*)responseBuffer);
-		// break;
+			// @TODO not implemented yet
+			// case PINGREQ:
+			// LOGS.debug("dispatch", "PINGREQ");
+			// pingReqHandler((msg_pingreq*)ResponseBuffer);
+			// break;
 
-		// @TODO not implemented yet - QoS level 1 or 2
-		// case PUBACK:
-		// logs.debug("dispatch", "PUBACK");
-		// pubAckHandler((msg_puback*)responseBuffer);
-		// break;
+			// @TODO not implemented yet - QoS level 1 or 2
+			// case PUBACK:
+			// LOGS.debug("dispatch", "PUBACK");
+			// pubAckHandler((msg_puback*)ResponseBuffer);
+			// break;
 
-		// @TODO not implemented yet
-		// case WILLTOPICRESP:
-		// logs.debug("dispatch", "WILLTOPICRESP");
-		// willTopicRespHandler((msg_willtopicresp*)responseBuffer);
-		// break;
+			// @TODO not implemented yet
+			// case WILLTOPICRESP:
+			// LOGS.debug("dispatch", "WILLTOPICRESP");
+			// willTopicRespHandler((msg_willtopicresp*)ResponseBuffer);
+			// break;
 
-		// @TODO not implemented yet
-		// case UNSUBACK:
-		// logs.debug("dispatch", "UNSUBACK");
-		// unsuback_handler((msg_unsuback*)responseBuffer);
-		// break;
+			// @TODO not implemented yet
+			// case UNSUBACK:
+			// LOGS.debug("dispatch", "UNSUBACK");
+			// unsuback_handler((msg_unsuback*)ResponseBuffer);
+			// break;
 
-		// @TODO not implemented yet
-		// case REGISTER:
-		// logs.debug("dispatch", "REGISTER");
-		// registerHandler((msg_register*)responseBuffer);
-		// break;
+			// @TODO not implemented yet
+			// case REGISTER:
+			// LOGS.debug("dispatch", "REGISTER");
+			// registerHandler((msg_register*)ResponseBuffer);
+			// break;
 
-		// @TODO not implemented yet
-		// case WILLMSGRESP:
-		// logs.debug("dispatch", "WILLMSGRESP");
-		// willMsgRespHandler((msg_willmsgresp*)responseBuffer);
-		// break;
+			// @TODO not implemented yet
+			// case WILLMSGRESP:
+			// LOGS.debug("dispatch", "WILLMSGRESP");
+			// willMsgRespHandler((msg_willmsgresp*)ResponseBuffer);
+			// break;
 
-		// @TODO not implemented yet
-		// case WILLTOPICREQ:
-		// logs.debug("dispatch", "WILLTOPICREQ");
-		// willTopicReqHandler(response_message);
-		// break;
+			// @TODO not implemented yet
+			// case WILLTOPICREQ:
+			// LOGS.debug("dispatch", "WILLTOPICREQ");
+			// willTopicReqHandler(responseMessage);
+			// break;
 
-		// @TODO not implemented yet
-		// case WILLMSGREQ:
-		// logs.debug("dispatch", "WILLMSGREQ");
-		// willmsgreq_handler(response_message);
-		// break;
+			// @TODO not implemented yet
+			// case WILLMSGREQ:
+			// LOGS.debug("dispatch", "WILLMSGREQ");
+			// willmsgreq_handler(responseMessage);
+			// break;
+		}
 	}
 }
 
 void Mqttsn::pingRespHandler() {
 	// do nothing
-	// logs.debug("pingRespHandler", "end of published messages");
+	// LOGS.debug("pingRespHandler", "end of published messages");
 }
 
 uint16_t Mqttsn::bitSwap(uint16_t value) {
 	return (value << 8) | (value >> 8);
 }
 
-void Mqttsn::publishHandler(msg_publish* msg) {
+void Mqttsn::publishHandler(MsgPublish* msg) {
 
-	if(nbReceivedMessage < MAX_MESSAGES) {
-		logs.info("msg received");
-		receivedMessages[nbReceivedMessage].topic_id = bitSwap(msg->topic_id);
-		strcpy(receivedMessages[nbReceivedMessage].data, msg->data);
-		nbReceivedMessage++;
+	if(NbReceivedMessage < MAX_MESSAGES) {
+		LOGS.info("msg received");
+		ReceivedMessages[NbReceivedMessage].topicId = bitSwap(msg->topicId);
+		strcpy(ReceivedMessages[NbReceivedMessage].data, msg->data);
+		NbReceivedMessage++;
 	} else {
-		// logs.debug("publishHandler", "too many received messages");
+		// LOGS.debug("publishHandler", "too many received messages");
 	}
-	// logs.debug("publishHandler", "nb received messages: ", nbReceivedMessage);
-	// logs.debug("publishHandler", "topic: ", receivedMessages[nbReceivedMessage].topic_id);
-	// logs.debug("publishHandler", "message: ", receivedMessages[nbReceivedMessage].data);
+	// LOGS.debug("publishHandler", "nb received messages: ", NbReceivedMessage);
+	// LOGS.debug("publishHandler", "topic: ", ReceivedMessages[NbReceivedMessage].topicId);
+	// LOGS.debug("publishHandler", "message: ", ReceivedMessages[NbReceivedMessage].data);
 
 	// @TODO not implemented yet - QoS level 1 or 2
-	// logs.debug("publishHandler", "send pub ack");
-	// logs.debug("publishHandler", "message id:", msg->message_id);
-	// pubAck(msg->topic_id, msg->message_id, ret);
+	// LOGS.debug("publishHandler", "send pub ack");
+	// LOGS.debug("publishHandler", "message id:", msg->messageId);
+	// pubAck(msg->topicId, msg->messageId, ret);
 
 	// waiting next message
 	if( !checkSerial() ) {
-		connected = REJECTED;
+		Connected = REJECTED;
 		return;
 	}
 	parseData();
@@ -250,296 +241,322 @@ void Mqttsn::publishHandler(msg_publish* msg) {
  **/
 bool Mqttsn::checkSerial() {
 
-	int i, frame_size;
+	// LOGS.debug("checkSerial", "");
+
+	int i, frameSize;
 	uint8_t delimiter, length1, length2;
 
 	// no data is available
 	if(!waitData()) {
-		// logs.debug("checkSerial", "no data available -> timeout");
+		// LOGS.debugln("checkSerial", "KO 0");
 		return false;
 	}
-	delimiter = xBee->read();
+
+	delimiter = XBEE->read();
 
 	if(delimiter != 0x7E) {
-		// logs.debug("checkSerial", "delimiter KO!");
+		// LOGS.debug("checkSerial", "KO 1", delimiter);
 		return checkSerial();
 	}
 
-	xBee->listen();
-	if(xBee->isListening()) {
-		if(xBee->available() > 0) {
-			length1 = xBee->read();
-			length2 = xBee->read();
-			frame_size = (length1*16)+length2+1;
+	length1 = XBEE->read();
+	length2 = XBEE->read();
+	frameSize = (length1*16)+length2+1;
 
-			// store the data in @frameBuffer
-			for(i = 0; i < frame_size; i++){
-				delay(10);
-				frameBufferIn[i] = xBee->read();
-			}
-
-			if(!verifyChecksum(frameBufferIn, frame_size)) {
-				// logs.debug("checkSerial", "checksum KO!");
-				return checkSerial();
-			}
-
-			if(frameBufferIn[0] == 139) {
-				// logs.debug("checkSerial", "a transmit status (XBEE acquitall) -> get next message!");
-				return checkSerial();
-			}
-
-			if(frameBufferIn[0] == 144) {
-				// this is a data packet, copy the gateway address
-				if(gatewayAddress[0]==0 && gatewayAddress[1]==0 && gatewayAddress[2]==0 && gatewayAddress[3]==0){
-					gatewayAddress[0] = frameBufferIn[1];
-					gatewayAddress[1] = frameBufferIn[2];
-					gatewayAddress[2] = frameBufferIn[3];
-					gatewayAddress[3] = frameBufferIn[4];
-					gatewayAddress[4] = frameBufferIn[5];
-					gatewayAddress[5] = frameBufferIn[6];
-					gatewayAddress[6] = frameBufferIn[7];
-					gatewayAddress[7] = frameBufferIn[8];
-				}
-				// all data have been store in @frameBufferIn
-				// logs.debug("checkSerial", "correct data received");
-				return true;
-			}
-		}
+	// store the data in @frameBuffer
+	for(i = 0; i < frameSize; i++){
+		delay(10);
+		FrameBufferIn[i] = XBEE->read();
 	}
+
+	if(!verifyChecksum(FrameBufferIn, frameSize)) {
+		// LOGS.debug("checkSerial", "KO 2", delimiter);
+		return checkSerial();
+	}
+
+	if(FrameBufferIn[0] == 139 || FrameBufferIn[0] == 161) {
+		// LOGS.debug("checkSerial", "KO 3" , FrameBufferIn[0]);
+		return checkSerial();
+	}
+
+	// printFrameBufferIn();
+
+	if(FrameBufferIn[0] == 144) {
+		// this is a data packet, copy the gateway address
+		if(0 == GatewayAddress[0] && 0 == GatewayAddress[1] && 0 == GatewayAddress[2] && 0 == GatewayAddress[3]){
+			GatewayAddress[0] = FrameBufferIn[1];
+			GatewayAddress[1] = FrameBufferIn[2];
+			GatewayAddress[2] = FrameBufferIn[3];
+			GatewayAddress[3] = FrameBufferIn[4];
+			GatewayAddress[4] = FrameBufferIn[5];
+			GatewayAddress[5] = FrameBufferIn[6];
+			GatewayAddress[6] = FrameBufferIn[7];
+			GatewayAddress[7] = FrameBufferIn[8];
+		}
+		// all data have been store in @FrameBufferIn
+		// LOGS.debugln("checkSerial", "OK");
+		return true;
+	}
+
 	// not data available, clear the buffer and return false
-	memset(frameBufferIn, 0, sizeof(frameBufferIn));
-	// logs.debug("checkSerial", "default KO!");
+	memset(FrameBufferIn, 0, sizeof(FrameBufferIn));
+	// LOGS.debugln("checkSerial", "KO 4");
 	return false;
 }
 
-void Mqttsn::subAckHandler(msg_suback* msg) {
+void Mqttsn::subAckHandler(MsgSubAck* msg) {
 
-	if (msg->return_code == ACCEPTED && nbRegisteredTopic < MAX_TOPICS && bitSwap(msg->message_id) == messageId) {
-		topicTable[lastSubscribedTopic].id = msg->topic_id;
-		regAckReturnCode = ACCEPTED;
+	if (msg->returnCode == ACCEPTED && NbRegisteredTopic < MAX_TOPICS) {
+		TopicTable[LastSubscribedTopic].id = msg->topicId;
+		RegAckReturnCode = ACCEPTED;
 
-		// logs.debug("subAckHandler", "msg->id: ", msg->topic_id);
-		// logs.debug("subAckHandler", "table[id]: ", topicTable[lastSubscribedTopic].id);
-		// logs.debug("subAckHandler", "table[name]: ", topicTable[lastSubscribedTopic].name);
+		// LOGS.debug("subAckHandler", "msg->id: ", msg->topicId);
+		// LOGS.debug("subAckHandler", "table[id]: ", TopicTable[LastSubscribedTopic].id);
+		// LOGS.debug("subAckHandler", "table[name]: ", TopicTable[LastSubscribedTopic].name);
 
-		logs.info("subscibe OK");
+		LOGS.info("subscibe OK");
 	} else {
-		logs.error("subscibe KO");
-		regAckReturnCode = REJECTED;
+		LOGS.error("subscibe KO");
+		RegAckReturnCode = REJECTED;
 	}
-
 }
 
 void Mqttsn::sendMessage() {
 
-	// logs.debug("sendMessage");
+	// LOGS.debug("sendMessage");
 	delay(LONG_WAIT);
 
-	if(waitingForResponse) {
-		// logs.debug("sendMessage", "the module is already waiting for a response");
+	if(WaitingForResponse) {
+		// LOGS.debug("sendMessage", "the module is already waiting for a response");
 		return;
 	}
-	waitingForResponse = true;
+	WaitingForResponse = true;
 
-	// Sending the message stored into @messageBuffer through @MB_serial_send function
-	// extern void MB_serial_send(uint8_t* messageBuffer, int length);
-	message_header* header = reinterpret_cast<message_header*>(messageBuffer);
+	// Sending the message stored into @MessageBuffer through @MB_serial_send function
+	// extern void MB_serial_send(uint8_t* MessageBuffer, int length);
+	MessageHeader* header = reinterpret_cast<MessageHeader*>(MessageBuffer);
 
 	int length = createFrame(header->length);
 
 	if (length > 0) {
 
-		xBee->listen();
-		while(!xBee->isListening()) { } // infinite loop to wait xBee module
+		XBEE->listen();
+		while(!XBEE->isListening()) { } // infinite loop to wait XBEE module
 
-		xBee->write(frameBufferOut, length);
-		xBee->flush();
-		// logs.debug("sendMessage", "message sent");
+		// displayFrameBufferOut();
+		XBEE->write(FrameBufferOut, length);
+		XBEE->flush();
+		// LOGS.debug("sendMessage", "message sent");
 	} else {
-		// logs.debug("sendMessage", "message not sent");
+		// LOGS.debug("sendMessage", "message not sent");
 	}
 
 	// @BUG waits 500ms seconds otherwise the module miss some answers from the gateway
 	delay(LONG_WAIT);
 }
 
-bool Mqttsn::verifyChecksum(uint8_t frame_buffer[], int frame_size) {
+bool Mqttsn::verifyChecksum(uint8_t _frameBuffer[], int _frameSize) {
 
 	int i;
 	uint16_t checksum = 0x00;
 
-	for(i=0; i < frame_size; i++) {
-		checksum += frame_buffer[i];
+	for(i=0; i < _frameSize; i++) {
+		checksum += _frameBuffer[i];
 	}
 	checksum = checksum & 0xFF;
 
-	// logs.debug("verifyChecksum", "checksum is : ", (int) checksum);
+	// LOGS.debug("verifyChecksum", "checksum is : ", (int) checksum);
 
 	return checksum == 0xFF ;
 }
 
-int Mqttsn::createFrame(int header_lenght) {
+int Mqttsn::createFrame(int _headerLenght) {
 
-	// logs.debug("createFrame");
+	// LOGS.debug("createFrame");
 
 	uint8_t checksum = 0;
 	int i = 0;
 
 	// data is too long?
 	// TODO: Split in multiple packets?
-	if (header_lenght > API_DATA_LEN) {
-		// logs.debug("createFrame", "ERROR - header_lenght too long: ", header_lenght);
+	if (_headerLenght > API_DATA_LEN) {
+		// LOGS.debug("createFrame", "ERROR - _headerLenght too long: ", _headerLenght);
 		return -2;
 	}
 
 	// frame buffer is fine, clear it
-	memset(frameBufferOut, 0, sizeof(frameBufferOut));
+	memset(FrameBufferOut, '\0', sizeof(FrameBufferOut));
 
 	/* The header */
 
 	// delimiter
-	frameBufferOut[0] = API_START_DELIMITER;
+	FrameBufferOut[0] = API_START_DELIMITER;
 
 	// length of the payload
-	frameBufferOut[1] = 0;
-	frameBufferOut[2] = 14 + header_lenght;
+	FrameBufferOut[1] = 0;
+	FrameBufferOut[2] = 14 + _headerLenght;
 
 	// frame Type: Transmit Request
 	checksum = 0;
-	checksum += frameBufferOut[3] = 16;
+	checksum += FrameBufferOut[3] = FRAME_TYPE_TRANSMIT_REQUEST;
 
 	// frame id
-	checksum += frameBufferOut[4] = frameId++;
+	checksum += FrameBufferOut[4] = FRAME_ID_WITHOUT_ACK;
 
 	// 64-bit address
-	checksum += frameBufferOut[5] = gatewayAddress[0];
-	checksum += frameBufferOut[6] = gatewayAddress[1];
-	checksum += frameBufferOut[7] = gatewayAddress[2];
-	checksum += frameBufferOut[8] = gatewayAddress[3];
-	checksum += frameBufferOut[9] = gatewayAddress[4];
-	checksum += frameBufferOut[10] = gatewayAddress[5];
-	checksum += frameBufferOut[11] = gatewayAddress[6];
-	checksum += frameBufferOut[12] = gatewayAddress[7];
+	checksum += FrameBufferOut[5] = GatewayAddress[0];
+	checksum += FrameBufferOut[6] = GatewayAddress[1];
+	checksum += FrameBufferOut[7] = GatewayAddress[2];
+	checksum += FrameBufferOut[8] = GatewayAddress[3];
+	checksum += FrameBufferOut[9] = GatewayAddress[4];
+	checksum += FrameBufferOut[10] = GatewayAddress[5];
+	checksum += FrameBufferOut[11] = GatewayAddress[6];
+	checksum += FrameBufferOut[12] = GatewayAddress[7];
 
 	// 16-bit address
-	checksum += frameBufferOut[13] = 0;
-	checksum += frameBufferOut[14] = 0;
-	checksum += frameBufferOut[15] = 0;
-	checksum += frameBufferOut[16] = 0;
+	checksum += FrameBufferOut[13] = 0;
+	checksum += FrameBufferOut[14] = 0;
+
+	// broadcast radius
+	checksum += FrameBufferOut[15] = BROADCAST_RADIUS_ZERO;
+
+	// options
+	checksum += FrameBufferOut[16] = OPTION_DISABLE_RETRIES;
 
 
 	/* The data */
-	for (i = 0; i < header_lenght; i++) {
-		checksum += frameBufferOut[17 + i] = messageBuffer[i];
-		Serial.print(" ");
+	for (i = 0; i < _headerLenght; i++) {
+		checksum += FrameBufferOut[17 + i] = MessageBuffer[i];
 	}
 
 	checksum = 0XFF - checksum;
-	frameBufferOut[17 + header_lenght] = checksum;
+	FrameBufferOut[17 + _headerLenght] = checksum;
 
-	return 17 + header_lenght + 1;
+	return 17 + _headerLenght + 1;
 }
 
-void Mqttsn::connAckHandler(msg_connack* msg) {
+void Mqttsn::connAckHandler(MsgConnAck* msg) {
 
-	if(msg->return_code == ACCEPTED) {
-		connected = ACCEPTED;
-		logs.info("connected");
+	if(msg->returnCode == ACCEPTED) {
+		Connected = ACCEPTED;
+		LOGS.info("connected");
 	} else {
-		connected = REJECTED;
-		logs.notConnected();
+		Connected = REJECTED;
+		LOGS.error("not connected");
 		while(1);
 	}
 }
 
-void Mqttsn::disconnectHandler(msg_disconnect* msg) {
+void Mqttsn::disconnectHandler(MsgDisconnect* msg) {
 
-	connected = REJECTED;
+	Connected = REJECTED;
 
-	logs.info("slepping");
+	LOGS.info("disconnected");
 
-	delay(TIME_TO_SLEEP*1000); // time in seconds to milliseconds
+	delay(SLEEP_TIME * 1500); // 10 ms * 1500 = 15000 ms = 15 s
 
-	logs.info("awake");
+	LOGS.info("awake");
 }
 
-void Mqttsn::searchGatewayHandler(msg_gwinfo* message) {
+void Mqttsn::searchGatewayHandler(MsgGwinfo* message) {
 
-	if(message->gw_id == GATEWAY_ID) {
-		logs.info("started");
-		initOk = true;
+	if(message->gatewayId == GATEWAY_ID) {
+		LOGS.info("started");
+		SearchGatewayOk = true;
 	} else {
-		logs.error("not started: stop");
-		initOk = false;
+		LOGS.error("not started");
+		SearchGatewayOk = false;
 		while(1);
 	}
 }
 
-void Mqttsn::regAckHandler(msg_regack* msg) {
+void Mqttsn::regAckHandler(MsgRegAck* msg) {
 
-	if (msg->return_code == ACCEPTED && nbRegisteredTopic < MAX_TOPICS && bitSwap(msg->message_id) == messageId) {
+	if (msg->returnCode == ACCEPTED && NbRegisteredTopic < MAX_TOPICS) {
 
-		topicTable[nbRegisteredTopic].id = msg->topic_id;
-		regAckReturnCode = ACCEPTED;
+		TopicTable[NbRegisteredTopic].id = msg->topicId;
+		RegAckReturnCode = ACCEPTED;
 
-		// logs.debug("regAckHandler", "Topic registered, id: ", msg->topic_id);
-		// logs.debug("regAckHandler", "Topic registered, table id: ", topicTable[nbRegisteredTopic].id);
-		// logs.debug("regAckHandler", "Topic registered, table name: ", topicTable[nbRegisteredTopic].name);
-		logs.info("register OK");
+		// LOGS.debug("regAckHandler", "Topic registered, id: ", msg->topicId);
+		// LOGS.debug("regAckHandler", "Topic registered, table id: ", TopicTable[NbRegisteredTopic].id);
+		// LOGS.debug("regAckHandler", "Topic registered, table name: ", TopicTable[NbRegisteredTopic].name);
+		LOGS.info("register OK");
 
-		nbRegisteredTopic++;
+		NbRegisteredTopic++;
 	} else {
-		logs.error("register KO");
-		regAckReturnCode = REJECTED;
+		LOGS.error("register KO");
+		RegAckReturnCode = REJECTED;
 	}
 }
 
 void Mqttsn::resetRegisteredTopicId(int topicId) {
 
-	for (int i = 0; i < nbRegisteredTopic; i++) {
-		if (topicTable[i].id == topicId) {
-			// logs.debug("resetRegisteredTopicId", "topic id found");
-			topicTable[i].id = DEFAULT_TOPIC_ID;
+	for (int i = 0; i < NbRegisteredTopic; i++) {
+		if (TopicTable[i].id == topicId) {
+			// LOGS.debug("resetRegisteredTopicId", "topic id found");
+			TopicTable[i].id = DEFAULT_TOPIC_ID;
 		}
 	}
 
-	// logs.debug("resetRegisteredTopicId", "topic id NOT found");
+	// LOGS.debug("resetRegisteredTopicId", "topic id NOT found");
 }
 
 /**
  * @brief Mqttsn::reRegisterHandler
  * @param msg
  **/
-void Mqttsn::reRegisterHandler(msg_reregister* msg) {
+void Mqttsn::reRegisterHandler(MsgReRegister* msg) {
 
-	// logs.debug("reregisterTopic", "topic id:", msg->topic_id);
-	const char* topicName = findTopicName(msg->topic_id);
+	// LOGS.debug("reregisterTopic", "topic id:", msg->topicId);
+	const char* topicName = findTopicName(msg->topicId);
 
-	resetRegisteredTopicId(msg->topic_id);
+	resetRegisteredTopicId(msg->topicId);
 
 	if( strcmp("", topicName) != 0 ) {
-		// logs.debug("reregisterTopic", "topic name found -> register:", topicName);
+		// LOGS.debug("reregisterTopic", "topic name found -> register:", topicName);
 		registerTopic(topicName);
 	}
 }
+
+/*
+void Mqttsn::printFrameBufferOut() {
+	int i = 0;
+	for(; i < sizeof(FrameBufferOut); i++) {
+		Serial.print(FrameBufferOut[i], HEX);
+		Serial.print(" ");
+	}
+	Serial.println("");
+}
+*/
+
+/*
+void Mqttsn::printFrameBufferIn() {
+	int i = 0;
+	for(; i < sizeof(FrameBufferIn); i++) {
+		Serial.print(FrameBufferIn[i], HEX);
+		Serial.print(" ");
+	}
+	Serial.println("");
+}
+*/
 
 /**
  * @TODO never used
  *
  * @brief Mqttsn::unsubscribeById
  * @param flags
- * @param topic_id
+ * @param topicId
  *
-void Mqttsn::unsubscribeById(uint8_t flags, uint16_t topic_id) {
+void Mqttsn::unsubscribeById(uint8_t flags, uint16_t topicId) {
 	++messageId;
 
-	msg_unsubscribe* msg = reinterpret_cast<msg_unsubscribe*>(messageBuffer);
+	msg_unsubscribe* msg = reinterpret_cast<msg_unsubscribe*>(MessageBuffer);
 
 	msg->length = sizeof(msg_unsubscribe);
 	msg->type = UNSUBSCRIBE;
 	msg->flags = (flags & QOS_MASK) | FLAG_TOPIC_PREDEFINED_ID;
-	msg->message_id = bitSwap(messageId);
-	msg->topic_id = bitSwap(topic_id);
+	msg->messageId = bitSwap(messageId);
+	msg->topicId = bitSwap(topicId);
 
 	sendMessage();
 }
@@ -565,14 +582,14 @@ void Mqttsn::unsuback_handler(msg_unsuback* msg) {
 void Mqttsn::unsubscribeByName(uint8_t flags, char* topic_name) {
 	++messageId;
 
-	msg_unsubscribe* msg = reinterpret_cast<msg_unsubscribe*>(messageBuffer);
+	msg_unsubscribe* msg = reinterpret_cast<msg_unsubscribe*>(MessageBuffer);
 
 	// The -2 here is because we're unioning a 0-length member (topic_name)
 	// with a uint16_t in the msg_unsubscribe struct.
 	msg->length = sizeof(msg_unsubscribe) + strlen(topic_name) - 2;
 	msg->type = UNSUBSCRIBE;
 	msg->flags = (flags & QOS_MASK) | FLAG_TOPIC_NAME;
-	msg->message_id = bitSwap(messageId);
+	msg->messageId = bitSwap(messageId);
 	strcpy(msg->topic_name, topic_name);
 
 	sendMessage();
@@ -587,7 +604,7 @@ void Mqttsn::unsubscribeByName(uint8_t flags, char* topic_name) {
  *
 void Mqttsn::advertiseHandler(msg_advertise* msg) {
 
-	// logs.debug("advertiseHandler");
+	// LOGS.debug("advertiseHandler");
 
 	gatewayId = msg->gw_id;
 }
@@ -598,18 +615,18 @@ void Mqttsn::advertiseHandler(msg_advertise* msg) {
  *
  * @brief Mqttsn::subscribeById
  * @param flags
- * @param topic_id
+ * @param topicId
  *
-void Mqttsn::subscribeById(uint8_t flags, uint16_t topic_id) {
+void Mqttsn::subscribeById(uint8_t flags, uint16_t topicId) {
 	++messageId;
 
-	msg_subscribe* msg = reinterpret_cast<msg_subscribe*>(messageBuffer);
+	msg_subscribe* msg = reinterpret_cast<msg_subscribe*>(MessageBuffer);
 
 	msg->length = sizeof(msg_subscribe);
 	msg->type = SUBSCRIBE;
 	msg->flags = (flags & QOS_MASK) | FLAG_TOPIC_PREDEFINED_ID;
-	msg->message_id = bitSwap(messageId);
-	msg->topic_id = bitSwap(topic_id);
+	msg->messageId = bitSwap(messageId);
+	msg->topicId = bitSwap(topicId);
 
 	sendMessage();
 }
@@ -625,12 +642,12 @@ void Mqttsn::subscribeById(uint8_t flags, uint16_t topic_id) {
  *
 void Mqttsn::willTopic(uint8_t flags, char* will_topic, bool update) {
 	if (will_topic == NULL) {
-		message_header* msg = reinterpret_cast<message_header*>(messageBuffer);
+		MessageHeader* msg = reinterpret_cast<MessageHeader*>(MessageBuffer);
 
 		msg->type = update ? WILLTOPICUPD : WILLTOPIC;
-		msg->length = sizeof(message_header);
+		msg->length = sizeof(MessageHeader);
 	} else {
-		msg_willtopic* msg = reinterpret_cast<msg_willtopic*>(messageBuffer);
+		msg_willtopic* msg = reinterpret_cast<msg_willtopic*>(MessageBuffer);
 
 		msg->type = update ? WILLTOPICUPD : WILLTOPIC;
 		msg->flags = flags;
@@ -650,7 +667,7 @@ void Mqttsn::willTopic(uint8_t flags, char* will_topic, bool update) {
  * @param update
  *
 void Mqttsn::willMesssage(void* will_msg, uint8_t will_msg_len, bool update) {
-	msg_willmsg* msg = reinterpret_cast<msg_willmsg*>(messageBuffer);
+	msg_willmsg* msg = reinterpret_cast<msg_willmsg*>(MessageBuffer);
 
 	msg->length = sizeof(msg_willmsg) + will_msg_len;
 	msg->type = update ? WILLMSGUPD : WILLMSG;
@@ -687,7 +704,7 @@ void Mqttsn::willMsgRespHandler(msg_willmsgresp* msg) {
  * @param msg
  */
 /*
-void Mqttsn::willTopicReqHandler(message_header* msg) {
+void Mqttsn::willTopicReqHandler(MessageHeader* msg) {
 }
 */
 
@@ -697,7 +714,7 @@ void Mqttsn::willTopicReqHandler(message_header* msg) {
  * @brief Mqttsn::willMsgReqHandler
  * @param msg
  *
-void Mqttsn::willMsgReqHandler(message_header* msg) {
+void Mqttsn::willMsgReqHandler(MessageHeader* msg) {
 }
 */
 
@@ -712,7 +729,7 @@ void Mqttsn::willMsgReqHandler(message_header* msg) {
 
 /*
 void Mqttsn::pubAckHandler(msg_puback* msg) {
-	pubAckReturnCode = msg->return_code;
+	pubAckReturnCode = msg->returnCode;
 }
 
 void Mqttsn::pubRecHandler(msg_pubqos2* msg) {
@@ -724,14 +741,14 @@ void Mqttsn::pubRelHandler(msg_pubqos2* msg) {
 void Mqttsn::pubCompHandler(msg_pubqos2* msg) {
 }
 
-void Mqttsn::pubAck(uint16_t topic_id, uint16_t message_id, return_code_t return_code) {
-	msg_puback* msg = reinterpret_cast<msg_puback*>(messageBuffer);
+void Mqttsn::pubAck(uint16_t topicId, uint16_t messageId, returnCode_t returnCode) {
+	msg_puback* msg = reinterpret_cast<msg_puback*>(MessageBuffer);
 
 	msg->length = sizeof(msg_puback);
 	msg->type = PUBACK;
-	msg->topic_id = bitSwap(topic_id);
-	msg->message_id = bitSwap(message_id);
-	msg->return_code = return_code;
+	msg->topicId = bitSwap(topicId);
+	msg->messageId = bitSwap(messageId);
+	msg->returnCode = returnCode;
 	sendMessage();
 }
 
@@ -739,7 +756,7 @@ void Mqttsn::pubRec() {
 	msg_pubqos2* msg = reinterpret_cast<msg_pubqos2*>(message_buffer);
 	msg->length = sizeof(msg_pubqos2);
 	msg->type = PUBREC;
-	msg->message_id = bitSwap(_message_id);
+	msg->messageId = bitSwap(_messageId);
 
 	sendMessage();
 }
@@ -748,7 +765,7 @@ void Mqttsn::pubRel() {
 	msg_pubqos2* msg = reinterpret_cast<msg_pubqos2*>(message_buffer);
 	msg->length = sizeof(msg_pubqos2);
 	msg->type = PUBREL;
-	msg->message_id = bitSwap(_message_id);
+	msg->messageId = bitSwap(_messageId);
 
 	sendMessage();
 }
@@ -757,7 +774,7 @@ void Mqttsn::pubComp() {
 	msg_pubqos2* msg = reinterpret_cast<msg_pubqos2*>(message_buffer);
 	msg->length = sizeof(msg_pubqos2);
 	msg->type = PUBCOMP;
-	msg->message_id = bitSwap(_message_id);
+	msg->messageId = bitSwap(_messageId);
 
 	sendMessage();
 }
@@ -771,18 +788,18 @@ void Mqttsn::pubComp() {
  *
 void Mqttsn::registerHandler(msg_register* message) {
 
-	return_code_t ret = REJECTED_INVALID_TOPIC_ID;
-	int topic_id = findTopicId(message->topic_name);
+	returnCode_t ret = REJECTED_INVALID_topicId;
+	int topicId = findTopicId(message->topic_name);
 
-	// logs.debug("registerHandler", "received topic_name: ", message->topic_name);
-	// logs.debug("registerHandler", "found topic id: ", (int)topic_id);
+	// LOGS.debug("registerHandler", "received topic_name: ", message->topic_name);
+	// LOGS.debug("registerHandler", "found topic id: ", (int)topicId);
 
-	if (topic_id != DEFAULT_TOPIC_ID) {
-		topicTable[topic_id].id = bitSwap(message->topic_id);
+	if (topicId != DEFAULT_topicId) {
+		TopicTable[topicId].id = bitSwap(message->topicId);
 		ret = ACCEPTED;
 	}
 
-	regAck(message->topic_id, message->message_id, ret);
+	regAck(message->topicId, message->messageId, ret);
 }
 */
 
@@ -790,18 +807,18 @@ void Mqttsn::registerHandler(msg_register* message) {
  * * @TODO not implemented yet
  *
  * @brief Mqttsn::regAck
- * @param topic_id
- * @param message_id
- * @param return_code
+ * @param topicId
+ * @param messageId
+ * @param returnCode
  *
-void Mqttsn::regAck(uint16_t topic_id, uint16_t message_id, return_code_t return_code) {
-	msg_regack* msg = reinterpret_cast<msg_regack*>(messageBuffer);
+void Mqttsn::regAck(uint16_t topicId, uint16_t messageId, returnCode_t returnCode) {
+	msg_regack* msg = reinterpret_cast<msg_regack*>(MessageBuffer);
 
 	msg->length = sizeof(msg_regack);
 	msg->type = REGACK;
-	msg->topic_id = bitSwap(topic_id);
-	msg->message_id = bitSwap(message_id);
-	msg->return_code = return_code;
+	msg->topicId = bitSwap(topicId);
+	msg->messageId = bitSwap(messageId);
+	msg->returnCode = returnCode;
 
 	sendMessage();
 }
@@ -811,18 +828,18 @@ void Mqttsn::regAck(uint16_t topic_id, uint16_t message_id, return_code_t return
  * @TODO not implemented yet
  *
  * @brief Mqttsn::reRegister
- * @param topic_id
- * @param message_id
- * @param return_code
+ * @param topicId
+ * @param messageId
+ * @param returnCode
  *
-void Mqttsn::reRegister(uint16_t topic_id, uint16_t message_id, return_code_t return_code) {
-	msg_reregister* msg = reinterpret_cast<msg_reregister*>(messageBuffer);
+void Mqttsn::reRegister(uint16_t topicId, uint16_t messageId, returnCode_t returnCode) {
+	MsgReRegister* msg = reinterpret_cast<MsgReRegister*>(MessageBuffer);
 
-	msg->length = sizeof(msg_reregister);
+	msg->length = sizeof(MsgReRegister);
 	msg->type = REREGISTER;
-	msg->topic_id = bitSwap(topic_id);
-	msg->message_id = bitSwap(message_id);
-	msg->return_code = return_code;
+	msg->topicId = bitSwap(topicId);
+	msg->messageId = bitSwap(messageId);
+	msg->returnCode = returnCode;
 
 	sendMessage();
 }

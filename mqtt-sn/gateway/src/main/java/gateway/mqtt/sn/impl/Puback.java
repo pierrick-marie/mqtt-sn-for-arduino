@@ -8,33 +8,31 @@
 package gateway.mqtt.sn.impl;
 
 import gateway.mqtt.client.Device;
-import gateway.mqtt.sn.IAction;
 import gateway.utils.log.Log;
-import gateway.utils.log.LogLevel;
 
 /**
  * @TODO not implemented yet
  */
-public class Puback implements IAction {
+public class Puback implements Runnable {
 
 	final Device device;
 	final byte[] msg;
 
 	public Puback(final Device device, final byte[] msg) {
 
-		Log.input(device, "pub ack");
+		Log.xbeeInput(device, "pub ack");
 
 		this.device = device;
 		this.msg = msg;
 	}
 
 	@Override
-	public void exec() {
+	public void run() {
 
 		if (msg[4] == (byte) 0x00) {
 			final int msgID = (msg[3] << 8) + (msg[2] & 0xFF);
 
-			Log.debug(LogLevel.ACTIVE, "PubAck", "puback", "message id ack: " + msgID);
+			Log.debug("PubAck", "puback", "message id ack " + msgID);
 
 			// NOT IMPLEMENTED YET (QoS)
 			// device.acquitMessage(msgID);
