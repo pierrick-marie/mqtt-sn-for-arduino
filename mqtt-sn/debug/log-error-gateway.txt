@@ -1,0 +1,274 @@
+ # [  DEBUG 2019/06/11 10:45:37  ] XBee.<init>: connection to the XBee module
+Gateway connected to the XBee module /dev/ttyUSB0
+ # [  DEBUG 2019/06/11 10:46:42  ] SerialPortReader.serialEvent: new message executor reader started
+ # [  DEBUG 2019/06/11 10:46:42  ] RawDataParser.run: start the message executor reader
+ # [  DEBUG 2019/06/11 10:46:42  ] RawDataParser.verifyData: OK
+ # [  DEBUG 2019/06/11 10:46:42  ] RawDataParser.verifyChecksum: OK
+ # [  DEBUG 2019/06/11 10:46:42  ] RawDataParser.parse: 64b address
+ # [  DEBUG 2019/06/11 10:46:42  ] RawDataParser.parse: 16b address
+ # [  DEBUG 2019/06/11 10:46:42  ] RawDataParser.parse: payload
+Exception in thread "Thread-1" java.lang.NegativeArraySizeException: -3
+        at gateway.serial.RawDataParser.parse(RawDataParser.java:90)
+        at gateway.serial.RawDataParser.run(RawDataParser.java:157)
+        at java.base/java.lang.Thread.run(Thread.java:834)
+ # [  DEBUG 2019/06/11 10:46:42  ] SerialPortReader.serialEvent: new message executor reader started
+ # [  DEBUG 2019/06/11 10:46:42  ] RawDataParser.run: start the message executor reader
+ # [  DEBUG 2019/06/11 10:46:42  ] RawDataParser.verifyData: OK
+ [  ERROR 2019/06/11 10:46:42  ] RawDataParser.verifyChecksum: Fail
+ # [  DEBUG 2019/06/11 10:46:42  ] RawDataParser.verifyChecksum: checksum: 145
+ # [  DEBUG 2019/06/11 10:46:43  ] SerialPortReader.serialEvent: new message executor reader started
+ # [  DEBUG 2019/06/11 10:46:43  ] RawDataParser.run: start the message executor reader
+ # [  DEBUG 2019/06/11 10:46:43  ] RawDataParser.verifyData: OK
+ [  ERROR 2019/06/11 10:46:43  ] RawDataParser.verifyChecksum: Fail
+ # [  DEBUG 2019/06/11 10:46:43  ] RawDataParser.verifyChecksum: checksum: 35
+ # [  DEBUG 2019/06/11 10:46:46  ] SerialPortReader.serialEvent: new message executor reader started
+ # [  DEBUG 2019/06/11 10:46:46  ] RawDataParser.run: start the message executor reader
+ # [  DEBUG 2019/06/11 10:46:46  ] RawDataParser.verifyData: OK
+ # [  DEBUG 2019/06/11 10:46:46  ] RawDataParser.verifyChecksum: OK
+ # [  DEBUG 2019/06/11 10:46:46  ] RawDataParser.parse: 64b address
+ # [  DEBUG 2019/06/11 10:46:46  ] RawDataParser.parse: 16b address
+ # [  DEBUG 2019/06/11 10:46:46  ] RawDataParser.parse: payload                                                                                                        
+Exception in thread "Thread-4" java.lang.ArrayIndexOutOfBoundsException: Index 28 out of bounds for length 28
+        at gateway.serial.RawDataParser.parse(RawDataParser.java:92)
+        at gateway.serial.RawDataParser.run(RawDataParser.java:157)
+        at java.base/java.lang.Thread.run(Thread.java:834)
+^Cpierrick@clitours [10:54:22] [~/Documents/recherche/xbee-module/mqtt-sn/gateway] [master]
+-> % ./run.sh /dev/ttyUSB0 192.168.0.42 1883 VERBOSE
+Compile
+Run
+Starting the gateway 
+ * Serial: /dev/ttyUSB0
+ * IP server: 192.168.0.42 
+ * Port server: 1883 
+ * Log level: VERBOSE
+ # [  DEBUG 2019/06/11 10:54:24  ] XBee.<init>: connection to the XBee module
+Gateway connected to the XBee module /dev/ttyUSB0
+ # [  DEBUG 2019/06/11 10:56:19  ] SerialPortReader.serialEvent: new message executor reader started
+ # [  DEBUG 2019/06/11 10:56:19  ] RawDataParser.run: start the message executor reader                                                                                
+ # [  DEBUG 2019/06/11 10:56:19  ] RawDataParser.verifyData: OK                                                                                                        
+ # [  DEBUG 2019/06/11 10:56:19  ] RawDataParser.verifyChecksum: OK                                                                                                    
+ # [  DEBUG 2019/06/11 10:56:19  ] RawDataParser.parse: 64b address                                                                                                    
+ # [  DEBUG 2019/06/11 10:56:19  ] RawDataParser.parse: 16b address                                                                                                    
+ # [  DEBUG 2019/06/11 10:56:19  ] RawDataParser.parse: payload                                                                                                        
+Exception in thread "Thread-1" java.lang.NegativeArraySizeException: -2
+        at gateway.serial.RawDataParser.parse(RawDataParser.java:90)
+        at gateway.serial.RawDataParser.run(RawDataParser.java:157)
+        at java.base/java.lang.Thread.run(Thread.java:834)
+ # [  DEBUG 2019/06/11 10:56:20  ] SerialPortReader.serialEvent: new message executor reader started
+ # [  DEBUG 2019/06/11 10:56:20  ] RawDataParser.run: start the message executor reader                                                                                
+ # [  DEBUG 2019/06/11 10:56:20  ] RawDataParser.verifyData: OK                                                                                                        
+ # [  DEBUG 2019/06/11 10:56:20  ] RawDataParser.verifyChecksum: OK                                                                                                    
+ # [  DEBUG 2019/06/11 10:56:20  ] RawDataParser.parse: 64b address                                                                                                    
+ # [  DEBUG 2019/06/11 10:56:20  ] RawDataParser.parse: 16b address                                                                                                    
+ # [  DEBUG 2019/06/11 10:56:20  ] RawDataParser.parse: payload                                                                                                        
+Exception in thread "Thread-2" java.lang.NegativeArraySizeException: -2
+        at gateway.serial.RawDataParser.parse(RawDataParser.java:90)
+        at gateway.serial.RawDataParser.run(RawDataParser.java:157)
+        at java.base/java.lang.Thread.run(Thread.java:834)
+ # [  DEBUG 2019/06/11 10:56:21  ] SerialPortReader.serialEvent: new message executor reader started
+ # [  DEBUG 2019/06/11 10:56:21  ] RawDataParser.run: start the message executor reader                                                                                
+ # [  DEBUG 2019/06/11 10:56:21  ] RawDataParser.verifyData: OK                                                                                                        
+ # [  DEBUG 2019/06/11 10:56:21  ] RawDataParser.verifyChecksum: OK                                                                                                    
+ # [  DEBUG 2019/06/11 10:56:21  ] RawDataParser.parse: 64b address                                                                                                    
+ # [  DEBUG 2019/06/11 10:56:21  ] RawDataParser.parse: 16b address                                                                                                    
+ # [  DEBUG 2019/06/11 10:56:21  ] RawDataParser.parse: payload                                                                                                        
+Exception in thread "Thread-3" java.lang.NegativeArraySizeException: -2
+        at gateway.serial.RawDataParser.parse(RawDataParser.java:90)
+        at gateway.serial.RawDataParser.run(RawDataParser.java:157)
+        at java.base/java.lang.Thread.run(Thread.java:834)
+ # [  DEBUG 2019/06/11 10:56:21  ] SerialPortReader.serialEvent: new message executor reader started
+ # [  DEBUG 2019/06/11 10:56:21  ] RawDataParser.run: start the message executor reader                                                                                
+ # [  DEBUG 2019/06/11 10:56:21  ] RawDataParser.verifyData: OK                                                                                                        
+ # [  DEBUG 2019/06/11 10:56:21  ] RawDataParser.verifyChecksum: OK                                                                                                    
+ # [  DEBUG 2019/06/11 10:56:21  ] RawDataParser.parse: 64b address                                                                                                    
+ # [  DEBUG 2019/06/11 10:56:21  ] RawDataParser.parse: 16b address                                                                                                    
+ # [  DEBUG 2019/06/11 10:56:21  ] RawDataParser.parse: payload                                                                                                        
+Exception in thread "Thread-4" java.lang.NegativeArraySizeException: -2
+        at gateway.serial.RawDataParser.parse(RawDataParser.java:90)
+        at gateway.serial.RawDataParser.run(RawDataParser.java:157)
+        at java.base/java.lang.Thread.run(Thread.java:834)
+ # [  DEBUG 2019/06/11 10:56:22  ] SerialPortReader.serialEvent: new message executor reader started
+ # [  DEBUG 2019/06/11 10:56:22  ] RawDataParser.run: start the message executor reader                                                                                
+ # [  DEBUG 2019/06/11 10:56:22  ] RawDataParser.verifyData: OK                                                                                                        
+ # [  DEBUG 2019/06/11 10:56:22  ] RawDataParser.verifyChecksum: OK                                                                                                    
+ # [  DEBUG 2019/06/11 10:56:22  ] RawDataParser.parse: 64b address                                                                                                    
+ # [  DEBUG 2019/06/11 10:56:22  ] RawDataParser.parse: 16b address                                                                                                    
+ # [  DEBUG 2019/06/11 10:56:22  ] RawDataParser.parse: payload                                                                                                        
+Exception in thread "Thread-5" java.lang.NegativeArraySizeException: -2
+        at gateway.serial.RawDataParser.parse(RawDataParser.java:90)
+        at gateway.serial.RawDataParser.run(RawDataParser.java:157)
+        at java.base/java.lang.Thread.run(Thread.java:834)
+ # [  DEBUG 2019/06/11 10:56:25  ] SerialPortReader.serialEvent: new message executor reader started
+ # [  DEBUG 2019/06/11 10:56:25  ] RawDataParser.run: start the message executor reader                                                                                
+ # [  DEBUG 2019/06/11 10:56:25  ] RawDataParser.verifyData: OK                                                                                                        
+ [  ERROR 2019/06/11 10:56:25  ] RawDataParser.verifyChecksum: Fail
+ # [  DEBUG 2019/06/11 10:56:25  ] RawDataParser.verifyChecksum: checksum: 184
+ # [  DEBUG 2019/06/11 10:56:34  ] SerialPortReader.serialEvent: new message executor reader started                                                                   
+ # [  DEBUG 2019/06/11 10:56:34  ] RawDataParser.run: start the message executor reader                                                                                
+ # [  DEBUG 2019/06/11 10:56:34  ] RawDataParser.verifyData: OK                                                                                                        
+ # [  DEBUG 2019/06/11 10:56:34  ] RawDataParser.verifyChecksum: OK                                                                                                    
+ # [  DEBUG 2019/06/11 10:56:34  ] RawDataParser.parse: 64b address                                                                                                    
+ # [  DEBUG 2019/06/11 10:56:34  ] RawDataParser.parse: 16b address                                                                                                    
+ # [  DEBUG 2019/06/11 10:56:34  ] RawDataParser.parse: payload                                                                                                        
+Exception in thread "Thread-7" java.lang.NegativeArraySizeException: -2
+        at gateway.serial.RawDataParser.parse(RawDataParser.java:90)
+        at gateway.serial.RawDataParser.run(RawDataParser.java:157)
+        at java.base/java.lang.Thread.run(Thread.java:834)
+ # [  DEBUG 2019/06/11 10:56:50  ] SerialPortReader.serialEvent: new message executor reader started
+ # [  DEBUG 2019/06/11 10:56:50  ] RawDataParser.run: start the message executor reader                                                                                
+ # [  DEBUG 2019/06/11 10:56:50  ] RawDataParser.verifyData: OK                                                                                                        
+ # [  DEBUG 2019/06/11 10:56:50  ] RawDataParser.verifyChecksum: OK                                                                                                    
+ # [  DEBUG 2019/06/11 10:56:50  ] RawDataParser.parse: 64b address                                                                                                    
+ # [  DEBUG 2019/06/11 10:56:50  ] RawDataParser.parse: 16b address                                                                                                    
+ # [  DEBUG 2019/06/11 10:56:50  ] RawDataParser.parse: payload                                                                                                        
+Exception in thread "Thread-8" java.lang.NegativeArraySizeException: -2
+        at gateway.serial.RawDataParser.parse(RawDataParser.java:90)
+        at gateway.serial.RawDataParser.run(RawDataParser.java:157)
+        at java.base/java.lang.Thread.run(Thread.java:834)
+ # [  DEBUG 2019/06/11 10:56:51  ] SerialPortReader.serialEvent: new message executor reader started
+ # [  DEBUG 2019/06/11 10:56:51  ] RawDataParser.run: start the message executor reader                                                                                
+ # [  DEBUG 2019/06/11 10:56:51  ] RawDataParser.verifyData: OK                                                                                                        
+ # [  DEBUG 2019/06/11 10:56:51  ] RawDataParser.verifyChecksum: OK                                                                                                    
+ # [  DEBUG 2019/06/11 10:56:51  ] RawDataParser.parse: 64b address                                                                                                    
+ # [  DEBUG 2019/06/11 10:56:51  ] RawDataParser.parse: 16b address                                                                                                    
+ # [  DEBUG 2019/06/11 10:56:51  ] RawDataParser.parse: payload                                                                                                        
+Exception in thread "Thread-9" java.lang.NegativeArraySizeException: -2
+        at gateway.serial.RawDataParser.parse(RawDataParser.java:90)
+        at gateway.serial.RawDataParser.run(RawDataParser.java:157)
+        at java.base/java.lang.Thread.run(Thread.java:834)
+ # [  DEBUG 2019/06/11 10:56:52  ] SerialPortReader.serialEvent: new message executor reader started
+ # [  DEBUG 2019/06/11 10:56:52  ] RawDataParser.run: start the message executor reader                                                                                
+ # [  DEBUG 2019/06/11 10:56:52  ] RawDataParser.verifyData: OK                                                                                                        
+ [  ERROR 2019/06/11 10:56:52  ] RawDataParser.verifyChecksum: Fail
+ # [  DEBUG 2019/06/11 10:56:52  ] RawDataParser.verifyChecksum: checksum: 43
+ # [  DEBUG 2019/06/11 10:56:54  ] SerialPortReader.serialEvent: new message executor reader started                                                                   
+ # [  DEBUG 2019/06/11 10:56:54  ] RawDataParser.run: start the message executor reader                                                                                
+ # [  DEBUG 2019/06/11 10:56:54  ] RawDataParser.verifyData: OK                                                                                                        
+ # [  DEBUG 2019/06/11 10:56:54  ] RawDataParser.verifyChecksum: OK                                                                                                    
+ # [  DEBUG 2019/06/11 10:56:54  ] RawDataParser.parse: 64b address                                                                                                    
+ # [  DEBUG 2019/06/11 10:56:54  ] RawDataParser.parse: 16b address                                                                                                    
+ # [  DEBUG 2019/06/11 10:56:54  ] RawDataParser.parse: payload                                                                                                        
+ # [  DEBUG 2019/06/11 10:56:54  ] Devices.search: addr 64b: 019-9406581-11959 - addr 16b: -125-106                                                                    
+ # [  DEBUG 2019/06/11 10:56:54  ] Devices.search: device with address 019-9406581-11959 is NOT registered                                                             
+ # [  DEBUG 2019/06/11 10:56:54  ] Devices.search: creating a new device                                                                                               
+ # [  DEBUG 2019/06/11 10:56:55  ] Device.updateTimer: Tue Jun 11 10:56:55 CEST 2019                                                                                   
+ # [  DEBUG 2019/06/11 10:56:55  ] RawDataParser.parse: analyse message type                                                                                           
+ # [  DEBUG 2019/06/11 10:56:56  ] SerialPortReader.serialEvent: new message executor reader started                                                                   
+ # [  DEBUG 2019/06/11 10:56:56  ] RawDataParser.run: start the message executor reader                                                                                
+ # [  DEBUG 2019/06/11 10:56:56  ] RawDataParser.verifyData: OK                                                                                                        
+ # [  DEBUG 2019/06/11 10:56:56  ] RawDataParser.verifyChecksum: OK                                                                                                    
+ # [  DEBUG 2019/06/11 10:56:56  ] RawDataParser.parse: 64b address                                                                                                    
+ # [  DEBUG 2019/06/11 10:56:56  ] RawDataParser.parse: 16b address                                                                                                    
+ # [  DEBUG 2019/06/11 10:56:56  ] RawDataParser.parse: payload                                                                                                        
+Exception in thread "Thread-14" java.lang.NegativeArraySizeException: -2
+        at gateway.serial.RawDataParser.parse(RawDataParser.java:90)
+        at gateway.serial.RawDataParser.run(RawDataParser.java:157)
+        at java.base/java.lang.Thread.run(Thread.java:834)
+ # [  DEBUG 2019/06/11 10:57:08  ] SerialPortReader.serialEvent: new message executor reader started
+ # [  DEBUG 2019/06/11 10:57:08  ] RawDataParser.run: start the message executor reader                                                                                
+ # [  DEBUG 2019/06/11 10:57:08  ] RawDataParser.verifyData: OK                                                                                                        
+ [  ERROR 2019/06/11 10:57:08  ] RawDataParser.verifyChecksum: Fail
+ # [  DEBUG 2019/06/11 10:57:08  ] RawDataParser.verifyChecksum: checksum: 32
+ # [  DEBUG 2019/06/11 10:57:15  ] SerialPortReader.serialEvent: new message executor reader started                                                                   
+ # [  DEBUG 2019/06/11 10:57:15  ] RawDataParser.run: start the message executor reader                                                                                
+ # [  DEBUG 2019/06/11 10:57:15  ] RawDataParser.verifyData: OK                                                                                                        
+ [  ERROR 2019/06/11 10:57:15  ] RawDataParser.verifyChecksum: Fail
+ # [  DEBUG 2019/06/11 10:57:15  ] RawDataParser.verifyChecksum: checksum: 143
+ # [  DEBUG 2019/06/11 10:57:18  ] SerialPortReader.serialEvent: new message executor reader started                                                                   
+ # [  DEBUG 2019/06/11 10:57:18  ] RawDataParser.run: start the message executor reader                                                                                
+ # [  DEBUG 2019/06/11 10:57:18  ] RawDataParser.verifyData: OK                                                                                                        
+ # [  DEBUG 2019/06/11 10:57:18  ] RawDataParser.verifyChecksum: OK                                                                                                    
+ # [  DEBUG 2019/06/11 10:57:18  ] RawDataParser.parse: 64b address                                                                                                    
+ # [  DEBUG 2019/06/11 10:57:18  ] RawDataParser.parse: 16b address                                                                                                    
+ # [  DEBUG 2019/06/11 10:57:18  ] RawDataParser.parse: payload                                                                                                        
+Exception in thread "Thread-17" java.lang.ArrayIndexOutOfBoundsException: Index 23 out of bounds for length 23
+        at gateway.serial.RawDataParser.parse(RawDataParser.java:92)
+        at gateway.serial.RawDataParser.run(RawDataParser.java:157)
+        at java.base/java.lang.Thread.run(Thread.java:834)
+ # [  DEBUG 2019/06/11 10:57:19  ] SerialPortReader.serialEvent: new message executor reader started
+ # [  DEBUG 2019/06/11 10:57:19  ] RawDataParser.run: start the message executor reader                                                                                
+ # [  DEBUG 2019/06/11 10:57:19  ] RawDataParser.verifyData: OK                                                                                                        
+ [  ERROR 2019/06/11 10:57:19  ] RawDataParser.verifyChecksum: Fail
+ # [  DEBUG 2019/06/11 10:57:19  ] RawDataParser.verifyChecksum: checksum: 33
+ # [  DEBUG 2019/06/11 10:57:21  ] SerialPortReader.serialEvent: new message executor reader started                                                                   
+ # [  DEBUG 2019/06/11 10:57:21  ] RawDataParser.run: start the message executor reader                                                                                
+ # [  DEBUG 2019/06/11 10:57:21  ] RawDataParser.verifyData: OK                                                                                                        
+ [  ERROR 2019/06/11 10:57:21  ] RawDataParser.verifyChecksum: Fail
+ # [  DEBUG 2019/06/11 10:57:21  ] RawDataParser.verifyChecksum: checksum: 31
+ # [  DEBUG 2019/06/11 10:57:29  ] SerialPortReader.serialEvent: new message executor reader started                                                                   
+ # [  DEBUG 2019/06/11 10:57:29  ] RawDataParser.run: start the message executor reader                                                                                
+ # [  DEBUG 2019/06/11 10:57:29  ] RawDataParser.verifyData: OK                                                                                                        
+ # [  DEBUG 2019/06/11 10:57:29  ] RawDataParser.verifyChecksum: OK                                                                                                    
+ # [  DEBUG 2019/06/11 10:57:29  ] RawDataParser.parse: 64b address                                                                                                    
+ # [  DEBUG 2019/06/11 10:57:29  ] RawDataParser.parse: 16b address                                                                                                    
+ # [  DEBUG 2019/06/11 10:57:29  ] RawDataParser.parse: payload                                                                                                        
+Exception in thread "Thread-20" java.lang.NegativeArraySizeException: -3
+        at gateway.serial.RawDataParser.parse(RawDataParser.java:90)
+        at gateway.serial.RawDataParser.run(RawDataParser.java:157)
+        at java.base/java.lang.Thread.run(Thread.java:834)
+ # [  DEBUG 2019/06/11 10:57:38  ] SerialPortReader.serialEvent: new message executor reader started
+ # [  DEBUG 2019/06/11 10:57:38  ] RawDataParser.run: start the message executor reader                                                                                
+ # [  DEBUG 2019/06/11 10:57:38  ] RawDataParser.verifyData: OK                                                                                                        
+ # [  DEBUG 2019/06/11 10:57:38  ] RawDataParser.verifyChecksum: OK                                                                                                    
+ # [  DEBUG 2019/06/11 10:57:38  ] RawDataParser.parse: 64b address                                                                                                    
+ # [  DEBUG 2019/06/11 10:57:38  ] RawDataParser.parse: 16b address                                                                                                    
+ # [  DEBUG 2019/06/11 10:57:38  ] RawDataParser.parse: payload                                                                                                        
+Exception in thread "Thread-21" java.lang.NegativeArraySizeException: -3
+        at gateway.serial.RawDataParser.parse(RawDataParser.java:90)
+        at gateway.serial.RawDataParser.run(RawDataParser.java:157)
+        at java.base/java.lang.Thread.run(Thread.java:834)
+ # [  DEBUG 2019/06/11 10:57:38  ] SerialPortReader.serialEvent: new message executor reader started
+ # [  DEBUG 2019/06/11 10:57:38  ] RawDataParser.run: start the message executor reader                                                                                
+ # [  DEBUG 2019/06/11 10:57:38  ] RawDataParser.verifyData: OK                                                                                                        
+ [  ERROR 2019/06/11 10:57:38  ] RawDataParser.verifyChecksum: Fail
+ # [  DEBUG 2019/06/11 10:57:38  ] RawDataParser.verifyChecksum: checksum: 153
+ # [  DEBUG 2019/06/11 10:57:59  ] SerialPortReader.serialEvent: new message executor reader started                                                                   
+ # [  DEBUG 2019/06/11 10:57:59  ] RawDataParser.run: start the message executor reader                                                                                
+ # [  DEBUG 2019/06/11 10:57:59  ] RawDataParser.verifyData: OK                                                                                                        
+ # [  DEBUG 2019/06/11 10:57:59  ] RawDataParser.verifyChecksum: OK                                                                                                    
+ # [  DEBUG 2019/06/11 10:57:59  ] RawDataParser.parse: 64b address                                                                                                    
+ # [  DEBUG 2019/06/11 10:57:59  ] RawDataParser.parse: 16b address                                                                                                    
+ # [  DEBUG 2019/06/11 10:57:59  ] RawDataParser.parse: payload                                                                                                        
+Exception in thread "Thread-23" java.lang.NegativeArraySizeException: -2
+        at gateway.serial.RawDataParser.parse(RawDataParser.java:90)
+        at gateway.serial.RawDataParser.run(RawDataParser.java:157)
+        at java.base/java.lang.Thread.run(Thread.java:834)
+ # [  DEBUG 2019/06/11 10:58:00  ] SerialPortReader.serialEvent: new message executor reader started
+ # [  DEBUG 2019/06/11 10:58:00  ] RawDataParser.run: start the message executor reader                                                                                
+ # [  DEBUG 2019/06/11 10:58:00  ] RawDataParser.verifyData: OK                                                                                                        
+ [  ERROR 2019/06/11 10:58:00  ] RawDataParser.verifyChecksum: Fail
+ # [  DEBUG 2019/06/11 10:58:00  ] RawDataParser.verifyChecksum: checksum: 35
+ # [  DEBUG 2019/06/11 10:58:01  ] SerialPortReader.serialEvent: new message executor reader started                                                                   
+ # [  DEBUG 2019/06/11 10:58:01  ] RawDataParser.run: start the message executor reader                                                                                
+ # [  DEBUG 2019/06/11 10:58:01  ] RawDataParser.verifyData: OK                                                                                                        
+ [  ERROR 2019/06/11 10:58:01  ] RawDataParser.verifyChecksum: Fail
+ # [  DEBUG 2019/06/11 10:58:01  ] RawDataParser.verifyChecksum: checksum: 196
+ # [  DEBUG 2019/06/11 10:58:01  ] SerialPortReader.serialEvent: new message executor reader started
+ # [  DEBUG 2019/06/11 10:58:01  ] RawDataParser.run: start the message executor reader
+ # [  DEBUG 2019/06/11 10:58:01  ] RawDataParser.verifyData: OK
+ # [  DEBUG 2019/06/11 10:58:01  ] RawDataParser.verifyChecksum: OK
+ # [  DEBUG 2019/06/11 10:58:01  ] RawDataParser.parse: 64b address
+ # [  DEBUG 2019/06/11 10:58:01  ] RawDataParser.parse: 16b address
+ # [  DEBUG 2019/06/11 10:58:01  ] RawDataParser.parse: payload
+Exception in thread "Thread-26" java.lang.NegativeArraySizeException: -2
+        at gateway.serial.RawDataParser.parse(RawDataParser.java:90)
+        at gateway.serial.RawDataParser.run(RawDataParser.java:157)
+        at java.base/java.lang.Thread.run(Thread.java:834)
+Unnamed device 0 timeout remove device
+ # [  DEBUG 2019/06/11 11:00:55  ] Devices.remvove: Removing Unnamed device 0
+ # [  DEBUG 2019/06/11 11:01:01  ] SerialPortReader.serialEvent: new message executor reader started
+ # [  DEBUG 2019/06/11 11:01:01  ] RawDataParser.run: start the message executor reader
+ # [  DEBUG 2019/06/11 11:01:01  ] RawDataParser.verifyData: OK
+ # [  DEBUG 2019/06/11 11:01:01  ] RawDataParser.verifyChecksum: OK
+ # [  DEBUG 2019/06/11 11:01:01  ] RawDataParser.parse: 64b address
+ # [  DEBUG 2019/06/11 11:01:01  ] RawDataParser.parse: 16b address
+ # [  DEBUG 2019/06/11 11:01:01  ] RawDataParser.parse: payload
+Exception in thread "Thread-27" java.lang.NegativeArraySizeException: -3
+        at gateway.serial.RawDataParser.parse(RawDataParser.java:90)
+        at gateway.serial.RawDataParser.run(RawDataParser.java:157)
+        at java.base/java.lang.Thread.run(Thread.java:834)
+ # [  DEBUG 2019/06/11 11:01:01  ] SerialPortReader.serialEvent: new message executor reader started
+ # [  DEBUG 2019/06/11 11:01:01  ] RawDataParser.run: start the message executor reader
+ # [  DEBUG 2019/06/11 11:01:01  ] RawDataParser.verifyData: OK
+ [  ERROR 2019/06/11 11:01:01  ] RawDataParser.verifyChecksum: Fail
+ # [  DEBUG 2019/06/11 11:01:01  ] RawDataParser.verifyChecksum: checksum: 56

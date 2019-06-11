@@ -84,10 +84,21 @@ public class RawDataParser implements Runnable {
 		} catch (final Exception e) {
 			Log.error("RawDataParser", "parse", "Error while reading incoming data");
 			Log.debug("RawDataParser", "parse", e.getMessage());
+			Log.print(buffer);
+			return;
 		}
 
-		// Compute the message for each case of the following switch
-		final byte[] data = new byte[payload_length - MessageStructure.CHECKSUM_SIZE];
+		final byte[] data;
+		try {
+			// Compute the message for each case of the following switch
+			data = new byte[payload_length - MessageStructure.CHECKSUM_SIZE];
+		} catch (final Exception e) {
+			Log.error("RawDataParser", "parse", "paylod lenght error");
+			Log.debug("RawDataParser", "parse",
+					"data lenght: " + (payload_length - MessageStructure.CHECKSUM_SIZE));
+			Log.print(buffer);
+			return;
+		}
 		for (i = 0; i < data.length; i++) {
 			data[i] = buffer[MessageStructure.RECEIVE_PAYLOAD_START + i];
 		}
