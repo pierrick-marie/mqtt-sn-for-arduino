@@ -92,15 +92,15 @@ public class RawDataParser implements Runnable {
 		try {
 			// Compute the message for each case of the following switch
 			data = new byte[payload_length - MessageStructure.CHECKSUM_SIZE];
+			for (i = 0; i < data.length; i++) {
+				data[i] = buffer[MessageStructure.RECEIVE_PAYLOAD_START + i];
+			}
 		} catch (final Exception e) {
 			Log.error("RawDataParser", "parse", "paylod lenght error");
 			Log.debug("RawDataParser", "parse",
 					"data lenght: " + (payload_length - MessageStructure.CHECKSUM_SIZE));
 			Log.print(buffer);
 			return;
-		}
-		for (i = 0; i < data.length; i++) {
-			data[i] = buffer[MessageStructure.RECEIVE_PAYLOAD_START + i];
 		}
 
 		final Device device = Devices.list.search(new Address64(address64), new Address16(address16));

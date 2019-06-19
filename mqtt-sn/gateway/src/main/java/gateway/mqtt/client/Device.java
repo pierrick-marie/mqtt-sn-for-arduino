@@ -84,7 +84,11 @@ public class Device {
 
 	synchronized public Boolean containsTopic(final Integer id) {
 
+		Log.debug("Device", "containsTopic", Topics.toString());
+		Log.debug("Device", "containsTopic", "id = " + id);
+
 		for (final Topic topic : Topics) {
+			Log.debug("Device", "containsTopic", "topic.id() = " + topic.id());
 			if (topic.id().equals(id)) {
 				return true;
 			}

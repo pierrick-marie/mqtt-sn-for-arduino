@@ -7,18 +7,16 @@
 
 #define MODULE_NAME "Arduino-1"
 
-#define TOPIC_SUB "TOPIC_PUB-3"
+#define TOPIC_SUB "TOPIC_TEST"
 
-#define TOPIC_PUB "TOPIC_PUB-1"
+#define TOPIC_PUB "TOPIC_TEST"
 
-#define MESSAGE "MESSAGE 1"
+#define MESSAGE "MESSAGE"
 
-String rfid = "";
 int nbReceivedMessages = 0;
-long time = 0;
 
 Logs logs; 	                // objet pour ecrire des logs dans la console
-SoftwareSerial XBee(5, 4); 	//objet qui permet d'appeler les méthodes pour envoyer des données via le module XBee
+SoftwareSerial XBee(5, 4); 	// objet qui permet d'appeler les méthodes pour envoyer des données via le module XBee
 Mqttsn mqttsn(&XBee); 	    // objet qui permet d'appeler les methodes de la librairie mqttsn
 
 void setup() {
@@ -49,12 +47,11 @@ void loop() {
       Serial.print(" = ");
       Serial.println(msg[nbReceivedMessages].data);
     }
-
   } else {
     Serial.println("\n!!! Subscribe KO !!!");
   }
 
-  mqttsn.publish(TOPIC_PUB, MESSAGE);
+  mqttsn.publish(TOPIC_SUB, MESSAGE);
 
   mqttsn.disconnect();
 

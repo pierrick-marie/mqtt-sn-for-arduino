@@ -314,9 +314,9 @@ void Mqttsn::subAckHandler(MsgSubAck* msg) {
 		// LOGS.debug("subAckHandler", "table[id]: ", TopicTable[LastSubscribedTopic].id);
 		// LOGS.debug("subAckHandler", "table[name]: ", TopicTable[LastSubscribedTopic].name);
 
-		LOGS.info("subscibe OK");
+		LOGS.info("subscribe OK");
 	} else {
-		LOGS.error("subscibe KO");
+		LOGS.error("subscribe KO");
 		RegAckReturnCode = REJECTED;
 	}
 }
@@ -493,12 +493,13 @@ void Mqttsn::resetRegisteredTopicId(int topicId) {
 
 	for (int i = 0; i < NbRegisteredTopic; i++) {
 		if (TopicTable[i].id == topicId) {
-			// LOGS.debug("resetRegisteredTopicId", "topic id found");
+			LOGS.debug("resetRegisteredTopicId", "id = ", topicId);
 			TopicTable[i].id = DEFAULT_TOPIC_ID;
+			return;
 		}
 	}
 
-	// LOGS.debug("resetRegisteredTopicId", "topic id NOT found");
+	LOGS.debugln("resetRegisteredTopicId", "topic id NOT found");
 }
 
 /**

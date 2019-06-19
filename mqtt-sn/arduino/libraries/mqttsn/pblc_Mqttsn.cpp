@@ -237,14 +237,15 @@ void Mqttsn::connect(const char* _moduleName) {
 int Mqttsn::findTopicId(const char* _topicName) {
 
 	for (int i = 0; i < NbRegisteredTopic; i++) {
-		// LOGS.debug( "findTopicid", "id = ", (int)TopicTable[i].id);
-		// LOGS.debug( "findTopicid", "name = ", TopicTable[i].name);
+		// LOGS.debug( "findTopicId", "id = ", (int)TopicTable[i].id);
+		// LOGS.debug( "findTopicId", "name = ", TopicTable[i].name);
 		if (TopicTable[i].id != DEFAULT_TOPIC_ID && strcmp(TopicTable[i].name, _topicName) == 0) {
+			// LOGS.debug( "findTopicId", "return = ", TopicTable[i].id);
 			return TopicTable[i].id;
 		}
 	}
 
-	// LOGS.debug("findTopicId", "topicName not found");
+	// LOGS.debugln("findTopicId", "topicName not found");
 	return -1;
 }
 
