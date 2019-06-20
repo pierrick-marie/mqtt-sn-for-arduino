@@ -69,7 +69,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define BAUD_RATE 9600
 
-#define LONG_WAIT 500 // 500 ms (0.5 second)
+#define MIN_WAIT 4 // 2 x 100
+#define MAX_WAIT 12 // 8 x 100
 
 class Mqttsn {
 
@@ -239,6 +240,8 @@ private:
 	void displayFrameBufferOut();
 	void displayFrameBufferIn();
 
+	int getRandomTime();
+
 	// @TODO not implemented yet
 	// void willTopicRespHandler(msg_willtopicresp* msg);
 	// void willMsgRespHandler(msg_willmsgresp* msg);
@@ -282,7 +285,7 @@ private:
 
 	// the status of the connection (first sent message)
 	bool SearchGatewayOk = false;
-	bool WaitingForResponse = false;
+	// bool WaitingForResponse = false;
 
 	// the code received after a subscribe or register message
 	int RegAckReturnCode = 0;

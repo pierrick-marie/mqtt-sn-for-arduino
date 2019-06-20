@@ -46,13 +46,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 bool Mqttsn::waitData() {
 
-	delay(LONG_WAIT);
+	delay(200);
 
 	int i = 0;
 	XBEE->listen();
 	while(XBEE->isListening() && XBEE->available() <= 0 && i <= MAX_TRY ) {
 		// waiting for incoming data longer during 1 second (1000ms)
-		delay(LONG_WAIT);
+		delay(200);
 		i++;
 	}
 	if( i >= MAX_TRY ) {
@@ -88,7 +88,7 @@ void Mqttsn::parseData() {
 
 void Mqttsn::dispatch() {
 
-	WaitingForResponse = false;
+	// WaitingForResponse = false;
 	MessageHeader* responseMessage = (MessageHeader*)ResponseBuffer;
 
 	// LOGS.debug("dispatch", "response type:", responseMessage->type);
@@ -256,7 +256,8 @@ bool Mqttsn::checkSerial() {
 
 	if(delimiter != 0x7E) {
 		// LOGS.debug("checkSerial", "KO 1", delimiter);
-		return checkSerial();
+		// return checkSerial();
+		return false;
 	}
 
 	length1 = XBEE->read();
@@ -271,12 +272,14 @@ bool Mqttsn::checkSerial() {
 
 	if(!verifyChecksum(FrameBufferIn, frameSize)) {
 		// LOGS.debug("checkSerial", "KO 2", delimiter);
-		return checkSerial();
+		// return checkSerial();
+		return false;
 	}
 
 	if(FrameBufferIn[0] == 139 || FrameBufferIn[0] == 161) {
 		// LOGS.debug("checkSerial", "KO 3" , FrameBufferIn[0]);
-		return checkSerial();
+		// return checkSerial();
+		return false;
 	}
 
 	// printFrameBufferIn();
@@ -324,13 +327,15 @@ void Mqttsn::subAckHandler(MsgSubAck* msg) {
 void Mqttsn::sendMessage() {
 
 	// LOGS.debug("sendMessage");
-	delay(LONG_WAIT);
+	delay(getRandomTime());
 
+	/*
 	if(WaitingForResponse) {
 		// LOGS.debug("sendMessage", "the module is already waiting for a response");
 		return;
 	}
 	WaitingForResponse = true;
+	*/
 
 	// Sending the message stored into @MessageBuffer through @MB_serial_send function
 	// extern void MB_serial_send(uint8_t* MessageBuffer, int length);
@@ -352,7 +357,7 @@ void Mqttsn::sendMessage() {
 	}
 
 	// @BUG waits 500ms seconds otherwise the module miss some answers from the gateway
-	delay(LONG_WAIT);
+	delay(getRandomTime());
 }
 
 bool Mqttsn::verifyChecksum(uint8_t _frameBuffer[], int _frameSize) {
@@ -445,6 +450,8 @@ void Mqttsn::connAckHandler(MsgConnAck* msg) {
 		LOGS.error("not connected");
 		while(1);
 	}
+
+	delay(getRandomTime());
 }
 
 void Mqttsn::disconnectHandler(MsgDisconnect* msg) {
@@ -487,6 +494,8 @@ void Mqttsn::regAckHandler(MsgRegAck* msg) {
 		LOGS.error("register KO");
 		RegAckReturnCode = REJECTED;
 	}
+
+	delay(getRandomTime());
 }
 
 void Mqttsn::resetRegisteredTopicId(int topicId) {
@@ -517,6 +526,13 @@ void Mqttsn::reRegisterHandler(MsgReRegister* msg) {
 		// LOGS.debug("reregisterTopic", "topic name found -> register:", topicName);
 		registerTopic(topicName);
 	}
+
+	delay(getRandomTime());
+}
+
+int Mqttsn::getRandomTime() {
+
+	return random(MIN_WAIT, MAX_WAIT) * 100;
 }
 
 /*

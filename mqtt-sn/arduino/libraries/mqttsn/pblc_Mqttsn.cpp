@@ -56,6 +56,9 @@ Mqttsn::Mqttsn(SoftwareSerial* xBee) {
 	memset(TopicTable, 0, sizeof(Topic) * MAX_TOPICS);
 	memset(MessageBuffer, 0, MAX_BUFFER_SIZE);
 	memset(ResponseBuffer, 0, MAX_BUFFER_SIZE);
+
+	// Init random seed -> getRandomTime()
+	randomSeed(analogRead(0));
 }
 
 Mqttsn::~Mqttsn() {
@@ -67,6 +70,8 @@ bool Mqttsn::isConnected() {
 }
 
 int Mqttsn::requestMessages() {
+
+	delay(getRandomTime());
 
 	LOGS.info("request msg");
 
@@ -102,6 +107,8 @@ int Mqttsn::requestMessages() {
 
 void Mqttsn::disconnect() {
 
+	delay(getRandomTime());
+
 	MsgDisconnect* msg = reinterpret_cast<MsgDisconnect*>(MessageBuffer);
 
 	msg->length = sizeof(MessageHeader);
@@ -125,6 +132,8 @@ void Mqttsn::disconnect() {
 }
 
 void Mqttsn::publish(const char* _topicName, String _message){
+
+	delay(getRandomTime());
 
 	if(Connected != ACCEPTED) {
 		LOGS.connectionLost();
@@ -171,13 +180,15 @@ void Mqttsn::publish(const char* _topicName, String _message){
 		// }
 		// parseData();
 		// @TODO do not wait a response
-		WaitingForResponse = false;
+		// WaitingForResponse = false;
 	}
 }
 
 bool Mqttsn::start() {
 
-	WaitingForResponse = false;
+	delay(getRandomTime()*2);
+
+	// WaitingForResponse = false;
 	SearchGatewayOk = false;
 
 	MsgSearchGateway* msg = reinterpret_cast<MsgSearchGateway*>(MessageBuffer);
@@ -191,6 +202,7 @@ bool Mqttsn::start() {
 
 	// LOGS.debug("start", "checking the response from the gateway");
 
+	/*
 	int i = 0;
 	while(false == SearchGatewayOk && i <= MAX_TRY) {
 
@@ -203,11 +215,19 @@ bool Mqttsn::start() {
 
 		i++;
 	}
+	*/
+
+	if(false == SearchGatewayOk && !checkSerial() ) {
+		start();
+	}
+	parseData();
 
 	return SearchGatewayOk;
 }
 
 void Mqttsn::connect(const char* _moduleName) {
+
+	delay(getRandomTime());
 
 	strcpy(ModuleName, _moduleName);
 
@@ -228,7 +248,6 @@ void Mqttsn::connect(const char* _moduleName) {
 		// LOGS.debugln("connect", "KO");
 		// Connected = REJECTED;
 		LOGS.connectionLost();
-		start();
 		connect(_moduleName);
 	}
 	parseData();
@@ -262,6 +281,8 @@ const char* Mqttsn::findTopicName(int _topicId) {
 }
 
 bool Mqttsn::subscribeTopic(const char* _topicName) {
+
+	delay(getRandomTime());
 
 	// LOGS.debug("subscribeTopic", "topic: ", topicName);
 
@@ -312,8 +333,6 @@ bool Mqttsn::subscribeTopic(const char* _topicName) {
 		// LOGS.debug("subscribe", "check serial rejected");
 		// Connected = REJECTED;
 		LOGS.connectionLost();
-		start();
-		connect(ModuleName);
 		subscribeTopic(_topicName);
 	}
 
@@ -325,6 +344,8 @@ bool Mqttsn::subscribeTopic(const char* _topicName) {
 }
 
 bool Mqttsn::registerTopic(const char* _topicName) {
+
+	delay(getRandomTime());
 
 	// LOGS.debug("register", "topic: ", _topicName);
 
@@ -364,8 +385,6 @@ bool Mqttsn::registerTopic(const char* _topicName) {
 		// LOGS.debug("register", "rejected");
 		// Connected = REJECTED;
 		LOGS.connectionLost();
-		start();
-		connect(ModuleName);
 		registerTopic(_topicName);
 	}
 
@@ -378,6 +397,9 @@ bool Mqttsn::registerTopic(const char* _topicName) {
 }
 
 MsgPublish* Mqttsn::getReceivedMessages() {
+
+	delay(getRandomTime());
+
 	return ReceivedMessages;
 }
 
