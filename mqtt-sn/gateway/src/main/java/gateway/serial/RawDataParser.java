@@ -136,22 +136,18 @@ public class RawDataParser implements Runnable {
 		case MqttSNMessageType.PINGREQ:
 			device.setAction(new PingReq(device, data));
 			break;
-
-		case MqttSNMessageType.WILLTOPIC:
-			// @TODO not implemented yet
-			// device.setAction(new WillTopic(device, message));
-			break;
-
-		case MqttSNMessageType.WILLMSG:
-			// @TODO not implemented yet
-			// device.setAction(new WillMessage(device, message));
-			break;
-
-		case MqttSNMessageType.PUBACK:
-			// PUBACK
-			// Only used with QoS level 1 and 2 - not used yet
-			// device.setAction(new Puback(device, message));
-			break;
+		/*
+		 * case MqttSNMessageType.WILLTOPIC: // @TODO not implemented yet //
+		 * device.setAction(new WillTopic(device, message)); break;
+		 *
+		 * case MqttSNMessageType.WILLMSG: // @TODO not implemented yet //
+		 * device.setAction(new WillMessage(device, message)); break;
+		 *
+		 * case MqttSNMessageType.PUBACK: // PUBACK // Only used with QoS level 1 and 2
+		 * - not used yet // device.setAction(new Puback(device, message)); break;
+		 */
+		default:
+			Log.error("RawDataParser", "parse", "no action recognized");
 		}
 	}
 
@@ -164,9 +160,9 @@ public class RawDataParser implements Runnable {
 		 * TODO DEBUG final int indexOfByte = getFirstIndexforByte((byte) 0X7E, buffer);
 		 */
 		if (verifyData(buffer)) {
-			if (verifyChecksum(buffer)) {
-				parse(buffer);
-			}
+			// BUggy method -> useless !
+			// verifyChecksum(buffer);
+			parse(buffer);
 		}
 	}
 

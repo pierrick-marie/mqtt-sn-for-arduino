@@ -5,13 +5,10 @@
 
 #include <Mqttsn.h>
 
-#define MODULE_NAME "Arduino-1"
-
-#define TOPIC_SUB "TOPIC_TEST"
-
-#define TOPIC_PUB "TOPIC_TEST"
-
-#define MESSAGE "MESSAGE"
+#define MODULE_NAME "Arduino-6"
+#define TOPIC_SUB "TOPIC_TEST-6"
+#define TOPIC_PUB "TOPIC_TEST-6"
+#define MESSAGE "MESSAGE-6"
 
 int nbReceivedMessages = 0;
 
