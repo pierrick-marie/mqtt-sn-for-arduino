@@ -16,6 +16,6 @@ Texte de la licence : https://framagit.org/pierrick/mqtt-sn/-/raw/master/LICENSE
 
 # Folders
 
- * *documentation*: all documentation about XBee modules and MQTT-SN protocol
- * *mqtt-sn*: implementatoin of the MQTT-SN protool for Arduino with a gateway. The folder also contains an implementation of MQTT-SN in "transparent mode"
+ * *documentation*: all documentations about XBee modules and MQTT-SN protocol
+ * *implementation*: the source source of the implementatoin of the MQTT-SN protool for Arduino with a gateway. The subfolder "transparent mode" is a demonstration how to send and receive messages between Arduinos and XBEE modules as simple as possible without MQTT-SN.  
  * *xctu-parameters*: all configurations required for XBEE modules with XCTU software 
