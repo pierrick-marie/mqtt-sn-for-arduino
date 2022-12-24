@@ -13,3 +13,9 @@ URL publique du projet : https://framagit.org/pierrick/mqtt-sn.git
 # Licence BSD 3-Clause 
 
 Texte de la licence : https://framagit.org/pierrick/mqtt-sn/-/raw/master/LICENSE
+
+# Folders
+
+ * *documentation*: all documentation about XBee modules and MQTT-SN protocol
+ * *mqtt-sn*: implementatoin of the MQTT-SN protool for Arduino with a gateway. The folder also contains an implementation of MQTT-SN in "transparent mode"
+ * *xctu-parameters*: all configurations required for XBEE modules with XCTU software 
