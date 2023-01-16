@@ -3,7 +3,7 @@ Bibliothèque MQTT-SN pour clients Arduino
 
 Ce projet est un portage du protocole MQTT-SN sur Arduino. 
 
-Les communications sans fil entre les client Arduino sont effectuées à l'aide de modules XBEE : https://framagit.org/pierrick/mqtt-sn/-/raw/master/mqtt-sn/doc/zigbee-modules.pdf
+Les communications sans fil entre les client Arduino sont effectuées à l'aide de modules XBEE : https://framagit.org/pierrick/mqtt-sn/-/raw/master/documentation/zigbee-modules.pdf
 
 La gateway utilisée pour coordonner les clients Arduino est développée en Java.
 La bibliothèque MQTT-SN pour Arduino est développée en C/C++.
