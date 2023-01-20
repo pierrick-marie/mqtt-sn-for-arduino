@@ -1,16 +1,8 @@
-gateway/bin/
-gateway/.idea/
-new-gateway/.idea/
-# gateway/lib/
-
-mqtt-sn/gateway/.project
-
+bin/
+.idea/
 
 *.class
 *.zip
-# *.jar
-# *.iml
-
 
 .DS_Store
 .classpath
