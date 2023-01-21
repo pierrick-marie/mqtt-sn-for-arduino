@@ -14,9 +14,10 @@ git clone https://framagit.org/pierrick/mqtt-sn.git
 
 ### Folders
 
+ * *src/mqtt-sn-impl*: the implementation of MQTT-SN protocol with the gateway written in Java, Arduino libraries and Arduino client examples 
+ * *src/basic-xbee-communication*: a basic program to send and receive messages from a gateway. It does not implement MQTT-SN!
  * *documentation*: all documentations about XBee modules and MQTT-SN protocol
- * *implementation*: the source source of the implementatoin of the MQTT-SN protool for Arduino with a gateway. The subfolder "transparent mode" is a demonstration how to send and receive messages between Arduinos and XBEE modules as simple as possible without MQTT-SN.  
- * *xctu-parameters*: all configurations required for XBEE modules with XCTU software 
+ * *xctu-parameters*: all configurations required for XBee modules with XCTU software 
 
 # License: BSD 3-Clause 
 

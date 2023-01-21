@@ -19,12 +19,6 @@ XBee::~XBee() {
 	free(xBeeModule);
 }
 
-/**
- * BSD 3-Clause Licence
- *
- * Created by Pierrick MARIE on 28/11/2018.
- */
-
 String XBee::getMessage() {
 
 	char temp = ' ';
@@ -32,7 +26,7 @@ String XBee::getMessage() {
 	String message = "";
 
 	xBeeModule->listen();
-	while (!xBeeModule->available() && nbTry <= MAX_TRY) {
+	while (!xBeeModule->available() && nbTry <= MAX_TRY) {	// Wait new message
 		delay(DELAY_MILLIS);
 		nbTry++;
 	}
@@ -42,7 +36,7 @@ String XBee::getMessage() {
 	}
 
 	temp = xBeeModule->read();
-	while (xBeeModule->available() && isPrintable(temp) && '\n' != temp) {
+	while (xBeeModule->available() && isPrintable(temp) && '\n' != temp) {	// Get message char by char until '\n'
 		message += temp;
 		temp = xBeeModule->read();
 	}
