@@ -5,7 +5,7 @@
  * Updated by Pierrick MARIE on 28/11/2018.
  */
 
-package coordinator.utils;
+package gateway.utils;
 
 public enum Config {
 
@@ -16,7 +16,10 @@ public enum Config {
 	public void parseArgs(String[] args) {
 
 		if (1 == args.length) {
+			System.out.println("Using port: " + args[0]);
 			SERIAL_PORT = args[0];
+		} else {
+			System.out.println("Using default port: " + SERIAL_PORT);
 		}
 	}
 }

@@ -5,7 +5,7 @@
  * Updated by Pierrick MARIE on 28/11/2018.
  */
 
-package coordinator.utils.log;
+package gateway.utils.log;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;

@@ -5,14 +5,14 @@
  * Updated by Pierrick MARIE on 28/11/2018.
  */
 
-package coordinator.thread;
+package gateway.thread;
 
 import java.util.ConcurrentModificationException;
 
-import coordinator.data.Data;
-import coordinator.utils.log.Log;
-import coordinator.utils.log.LogLevel;
-import coordinator.utils.serial.XBeeWriter;
+import gateway.data.Data;
+import gateway.utils.log.Log;
+import gateway.utils.log.LogLevel;
+import gateway.utils.serial.XBeeWriter;
 
 public class Sender implements Runnable {
 

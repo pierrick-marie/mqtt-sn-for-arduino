@@ -5,10 +5,10 @@
  * Updated by Pierrick MARIE on 28/11/2018.
  */
 
-package coordinator.utils.serial;
+package gateway.utils.serial;
 
-import coordinator.utils.log.Log;
-import coordinator.utils.log.LogLevel;
+import gateway.utils.log.Log;
+import gateway.utils.log.LogLevel;
 import jssc.SerialPortException;
 
 public class XBeeWriter {

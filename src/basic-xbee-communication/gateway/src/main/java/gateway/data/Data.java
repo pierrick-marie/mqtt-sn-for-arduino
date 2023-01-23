@@ -5,7 +5,7 @@
  * Updated by Pierrick MARIE on 28/11/2018.
  */
 
-package coordinator.data;
+package gateway.data;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -14,9 +14,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import coordinator.Main;
-import coordinator.utils.log.Log;
-import coordinator.utils.log.LogLevel;
+import gateway.Main;
+import gateway.utils.log.Log;
+import gateway.utils.log.LogLevel;
 
 public class Data implements Runnable {
 

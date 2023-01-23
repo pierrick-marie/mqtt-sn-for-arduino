@@ -5,12 +5,12 @@
  * Updated by Pierrick MARIE on 28/11/2018.
  */
 
-package coordinator.data;
+package gateway.data;
 
 import java.util.Date;
 
-import coordinator.utils.log.Log;
-import coordinator.utils.log.LogLevel;
+import gateway.utils.log.Log;
+import gateway.utils.log.LogLevel;
 
 class Message implements Comparable<Date> {
 

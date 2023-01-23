@@ -5,11 +5,11 @@
  * Updated by Pierrick MARIE on 28/11/2018.
  */
 
-package coordinator.utils.serial;
+package gateway.utils.serial;
 
-import coordinator.utils.Config;
-import coordinator.utils.log.Log;
-import coordinator.utils.log.LogLevel;
+import gateway.utils.Config;
+import gateway.utils.log.Log;
+import gateway.utils.log.LogLevel;
 import jssc.SerialPort;
 import jssc.SerialPortException;
 
