@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import gateway.Main;
+import gateway.utils.Config;
 import gateway.utils.log.Log;
 import gateway.utils.log.LogLevel;
 
@@ -26,7 +27,7 @@ public class Data implements Runnable {
 	private final Map<Integer, Message> data = new ConcurrentHashMap<>();
 
 	public Data() {
-		for (int i = 0; i <= Main.NB_XBEE_MODULE; i++) {
+		for (int i = 0; i <= Config.NB_XBEE_MODULE; i++) {
 			data.put(i, new Message());
 		}
 	}
@@ -67,7 +68,7 @@ public class Data implements Runnable {
 
 	public synchronized void setData(final Integer xbeeId, final String message) {
 
-		if (0 < xbeeId && Main.NB_XBEE_MODULE >= xbeeId) {
+		if (0 < xbeeId && Config.NB_XBEE_MODULE >= xbeeId) {
 			data.replace(xbeeId, new Message(message));
 			Log.debug(LogLevel.VERBOSE, "Data", "replace", "id: " + xbeeId + " data: " + data.get(xbeeId));
 		}

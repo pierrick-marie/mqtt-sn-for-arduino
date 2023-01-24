@@ -16,9 +16,6 @@ import gateway.utils.log.LogLevel;
 
 public class Main {
 
-	private int a;
-	public static final int NB_XBEE_MODULE = 7;
-
 	public static void main(String[] args) {
 
 		Config.instance.parseArgs(args);
