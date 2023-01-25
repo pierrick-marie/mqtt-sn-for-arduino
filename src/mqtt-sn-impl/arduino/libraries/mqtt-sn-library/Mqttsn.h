@@ -2,10 +2,11 @@
  * BSD 3-Clause Licence
  *
  * Created by Pierrick MARIE on 28/11/2018.
+ * Updated by Pierrick MARIE on 20/01/2023
  */
 
-#ifndef __Mqttsn_MESSAGES_H__
-#define __Mqttsn_MESSAGES_H__
+#ifndef __MQTT_SN_MESSAGES_H__
+#define __MQTT_SN_MESSAGES_H__
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -58,13 +59,13 @@ public:
 	 * ****************************
 	 **/
 
-	Mqttsn(SoftwareSerial* _xBee) ;
+	Mqttsn(SoftwareSerial* xBee) ;
 	~Mqttsn() ;
 
 	bool waitForSubAck();
 	bool isConnected();
 
-	void publish(const char* topic_name, String message);
+	void publish(const char* topicName, String message);
 
 	bool subscribeTopic(const char* topicName);
 
@@ -78,39 +79,39 @@ public:
 
 	/**
 	 * @brief ABSTRCT_connect The funtion tries to connect the module to the gateway.
-	 * @param module_name The name of the module used to make the connection
+	 * @param moduleName The name of the module used to make the connection
 	 * @return ACCEPTED if a correct response is received, else REJECTED.
 	 **/
-	void connect(const char* module_name) ;
+	void connect(const char* moduleName) ;
 
 	/**
 	 * @brief Mqttsn::findTopicId The function search the index of a @topicName within @topicTable list.
 	 * @param topicName The name of the topic to search.
 	 * @return The index of the topic or -1 if not found.
 	 */
-	int findTopicId(const char* topic_name) ;
+	int findTopicId(const char* topicName) ;
 
-	const char* findTopicName(int topic_id) ;
+	const char* findTopicName(int topicId) ;
 
 	/**
-	 * @brief Mqttsn::registerTopic The function asks to the gateway to register a @topic_name.
+	 * @brief Mqttsn::registerTopic The function asks to the gateway to register a @topicName.
 	 * @param name The topic name to register.
 	 *
 	 * @return
-	 *      -2 if it is not possible to register the @topic_name.
-	 *      -1 if the message to register @topic_name is sent.
-	 *      >= 0 the id of the @topic_name already registered.f
+	 *      -2 if it is not possible to register the @topicName.
+	 *      -1 if the message to register @topicName is sent.
+	 *      >= 0 the id of the @topicName already registered.f
 	 *
 	 **/
 	bool registerTopic(const char* name) ;
 
 	/**
 	 * @brief pingReq send a message to the gateway to request new published messages
-	 * @param module_name the id of the client who wants published messages
+	 * @param moduleName the id of the client who wants published messages
 	 */
 	int requestMessages();
 
-	MsgPublish* getReceivedMessages();
+	Message* getReceivedMessages();
 
 private:
 
@@ -133,7 +134,7 @@ private:
 	bool waitData() ;
 
 	/**
-	 * The function analyses the incoming data (@FrameBufferIn) and calls the function @Mqttsn.parseStream before cleaning the @FrameBufferIn.
+	 * The function analyses the incoming data (@frameBufferIn) and calls the function @Mqttsn.parseStream before cleaning the @frameBufferIn.
 	 **/
 	void parseData() ;
 
@@ -164,7 +165,7 @@ private:
 	 * Returns:
 	 * The size of the created frame.
 	 **/
-	int createFrame(int _headerLenght) ;
+	int createFrame(int headerLenght) ;
 
 	/**
 	 * The function verifies the checksum of @frame_buffer according to its @frame_size and returns true if it's OK, else return false.
@@ -172,44 +173,44 @@ private:
 	 * Returns:
 	 * True if the checksum of @frame_buffer is ok, else false.
 	 **/
-	bool verifyChecksum(uint8_t _frameBuffer[], int _frameSize) ;
+	bool verifyChecksum(uint8_t frameBuffer[], int frameSize) ;
 
 	/**
 	 * @brief gatewayInfoHandler notifies the client with the information of the gateway
 	 * @param msg the information
 	 */
-	void searchGatewayHandler(MsgGwinfo* msg);
+	void searchGatewayHandler(GatewayInfo* msg);
 
 	/**
 	 * @brief connackHandler notifies the client a connetion to the gateway is ok
 	 * @param msg the notification message
 	 */
-	void connAckHandler(MsgConnAck* msg);
+	void connAckHandler(ConnAck* msg);
 
 	/**
 	 * @brief regAckHandler the gateway notifies the client it have register the topic.
 	 * @param msg The notification message.
 	 */
-	void regAckHandler(MsgRegAck* msg);
+	void regAckHandler(RegAck* msg);
 
-	void publishHandler(MsgPublish* msg);
+	void publishHandler(Message* msg);
 
 	/**
 	 * @brief subAckHandler notifies the client a subcription topic have been regisered.
 	 * @param msg the notification message.
 	 */
-	void subAckHandler(MsgSubAck* msg);
+	void subAckHandler(SubAck* msg);
 
 	/**
 	 * @brief pingRespHandler Do nothing.
 	 */
 	void pingRespHandler();
 
-	void disconnectHandler(MsgDisconnect* msg);
+	void disconnectHandler(Disconnect* msg);
 
 	void resetRegisteredTopicId(int topicId);
 
-	void reRegisterHandler(MsgReRegister* msg);
+	void reRegisterHandler(ReRegister* msg);
 
 	void displayFrameBufferOut();
 	void displayFrameBufferIn();
@@ -217,33 +218,33 @@ private:
 	int getRandomTime();
 
 	// @TODO not implemented yet
-	// void willTopicRespHandler(msg_willtopicresp* msg);
-	// void willMsgRespHandler(msg_willmsgresp* msg);
-	// void willTopic(uint8_t QOS_FLAGs, char* will_topic, bool update = false);
-	// void willMesssage(void* will_msg, uint8_t will_msg_len, bool update = false);
-	// void willTopicReqHandler(message_header* msg);
-	// void willMsgReqHandler(message_header* msg);
-	// void subscribeByName(uint8_t flags, char* topic_name);
-	// void subscribeById(uint8_t flags, uint16_t topic_id);
-	// void unsubscribeByName(uint8_t flags, char* topic_name);
-	// void unsubscribeById(uint8_t flags, uint16_t topic_id);
-	// void registerHandler(msg_register* msg);
-	// void regAck(uint16_t topic_id, uint16_t message_id, return_code_t return_code);
-	// void unsuback_handler(msg_unsuback* msg);
-	// void reRegister(uint16_t topic_id, uint16_t message_id, return_code_t return_code);
-	// void pingReqHandler(msg_pingreq* msg);
-	// void pingResp();
-	// void advertiseHandler(msg_advertise* msg);
+	void willTopicRespHandler(WillTopicResp* msg);
+	void willMsgRespHandler(WillMsgResp* msg);
+	void willTopic(uint8_t QOS_FLAGs, char* willTopic, bool update = false);
+	void willMesssage(void* willMsg, uint8_t willMsgLength, bool update = false);
+	void willTopicReqHandler(WillTopic* msg);
+	void willMsgReqHandler(WillMsg* msg);
+	void subscribeByName(uint8_t flags, char* topicName);
+	void subscribeById(uint8_t flags, uint16_t topicId);
+	void unsubscribeByName(uint8_t flags, char* topicName);
+	void unsubscribeById(uint8_t flags, uint16_t topicId);
+	void registerHandler(Register* msg);
+	void regAck(uint16_t topicId, uint16_t messageId, ReturnCode returnCode);
+	void unsuback_handler(UnsubAck* msg);
+	void reRegister(uint16_t topicId, uint16_t messageId, ReturnCode returnCode);
+	void pingReqHandler(Advertise* msg);
+	void pingResp();
+	void advertiseHandler(Advertise* msg);
 
 	// @TODO not implemented yet - QOS level 1 or 2
-	// void pubAckHandler(msg_puback* msg);
-	// void pubAck(uint16_t topic_id, uint16_t message_id, return_code_t return_code);
-	// void pubRecHandler(msg_pubqos2* msg);
-	// void pubRelHandler(msg_pubqos2* msg);
-	// void pubCompHandler(msg_pubqos2* msg);
-	// void pubRec();
-	// void pubRel();
-	// void pubComp();
+	void pubAckHandler(PubAck* msg);
+	void pubAck(uint16_t topicId, uint16_t messageId, ReturnCode returnCode);
+	void pubRecHandler(PubQoS2* msg);
+	void pubRelHandler(PubQoS2* msg);
+	void pubCompHandler(PubQoS2* msg);
+	void pubRec();
+	void pubRel();
+	void pubComp();
 
 	/**
 	 * ****************************
@@ -258,32 +259,33 @@ private:
 	SoftwareSerial* XBEE;
 
 	// the status of the connection (first sent message)
-	bool SearchGatewayOk = false;
+	bool searchGatewayOk = false;
 	// bool WaitingForResponse = false;
 
 	// the code received after a subscribe or register message
-	int RegAckReturnCode = 0;
-	int SubAckReturnCode = 0;
+	int regAckReturnCode = 0;
+	int subAckReturnCode = 0;
 
-	MsgPublish ReceivedMessages[MAX_MESSAGES];
-	int NbReceivedMessage;
+	Message receivedMessages[MAX_MESSAGES];
+	int nbReceivedMessage;
 
-	int NbRegisteredTopic;
-	Topic TopicTable[MAX_TOPICS];
+	int nbRegisteredTopic;
+	Topic topicTable[MAX_TOPICS];
 
-	int Connected;
-	int LastSubscribedTopic;
+	int connected;
+	int lastSubscribedTopic;
 
-	uint8_t MessageBuffer[MAX_BUFFER_SIZE];
-	uint8_t ResponseBuffer[MAX_BUFFER_SIZE];
+	uint8_t messageBuffer[MAX_BUFFER_SIZE];
+	uint8_t responseBuffer[MAX_BUFFER_SIZE];
 
-	char ModuleName[API_DATA_LEN];
+	char moduleName[API_DATA_LEN];
 
-	uint8_t GatewayId;
-	uint8_t FrameId = 0;
-	uint8_t FrameBufferOut[API_FRAME_LEN] = {0};
-	uint8_t FrameBufferIn[API_FRAME_LEN] = {0};
-	uint8_t GatewayAddress[8] = {0};
+	uint8_t messageId = 0;
+	uint8_t gatewayId = 0;
+
+	uint8_t frameBufferOut[API_FRAME_LEN] = {0};
+	uint8_t frameBufferIn[API_FRAME_LEN] = {0};
+	uint8_t gatewayAddress[8] = {0};
 };
 
 #endif

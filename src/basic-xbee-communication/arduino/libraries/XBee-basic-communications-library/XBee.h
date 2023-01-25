@@ -27,7 +27,7 @@ class XBee {
 
 public:
 
-	XBee(const short _id);
+	XBee(const short id);
 	~XBee();
 
 	/**

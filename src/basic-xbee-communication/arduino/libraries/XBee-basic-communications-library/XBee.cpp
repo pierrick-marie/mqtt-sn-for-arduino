@@ -6,9 +6,9 @@
 
 #include "XBee.h"
 
-XBee::XBee(const short _id) {
+XBee::XBee(const short id) {
 
-	xbeeId = _id;
+	xbeeId = id;
 
 	xBeeModule = new SoftwareSerial(XBEE_RX, XBEE_TX);
 	xBeeModule->begin(XBEE_BAUD_RATE);
