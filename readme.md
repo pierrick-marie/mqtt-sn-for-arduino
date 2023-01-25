@@ -148,4 +148,4 @@ Do not hesitate to improve to this program. Feel free to send PR or contact me t
 
 # Badges
 
-[![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) [![made-with-C++](https://img.shields.io/badge/Made%20with-C++-1f425f.svg)](https://www.javascript.com) [![made-with-Arduino](https://img.shields.io/badge/Made%20with-Arduino-%23E34F26.svg)](https://html.spec.whatwg.org/multipage/) 
+[![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) [![made-with-C++](https://img.shields.io/badge/Made%20with-C++-1f425f.svg)](https://www.javascript.com) [![made-with-Java](https://img.shields.io/badge/Made%20with-Java-1f425f.svg)](https://www.javascript.com) [![made-with-Arduino](https://img.shields.io/badge/Made%20with-Arduino-%23E34F26.svg)](https://html.spec.whatwg.org/multipage/) 
