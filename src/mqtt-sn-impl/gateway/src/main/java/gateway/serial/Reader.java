@@ -3,6 +3,7 @@
  *
  * Created by Arnaud OGLAZA on 04/07/2017.
  * Updated by Pierrick MARIE on 28/11/2018.
+ *                           on 20/01/2023.
  */
 
 package gateway.serial;
@@ -20,13 +21,6 @@ public enum Reader implements SerialPortEventListener {
 
 	private final int NB_THREAD_PARSER = 10;
 	private final XBee xbee = XBee.Instance;
-
-	/*
-	 * TODO private byte[] cleanBuffer(final byte[] data) { int plop; int i = 0; for
-	 * (; i < data.length; i++) { if (data[i] < 0) { plop = (byte) (data[i] &
-	 * 0x000000FF); Log.error("SerialReader", "cleanBuffer", "" +
-	 * String.format("%02X ", plop)); } } return data; }
-	 */
 
 	@Override
 	public synchronized void serialEvent(SerialPortEvent event) {

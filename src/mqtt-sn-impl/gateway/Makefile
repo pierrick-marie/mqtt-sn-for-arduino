@@ -4,7 +4,7 @@
 # Created by Pierrick MARIE on 20/01/2023.
 
 BIN= ./bin
-LIB= ./lib/jssc-2.8.0.jar
+LIB= ./lib/jssc-2.8.0.jar:./lib/org.eclipse.paho.client.mqttv3-1.2.0.jar
 SRC= ./src/main/java
 PKG= $(SRC)/gateway
 

@@ -3,6 +3,7 @@
  *
  * Created by Arnaud OGLAZA on 04/07/2017.
  * Updated by Pierrick MARIE on 28/11/2018.
+ *                           on 20/01/2023
  */
 
 package gateway.utils;
@@ -23,14 +24,16 @@ public enum Config {
 	private final Integer LOG_LEVEL = 3;
 
 	private String ipServer;
-	private LogLevel logLevel;
+	private LogLevel logLevel = LogLevel.NONE;
 	private Integer portServer;
 	private String serialPort;
 
+	private void usage() {
+		Log.info("\nMQTT-SN Gateway for XBee modules \nUsage:   SERIAL_PORT   IP_SERVER   PORT_SERVER   [OPTION LOG_LEVEL: (ACTIVE || VERBOSE) DEFAULT: NONE]\n");
+	}
+
 	private void error() {
-		Log.info("");
-		Log.info("Missing arguments. Usage:   SERIAL_PORT   IP_SERVER   PORT_SERVER   [OPTION LOG_LEVEL: (ACTIVE || VERBOSE)]");
-		Log.info("");
+		usage();
 		System.exit(-1);
 	}
 
@@ -42,6 +45,14 @@ public enum Config {
 		return logLevel;
 	}
 
+	public Integer portServer() {
+		return portServer;
+	}
+
+	public String serialPort() {
+		return serialPort;
+	}
+
 	private void ok() {
 		Log.info("Starting the gateway \n * Serial: " + Config.Instance.serialPort() + "\n * IP server: "
 				+ Config.Instance.ipServer() + " \n * Port server: " + Config.Instance.portServer()
@@ -50,42 +61,22 @@ public enum Config {
 
 	public void parseArgs(final String[] args) {
 
-		switch (args.length) {
-		case NB_ARGS_MIN:
-
-			logLevel = LogLevel.NONE;
-			break;
-
-		case NB_ARGS_MAX:
-
-			try {
-				if (args[LOG_LEVEL].isEmpty()) {
-					logLevel = LogLevel.NONE;
-				} else {
-					logLevel = LogLevel.valueOf(args[LOG_LEVEL]);
-				}
-			} catch (final IllegalArgumentException exception) {
-				error();
-			}
-			break;
-
-		default:
-
+		if( args.length < NB_ARGS_MIN ) {
 			error();
-			return;
+		}
+
+		if( args.length > NB_ARGS_MAX ) {
+			error();
 		}
 
 		serialPort = args[SERIAL_PORT];
 		ipServer = args[IP_SERVER];
 		portServer = Integer.valueOf(args[PORT_SERVER]);
+		
+		if( args.length == NB_ARGS_MAX ) {
+			logLevel = LogLevel.valueOf(args[LOG_LEVEL]);
+		}
+
 		ok();
-	}
-
-	public Integer portServer() {
-		return portServer;
-	}
-
-	public String serialPort() {
-		return serialPort;
 	}
 }

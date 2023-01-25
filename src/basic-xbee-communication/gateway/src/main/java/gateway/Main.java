@@ -2,7 +2,8 @@
  * BSD 3-Clause Licence
  *
  * Created by Arnaud OGLAZA on 04/07/2017.
- * Updated by Pierrick MARIE on 20/01/2023.
+ * Updated by Pierrick MARIE on 28/11/2018.
+ *                           on 20/01/2023.
  */
 
 package gateway;
