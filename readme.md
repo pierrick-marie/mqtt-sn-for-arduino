@@ -140,7 +140,7 @@ Developer: Pierrick MARIE contact at pierrickmarie.info
 
 # License: BSD 3-Clause 
 
-https://framagit.org/pierrick/mqtt-sn/-/raw/master/LICENSE
+https://raw.githubusercontent.com/pierrick-marie/mqtt-sn-for-arduino/master/LICENSE
 
 # Contributing
 
