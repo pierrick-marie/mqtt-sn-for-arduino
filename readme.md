@@ -1,8 +1,8 @@
 MQTT-SN for Arduino with XBee modules
 =====================
 
-This is an implementation of MQTT-SN protocol for Arduino with XBee modules for wireless communications.
-The implementation is writtrn in C++. The gateway in in Java.
+This is an implementation of the MQTT-SN protocol for Arduino with XBee modules for wireless communications.
+The implementation is writtrn in C++. The gateway is written in Java.
 
 # Get source code
 
@@ -14,9 +14,9 @@ The implementation is writtrn in C++. The gateway in in Java.
 
 The source code of this repository is split in two parts: *src/basic-xbee-communication* and *src/mqtt-sn-impl*.
 
-*basic-xbee-communication* is a basic solution to broadcast messages between wireless XBee modules through a gateway. THIS PART DOES NOT IMPLEMENT MQTT-SN!
+*mqtt-sn-impl* is the implementation of MQTT-SN for Arduino with wireless XBee modules.
 
-*mqtt-sn-impl* is an implementation of MQTT-SN for Arduino with wireless XBee modules.
+*basic-xbee-communication* is a basic solution to broadcast messages between wireless XBee modules through a gateway. This part is not the implemtation of MQTT-SN.
 
 ### Folders
 
@@ -30,6 +30,58 @@ The source code of this repository is split in two parts: *src/basic-xbee-commun
 The gateway depends on Jssc version 2.8.0 and eclipse Paho MQTT client version 3-1.2.0. Both are provided in source code.
 
 # Installation and usages
+
+## MQTT-SN
+
+#### Arduino library
+
+To install the Arduino librairy you have to copy the folders *arduino/library* into the default Arduino sketch folder. For Unix like system this folder is *~/Arduino*.
+
+```
+	cp src/mqtt-sn-impl/arduino/libraries ~/Arduino
+```
+
+Now, in *~/Arduino/libraries* you can find the folders *mqtt-sn-library*.
+
+You can use that library by including *Mqttsn.h* in your sketch.
+
+```
+	#include <XBee.h>
+```
+
+#### Arduino client examples
+
+There is a sketch example of Arduino client in *src/mqtt-sn-impl/arduino/mqtt-sn-client-example*. You can copy this folder in your default Arduino sketch folder to play with it.
+
+```
+	cp src/mqtt-sn-impl/arduino/mqtt-sn-client-example ~/Arduino
+```
+
+#### Gateway
+
+**Build**
+
+To build the gateway move to the folder and run makefile.
+
+```
+	cd src/mqtt-sn-impl/gateway
+	make
+```
+
+**Run**
+
+To run the gateway use the dedicated run file with the following arguments:
+
+* path of XBee module
+* IP of MQTT server
+* port of MQTT server
+* log level option: (ACTIVE || VERBOSE) By default: NONE
+
+Example:
+
+```
+	./run.sh /dev/ttyUSB0 127.0.01 8080 ACTIVE
+```
 
 ## Basic XBee communication
 
@@ -80,58 +132,6 @@ By default the gateway search the XBee module in */dev/ttyUSB0*. You can specify
 
 ```
 	./run.sh /dev/ttyUSB_1_
-```
-
-### MQTT-SN
-
-#### Arduino library
-
-To install the Arduino librairy you have to copy the folders *arduino/library* into the default Arduino sketch folder. For Unix like system this folder is *~/Arduino*.
-
-```
-	cp src/mqtt-sn-impl/arduino/libraries ~/Arduino
-```
-
-Now, in *~/Arduino/libraries* you can find the folders *mqtt-sn-library*.
-
-You can use that library by including *Mqttsn.h* in your sketch.
-
-```
-	#include <XBee.h>
-```
-
-#### Arduino client examples
-
-There is a sketch example of Arduino client in *src/mqtt-sn-impl/arduino/mqtt-sn-client-example*. You can copy this folder in your default Arduino sketch folder to play with it.
-
-```
-	cp src/mqtt-sn-impl/arduino/mqtt-sn-client-example ~/Arduino
-```
-
-#### Gateway
-
-**Build**
-
-To build the gateway move to the folder and run makefile.
-
-```
-	cd src/mqtt-sn-impl/gateway
-	make
-```
-
-**Run**
-
-To run the gateway use the dedicated run file with the following arguments:
-
-* path of XBee module
-* IP of MQTT server
-* port of MQTT server
-* log level option: (ACTIVE || VERBOSE) By default: NONE
-
-Example:
-
-```
-	./run.sh /dev/ttyUSB0 127.0.01 8080 ACTIVE
 ```
 
 # Authors and acknowledgment
