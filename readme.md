@@ -7,7 +7,7 @@ The implementation is writtrn in C++. The gateway in in Java.
 # Get source code
 
 ```
-	git clone https://framagit.org/pierrick/mqtt-sn.git
+	git clone https://github.com/pierrick-marie/mqtt-sn-for-arduino.git
 ```
 
 # Architecture of the project
