@@ -16,7 +16,7 @@ The source code of this repository is split in two parts: *src/basic-xbee-commun
 
 *mqtt-sn-impl* is the implementation of MQTT-SN for Arduino with wireless XBee modules.
 
-*basic-xbee-communication* is a basic solution to broadcast messages between wireless XBee modules through a gateway. This part is not the implemtation of MQTT-SN.
+*basic-xbee-communication* is a basic solution to broadcast messages between wireless XBee modules through a gateway. This part is not the implemtation of MQTT-SN. It simply broadcast all messages.
 
 ### Folders
 
@@ -84,6 +84,8 @@ Example:
 ```
 
 ## Basic XBee communication
+
+A simple solution to communicate through XBee devices. This part does not implement MQTT-SN. It simply broadcast all messages.
 
 #### Arduino library
 
